@@ -16,6 +16,14 @@ scattering factors for materials and compounds given the chemical formula
 and density.
 
 
+## install
+
+Download and unpack this code and install with
+
+
+    > python setup.py install
+
+
 ## status
 
 This is at the  "proof of concept" stage.
