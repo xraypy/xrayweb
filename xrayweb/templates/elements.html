@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<p> <div class=subtitle>Select Element for X-ray Properties </div></p>
+
+<div class=body>
+    {% include "periodic_table.html" %}	
+
+    {% if elem %}
+
+    <hr>
+     X-ray edges for {{elem}}
+    
+    <table cellspacing=5 cellpadding=2>
+      <tr>
+	<th >   &nbsp; Edge &nbsp;</th>
+	<th >  &nbsp; Energy (eV) &nbsp;</th>
+      </tr>
+      
+      
+      {% for name ,data in edges.items() %}
+      <tr class={{ loop.cycle('odd', 'even') }}>
+	<td> &nbsp; &nbsp; {{name}} </td>
+	<td> &nbsp; {{data.energy}} </td>
+      </tr>
+      {% endfor %}
+    </table>
+    {% endif %}
+</div>
+
+{% endblock %}

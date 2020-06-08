@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <title>X-ray Data</title>
+    <link rel=stylesheet type=text/css  href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+
+<div class=topbar>
+  <table cellpadding=1 width=100%>
+    <tr><td width=35% padding=5 align=left>
+	<a href="{{url_for('element')}}"> X-ray Data for the Elements </a>
+      </td>
+  </table>
+</div>
+
+  <ul class=topmenu>
+    <li>   <a href="{{url_for('element')}}"> Elements </a> </li>
+    </ul>
+{% block body %}
+{% endblock %}
