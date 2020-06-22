@@ -12,10 +12,11 @@ app.config.from_object(__name__)
 @app.route('/element/', methods=['GET', 'POST'])
 @app.route('/element/<elem>',  methods=['GET', 'POST'])
 def element(elem=None):
-    edges = {}
+    edges = atomic = {}
     if elem is not None:
         edges= xraydb.xray_edges(elem)
-    return render_template('elements.html', edges=edges, elem=elem)
+        atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem)}
+    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic)
 
 @app.route('/')
 def index():

@@ -11,20 +11,46 @@
     <hr>
      X-ray edges for {{elem}}
     
-    <table cellspacing=5 cellpadding=2>
-      <tr>
-	<th >   &nbsp; Edge &nbsp;</th>
-	<th >  &nbsp; Energy (eV) &nbsp;</th>
-      </tr>
-      
-      
-      {% for name ,data in edges.items() %}
-      <tr class={{ loop.cycle('odd', 'even') }}>
-	<td> &nbsp; &nbsp; {{name}} </td>
-	<td> &nbsp; {{data.energy}} </td>
-      </tr>
-      {% endfor %}
-    </table>
+     <table>
+           <tr>
+                 <th >X-ray edges for {{elem}}</th>
+                 <th >Elemental Data</th>
+           </tr>
+           
+           <tr>
+                 <td><table cellspacing=5 cellpadding=2>
+                  <tr>
+                  <th >   &nbsp; Edge &nbsp;</th>
+                  <th >  &nbsp; Energy (eV) &nbsp;</th>
+                  <th >  &nbsp; Fluorescence Yield</th>
+                  <th >  &nbsp; Edge Jump</th>
+                  </tr>
+                  
+                  
+                  {% for name ,data in edges.items() %}
+                  <tr class={{ loop.cycle('odd', 'even') }}>
+                  <td> &nbsp; &nbsp; {{name}} </td>
+                  <td> &nbsp; {{data.energy}} </td>
+                  <td> &nbsp; {{data.fyield}} </td>
+                  <td> &nbsp; {{data.jump_ratio}} </td>
+                  </tr>
+                  {% endfor %}
+                </table> </td>
+
+                <td><table>
+                      <tr>
+                            <th> &nbsp; Number </th>
+                            <th> &nbsp; Mass (AMU) </th>
+                      </tr>
+
+                      <tr>
+                            <td> &nbsp; {{atomic.n}}</td>
+                            <td> &nbsp; {{atomic.mass}}</td>
+                      </tr>
+                </table></td>
+           </tr>
+     </table>
+
     {% endif %}
 </div>
 
