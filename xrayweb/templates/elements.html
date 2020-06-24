@@ -13,11 +13,26 @@
     
      <table>
            <tr>
+                  <th >Elemental Data</th>
                  <th >X-ray edges for {{elem}}</th>
-                 <th >Elemental Data</th>
+                 <th >X-ray lines for {{elem}}</th>
            </tr>
            
            <tr>
+                  <td><table>
+                        <tr>
+                              <th> &nbsp; Number </th>
+                              <th> &nbsp; Mass (AMU) </th>
+                              <th> &nbsp; Density (gm/cm^3) </th>
+                        </tr>
+
+                        <tr>
+                              <td> &nbsp; {{atomic.n}}</td>
+                              <td> &nbsp; {{atomic.mass}}</td>
+                              <td> &nbsp; {{atomic.density}}</td>
+                        </tr>
+                  </table></td>
+
                  <td><table cellspacing=5 cellpadding=2>
                   <tr>
                   <th >   &nbsp; Edge &nbsp;</th>
@@ -37,17 +52,29 @@
                   {% endfor %}
                 </table> </td>
 
-                <td><table>
-                      <tr>
-                            <th> &nbsp; Number </th>
-                            <th> &nbsp; Mass (AMU) </th>
-                      </tr>
+                <td><table cellspacing=5 cellpadding=2>
+                  <tr>
+                  <th >   &nbsp; Siegbahn Notation &nbsp;</th>
+                  <th >  &nbsp; Energy (eV) &nbsp;</th>
+                  <th >  &nbsp; Intensity</th>
+                  <th >  &nbsp; Initial Level</th>
+                  <th >  &nbsp; Final Level</th>
+                  </tr>
+                  
+                  
+                  {% for name ,data in lines.items() %}
+                  <tr class={{ loop.cycle('odd', 'even') }}>
+                  <td> &nbsp; &nbsp; {{name}} </td>
+                  <td> &nbsp; {{data.energy}} </td>
+                  <td> &nbsp; {{data.intensity}} </td>
+                  <td> &nbsp; {{data.initial_level}} </td>
+                  <td> &nbsp; {{data.final_level}} </td>
+                  </tr>
+                  {% endfor %}
+                </table> </td>
 
-                      <tr>
-                            <td> &nbsp; {{atomic.n}}</td>
-                            <td> &nbsp; {{atomic.mass}}</td>
-                      </tr>
-                </table></td>
+
+
            </tr>
      </table>
 

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block body %}
+
+<p><div class=subtitle>Enter Chemical Formula for Results</div></p>
+<div class=body>
+    <form action="/action_page.php">
+        <label for="formula">Formula:</label>
+        <input type="text" id="formula" name="formula"><br><br>
+        <label for="density">Density:</label>
+        <input type="text" id="density" name="density"><br><br>
+        <label for="energy">Energy:</label>
+        <input type="text" id="energy" name="energy"><br><br>
+        <input type="submit" value="Submit">
+      </form>
+</div>
+
+{% endblock %}
