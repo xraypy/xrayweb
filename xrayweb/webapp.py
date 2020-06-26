@@ -1,7 +1,11 @@
 #!/usr/bin/env python
+import base64
+from io import BytesIO
 
 from flask import Flask, redirect, url_for, render_template
 from flask import request, session
+
+from matplotlib.figure import Figure
 
 import xraydb
 
@@ -25,6 +29,18 @@ def formula(fmla=None):
     if fmla is not None:
         pass
         #obtain info from the database
+    import matplotlib.pyplot as plt, mpld3
+    fig = Figure()
+    ax = fig.subplots()
+    ax.plot([1, 2, 3, 4], [1, 4, 2, 3]) 
+    buf = BytesIO()
+    fig.savefig(buf, format="png")
+    data = base64.b64encode(buf.getbuffer()).decode("ascii")
+    pstr = f"<img src='data:image/png;base64,{data}'/>" 
+    #print(pstr)
+    with open("plt.html", "w") as file:
+        file.write(pstr)
+
     return render_template('formulas.html')
 
 @app.route('/')
