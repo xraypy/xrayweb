@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 import base64
+import jinja2
 from io import BytesIO
 
 from flask import Flask, redirect, url_for, render_template
 from flask import request, session
 
 from matplotlib.figure import Figure
+
+from jinja2_base64_filters import jinja2_base64_filters
+
+env = jinja2.Environment()
 
 import xraydb
 
@@ -25,10 +30,38 @@ def element(elem=None):
 
 @app.route('/formula/', methods=['GET', 'POST'])
 @app.route('/formula/<fmla>', methods=['GET', 'POST'])
-def formula(fmla=None):
-    if fmla is not None:
-        pass
-        #obtain info from the database
+def formula():
+    #env.filters['b64decode'] = base64.b64decode
+    formula = message = ''
+    abslen = 0.0
+    if request.method == 'POST':
+        formula = request.form.get('formula')
+        density = request.form.get('density')
+        energy = request.form.get('energy')
+
+        #TODO: formula validation
+        try:
+            df = float(density)
+            if df < 0:
+                message = 'Density must be a positive number'
+        except:
+            message = 'Density must be a positive number'
+
+        try:
+            ef = float(energy)
+            if ef < 0:
+                message = 'Energy must be a positive number'
+        except:
+            message = 'Energy must be a positive number'
+
+        if not message:
+            message = 'Input is valid'
+        
+    if message == 'Input is valid':
+        abslen = xraydb.material_mu(formula, ef, df)
+
+    #print('Formula: ' + formula + ' Density: ' + density + ' Energy: ' + energy)
+    """
     import matplotlib.pyplot as plt, mpld3
     fig = Figure()
     ax = fig.subplots()
@@ -37,11 +70,11 @@ def formula(fmla=None):
     fig.savefig(buf, format="png")
     data = base64.b64encode(buf.getbuffer()).decode("ascii")
     pstr = f"<img src='data:image/png;base64,{data}'/>" 
-    #print(pstr)
+    print(env.filters['b64decode'])
     with open("plt.html", "w") as file:
         file.write(pstr)
-
-    return render_template('formulas.html')
+    """
+    return render_template('formulas.html', message=message, abslen=abslen)
 
 @app.route('/')
 def index():

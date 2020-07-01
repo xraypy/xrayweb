@@ -3,21 +3,33 @@
 
 <p><div class=subtitle>Enter Chemical Formula for Results</div></p>
 <div class=body>
-    <form action="/action_page.php">
+
+  {% if message %}
+    <p>{{message}}</p>
+  {% endif %}
+
+    <form action="{{url_for('formula')}}" method="post">
         <label for="formula">Formula:</label>
         <input type="text" id="formula" name="formula"><br><br>
+
         <label for="density">Density:</label>
         <input type="text" id="density" name="density"><br><br>
+
         <label for="energy">Energy:</label>
         <input type="text" id="energy" name="energy"><br><br>
+
         <input type="submit" value="Submit">
       </form>
+
+      {% if abslen %}
+        <p>Absorption Length: {{abslen}}</p>
+      {% endif %}
 
 </div>
 
 <hr>
 Example Plot
 <hr>
-{% include "plot.html" %}	
+{% include "plot.html" %}
 
 {% endblock %}
