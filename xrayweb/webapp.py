@@ -29,8 +29,8 @@ def element(elem=None):
     return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines)
 
 @app.route('/formula/', methods=['GET', 'POST'])
-@app.route('/formula/<fmla>', methods=['GET', 'POST'])
-def formula():
+@app.route('/formula/<material>', methods=['GET', 'POST'])
+def formula(material=None):
     #env.filters['b64decode'] = base64.b64decode
     formula = message = ''
     abslen = 0.0
@@ -40,6 +40,7 @@ def formula():
         energy = request.form.get('energy')
 
         #TODO: formula validation
+        #once energy ranges can be inputted, extra verification needed to make sure the max is higher than the min
         try:
             df = float(density)
             if df < 0:
@@ -58,8 +59,17 @@ def formula():
             message = 'Input is valid'
         
     if message == 'Input is valid':
+        #TODO: once functionality for multiple values is implemented, add a loop here to store all the values to be plotted later
         abslen = xraydb.material_mu(formula, ef, df)
 
+    mdata = ()
+    if material is not None:
+        materials_dict = xraydb.materials._read_materials_db()
+        mdata = materials_dict[material]
+
+
+    #for name, data in materials_dict.items(): 
+        #print(name, data)
     #print('Formula: ' + formula + ' Density: ' + density + ' Energy: ' + energy)
     """
     import matplotlib.pyplot as plt, mpld3
@@ -74,7 +84,7 @@ def formula():
     with open("plt.html", "w") as file:
         file.write(pstr)
     """
-    return render_template('formulas.html', message=message, abslen=abslen)
+    return render_template('formulas.html', message=message, abslen=abslen, mdata=mdata)
 
 @app.route('/')
 def index():

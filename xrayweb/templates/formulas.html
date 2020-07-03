@@ -21,11 +21,22 @@
         <input type="submit" value="Submit">
       </form>
 
+      {% if mdata %}
+        <p>Material Formula: {{mdata[0]}}</p>
+        Material Density: {{mdata[1]}}
+      {% endif %}
+
       {% if abslen %}
         <p>Absorption Length: {{abslen}}</p>
       {% endif %}
 
 </div>
+
+<hr>
+Materials
+<hr>
+{% include "materials.html" %}
+
 
 <hr>
 Example Plot
