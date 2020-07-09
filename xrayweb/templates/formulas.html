@@ -1,6 +1,22 @@
 {% extends "layout.html" %}
-{% block body %}
 
+{% block body %}
+<script>
+  materials_dict = {{materials_dict | tojson}}
+
+  function toFormula(name) {
+    window.alert(materials_dict.name);
+    return materials_dict.name[0];
+  }
+  function toDensity(name) {
+    return materials_dict.name[1];
+  }
+  function displayinfo() {
+    var dropdown = document.getElementById('mats');
+    document.getElementById('formula').value=toFormula(dropdown.options[dropdown.selectedIndex].text);
+    document.getElementById('density').value=toDensity(dropdown.options[dropdown.selectedIndex].text);
+  }
+</script>
 <p><div class=subtitle>Enter Chemical Formula for Results</div></p>
 <div class=body>
 
@@ -9,14 +25,31 @@
   {% endif %}
 
     <form action="{{url_for('formula')}}" method="post">
+        <p>
+          <label for="mats">Choose a preset material:</label>
+          <select name="mats" id="mats"
+            onchange="displayinfo()">
+            <option></option>
+            {% for mat in matlist %}
+            <option value="{{mat}}" {{'selected' if value==mat else ''}}>{{mat}}</option>
+            {% endfor %}
+          </select>
+        </p>
+
         <label for="formula">Formula:</label>
         <input type="text" id="formula" name="formula"><br><br>
 
         <label for="density">Density:</label>
         <input type="text" id="density" name="density"><br><br>
 
-        <label for="energy">Energy:</label>
-        <input type="text" id="energy" name="energy"><br><br>
+        <label for="energy1">Energy 1:</label>
+        <input type="text" id="energy1" name="energy1">
+
+        <label for="energy2">Energy 2:</label>
+        <input type="text" id="energy2" name="energy2">
+
+        <label for="step">Energy Step:</label>
+        <input type="text" id="step" name="step"><br><br>
 
         <input type="submit" value="Submit">
       </form>
@@ -26,16 +59,25 @@
         Material Density: {{mdata[1]}}
       {% endif %}
 
-      {% if abslen %}
-        <p>Absorption Length: {{abslen}}</p>
+      {% if num %}
+        <table>
+          <tr>
+            <th>Energy</th>
+            <th>Absorption Quantity</th>
+            <th>Absorption Length</th>
+          </tr>
+
+          {% for x in range(num) %}
+          <tr>
+            <td>{{energies[x]}}</td>
+            <td>{{absq[x]}}</td>
+            <td>{{abslen[x]}}</td>
+          </tr>
+          {% endfor %}
+        </table>
       {% endif %}
 
 </div>
-
-<hr>
-Materials
-<hr>
-{% include "materials.html" %}
 
 
 <hr>

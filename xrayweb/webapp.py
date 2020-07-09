@@ -3,7 +3,7 @@ import base64
 import jinja2
 from io import BytesIO
 
-from flask import Flask, redirect, url_for, render_template
+from flask import Flask, redirect, url_for, render_template, json
 from flask import request, session
 
 from matplotlib.figure import Figure
@@ -34,38 +34,108 @@ def formula(material=None):
     #env.filters['b64decode'] = base64.b64decode
     formula = message = ''
     abslen = 0.0
+    absq = 0.0
+    energies = 0.0
+    num = 0.0
     if request.method == 'POST':
         formula = request.form.get('formula')
         density = request.form.get('density')
-        energy = request.form.get('energy')
+        energy1 = request.form.get('energy1')
+        energy2 = request.form.get('energy2')
+        step = request.form.get('step')
 
         #TODO: formula validation
         #once energy ranges can be inputted, extra verification needed to make sure the max is higher than the min
+        if not formula:
+            message = 'Formula is a required field'
+        elif not material:
+            #verify using function
+            pass
+        
+        
         try:
             df = float(density)
-            if df < 0:
+            if df <= 0:
                 message = 'Density must be a positive number'
         except:
             message = 'Density must be a positive number'
 
-        try:
-            ef = float(energy)
-            if ef < 0:
+        if energy1:
+            try:
+                ef = float(energy1)
+                if ef <= 0:
+                    message = 'Energy must be a positive number'
+            except:
                 message = 'Energy must be a positive number'
-        except:
-            message = 'Energy must be a positive number'
+        else:
+            message = 'Energy1 is a required field'
+        
+        if energy2:
+            try:
+                ef2 = float(energy2)
+                if ef2 <= 0:
+                    message = 'Energy must be a positive number'
+            except:
+                message = 'Energy must be a positive number'
+            if energy1 and energy1 > energy2: #possibly edit later based on feedback
+                message = 'Energy must range from low to high values'
+        
+        if step:
+            try:
+                sf = float(step)
+                if sf <= 0:
+                    message = 'Step must be a positive number'
+            except:
+                message = 'Step must be a positive number'
+            if not energy2:
+                message = 'Step requires multiple energy values'
 
         if not message:
             message = 'Input is valid'
         
     if message == 'Input is valid':
         #TODO: once functionality for multiple values is implemented, add a loop here to store all the values to be plotted later
-        abslen = xraydb.material_mu(formula, ef, df)
+        #print(formula, ef, df)
+        energies = []
+        absq = []
+        abslen = []
+        if not energy2:
+            energies.append(ef)
+            val = xraydb.material_mu(formula, ef, df)
+            absq.append(val)
+            abslen.append(1 / val)
+        elif not step:
+            energies.append(ef)
+            val = xraydb.material_mu(formula, ef, df)
+            absq.append(val)
+            abslen.append(1 / val)
+
+            energies.append(ef2)
+            val = xraydb.material_mu(formula, ef2, df)
+            absq.append(val)
+            abslen.append(1 / val)
+        else:
+            i = ef
+            while i <= ef2:
+                energies.append(i)
+                val = xraydb.material_mu(formula, i, df)
+                absq.append(val)
+                abslen.append(1 / val)
+                i += sf
+        num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
+        message = ''        
+
 
     mdata = ()
+    materials_dict = xraydb.materials._read_materials_db()
+    #print(materials_dict)
     if material is not None:
-        materials_dict = xraydb.materials._read_materials_db()
         mdata = materials_dict[material]
+    
+    matlist = list(materials_dict.keys())
+    matlist = sorted(matlist)
+    #materials_dict = json.dumps(materials_dict)
+
 
 
     #for name, data in materials_dict.items(): 
@@ -84,7 +154,8 @@ def formula(material=None):
     with open("plt.html", "w") as file:
         file.write(pstr)
     """
-    return render_template('formulas.html', message=message, abslen=abslen, mdata=mdata)
+    return render_template('formulas.html', message=message, abslen=abslen, absq=absq, energies=energies, num=num,
+    mdata=mdata, matlist=matlist, materials_dict=materials_dict)
 
 @app.route('/')
 def index():
