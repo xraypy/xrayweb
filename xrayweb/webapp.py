@@ -134,7 +134,7 @@ def formula(material=None):
     
     matlist = list(materials_dict.keys())
     matlist = sorted(matlist)
-    #materials_dict = json.dumps(materials_dict)
+    materials_dict = json.dumps(materials_dict)
 
 
 

@@ -1,15 +1,25 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<script>
-  materials_dict = {{materials_dict | tojson}}
+<script type=text/javascript>
+  var temp = {{materials_dict | tojson}};
+  var mdict = JSON.parse(temp);
+  var keys = Object.keys(mdict);
+  var vals = Object.values(mdict);
 
   function toFormula(name) {
-    window.alert(materials_dict.name);
-    return materials_dict.name[0];
+    var i = keys.indexOf(name);
+    if (i != -1) {
+      return vals[i][0];
+    }
+    return "";
   }
   function toDensity(name) {
-    return materials_dict.name[1];
+    var i = keys.indexOf(name);
+    if (i != -1) {
+      return vals[i][1];
+    }
+    return "";
   }
   function displayinfo() {
     var dropdown = document.getElementById('mats');
