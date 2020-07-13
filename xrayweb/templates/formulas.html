@@ -90,6 +90,18 @@
 </div>
 
 
+
+<hr>
+Plot of mu(E):
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+<div id="mu_plot">
+  <script  type="text/javascript">
+    var graph = {{mu_plot | safe}};
+    Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
+  </script>
+</div>
+
 <hr>
 Example Plot
 <hr>
