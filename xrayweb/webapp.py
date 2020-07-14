@@ -6,6 +6,8 @@ from io import BytesIO
 from flask import Flask, redirect, url_for, render_template, json
 from flask import request, session
 
+import plotly.graph_objects as go
+
 from matplotlib.figure import Figure
 
 from jinja2_base64_filters import jinja2_base64_filters
@@ -77,7 +79,7 @@ def formula(material=None):
                     message = 'Energy must be a positive number'
             except:
                 message = 'Energy must be a positive number'
-            if energy1 and energy1 > energy2: #possibly edit later based on feedback
+            if ef and (ef > ef2): #possibly edit later based on feedback
                 message = 'Energy must range from low to high values'
         
         if step:
@@ -116,21 +118,22 @@ def formula(material=None):
             abslen.append(1 / val)
         else:
             i = ef
-            while i <= ef2:
+            while i < ef2:
                 energies.append(i)
                 val = xraydb.material_mu(formula, i, df)
                 absq.append(val)
                 abslen.append(1 / val)
                 i += sf
+            energies.append(ef2)
+            val = xraydb.material_mu(formula, ef2, df)
+            absq.append(val)
+            abslen.append(1 / val)
         num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
         message = ''        
 
 
-    mdata = ()
     materials_dict = xraydb.materials._read_materials_db()
     #print(materials_dict)
-    if material is not None:
-        mdata = materials_dict[material]
     
     matlist = list(materials_dict.keys())
     matlist = sorted(matlist)
@@ -155,7 +158,7 @@ def formula(material=None):
         file.write(pstr)
     """
     return render_template('formulas.html', message=message, abslen=abslen, absq=absq, energies=energies, num=num,
-    mdata=mdata, matlist=matlist, materials_dict=materials_dict)
+    matlist=matlist, materials_dict=materials_dict)
 
 @app.route('/')
 def index():

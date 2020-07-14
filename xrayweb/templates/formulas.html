@@ -53,21 +53,16 @@
         <input type="text" id="density" name="density"><br><br>
 
         <label for="energy1">Energy 1:</label>
-        <input type="text" id="energy1" name="energy1">
+        <input type="text" id="energy1" name="energy1"> &nbsp;
 
         <label for="energy2">Energy 2:</label>
-        <input type="text" id="energy2" name="energy2">
+        <input type="text" id="energy2" name="energy2"> &nbsp;
 
         <label for="step">Energy Step:</label>
         <input type="text" id="step" name="step"><br><br>
 
         <input type="submit" value="Submit">
       </form>
-
-      {% if mdata %}
-        <p>Material Formula: {{mdata[0]}}</p>
-        Material Density: {{mdata[1]}}
-      {% endif %}
 
       {% if num %}
         <table>
