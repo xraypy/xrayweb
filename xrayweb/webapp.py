@@ -81,6 +81,7 @@ def formula(material=None):
     absq = 0.0
     energies = 0.0
     num = 0.0
+    ef = ef2 = sf = 0.0
     energy1 = energy2 = step = None
     if request.method == 'POST':
         formula = request.form.get('formula')
@@ -113,7 +114,8 @@ def formula(material=None):
             except:
                 message = 'Energy must be a positive number'
         else:
-            message = 'Energy1 is a required field'
+            energy1 = "1000"
+            ef = float(energy1)
 
         if energy2:
             try:
@@ -123,17 +125,13 @@ def formula(material=None):
             except:
                 message = 'Energy must be a positive number'
             if ef and (ef > ef2): #possibly edit later based on feedback
-                message = 'Energy must range from low to high values'
+                message = 'Energy1 must be less than Energy2'
+        else:
+            energy2 = "50000"
+            ef2 = float(energy2)
 
         if step:
-            try:
-                sf = float(step)
-                if sf <= 0:
-                    message = 'Step must be a positive number'
-            except:
-                message = 'Step must be a positive number'
-            if not energy2:
-                message = 'Step requires multiple energy values'
+            sf = float(step)
 
         if not message:
             message = 'Input is valid'
@@ -148,29 +146,29 @@ def formula(material=None):
             energies.append(ef)
             val = xraydb.material_mu(formula, ef, df)
             absq.append(val)
-            abslen.append(1 / val)
+            abslen.append(10000 / val)
         elif not step:
             energies.append(ef)
             val = xraydb.material_mu(formula, ef, df)
             absq.append(val)
-            abslen.append(1 / val)
+            abslen.append(10000 / val)
 
             energies.append(ef2)
             val = xraydb.material_mu(formula, ef2, df)
             absq.append(val)
-            abslen.append(1 / val)
+            abslen.append(10000 / val)
         else:
             i = ef
             while i < ef2:
                 energies.append(i)
                 val = xraydb.material_mu(formula, i, df)
                 absq.append(val)
-                abslen.append(1 / val)
+                abslen.append(10000 / val)
                 i += sf
             energies.append(ef2)
             val = xraydb.material_mu(formula, ef2, df)
             absq.append(val)
-            abslen.append(1 / val)
+            abslen.append(10000 / val)
         num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
         message = ''
 
@@ -178,8 +176,6 @@ def formula(material=None):
     materials_dict = xraydb.materials._read_materials_db()
     #print(materials_dict)
     
-    if material is not None:
-        mdata = materials_dict[material]
 
     matlist = list(materials_dict.keys())
     matlist = sorted(matlist)
@@ -205,8 +201,8 @@ def formula(material=None):
     """
 
     mu_plot = {}
-    if energy1 is not None:
-        en_array = np.arange(float(energy1), float(energy2), float(step))
+    if ef != 0.0 and ef2 != 0.0 and sf != 0.0:
+        en_array = np.arange(ef, ef2, sf)
         mu_array = 0*en_array
         if formula not in ('', 'None', None):
             mu_array = xraydb.material_mu(formula, en_array, density=float(density))
@@ -217,7 +213,7 @@ def formula(material=None):
     return render_template('formulas.html', message=message, abslen=abslen,
                            mu_plot=mu_plot,
                            absq=absq, energies=energies, num=num,
-                           mdata=mdata, matlist=matlist, materials_dict=materials_dict)
+                           matlist=matlist, materials_dict=materials_dict, input=input)
 
 @app.route('/')
 def index():

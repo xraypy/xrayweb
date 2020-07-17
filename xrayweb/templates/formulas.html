@@ -47,23 +47,32 @@
         </p>
 
         <label for="formula">Formula:</label>
-        <input type="text" id="formula" name="formula"><br><br>
-
+        <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"><br><br>
+        
         <label for="density">Density:</label>
-        <input type="text" id="density" name="density"><br><br>
+        <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
 
         <label for="energy1">Energy 1:</label>
-        <input type="text" id="energy1" name="energy1"> &nbsp;
+        <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
 
         <label for="energy2">Energy 2:</label>
-        <input type="text" id="energy2" name="energy2"> &nbsp;
+        <input type="text" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
 
         <label for="step">Energy Step:</label>
-        <input type="text" id="step" name="step"><br><br>
-
+        <select name="step" id="step">
+          <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
+          <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
+          <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
+          <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
+          <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
+          <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
+          <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+        </select>
+        <br>
         <input type="submit" value="Submit">
       </form>
-
+      <p>
+      </p>
       {% if num %}
         <table>
           <tr>
@@ -85,7 +94,7 @@
 </div>
 
 
-
+{% if mu_plot %}
 <hr>
 Plot of mu(E):
 
@@ -96,10 +105,6 @@ Plot of mu(E):
     Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
   </script>
 </div>
-
-<hr>
-Example Plot
-<hr>
-{% include "plot.html" %}
+{% endif %}
 
 {% endblock %}
