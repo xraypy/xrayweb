@@ -170,6 +170,7 @@ def formula(material=None):
             absq.append(val)
             abslen.append(10000 / val)
         num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
+        #number formatting
         energies = ["{:.0f}".format(x) for x in energies]
         absq = ["{:.4f}".format(x) for x in absq]
         abslen = ["{:.4f}".format(x) for x in abslen]
