@@ -1,4 +1,4 @@
-a, h1, h2  {color: #16C; text-decoration: none; }.
+a, h1, h2  {color: #16C; text-decoration: none; }
 h1, h2     {font-family: 'Georgia', serif; margin: 0; }
 h1         {border-bottom: 1px solid #eee; }
 h2         {font-size: 1.2em; }
@@ -9,6 +9,10 @@ h2         {font-size: 1.2em; }
 .body a, a.active {color: #16C; text-decoration: none; }
 .body a.active    {color: #C61;  background-color: #FDFDFA;}
 .body a:hover     {color: #C61;  background-color: #F0F0F6;}
+
+.flex-container {display: flex;}
+.flex-child {flex: 1;}
+.flex-child:first-child {margin-right: 20px;}
 
 .even {background-color: #F3F3F0;}
 .odd {background-color: #FFFFFF;}

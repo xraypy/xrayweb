@@ -34,45 +34,48 @@
     <p>{{message}}</p>
   {% endif %}
 
-    <form action="{{url_for('formula')}}" method="post">
-        <p>
-          <label for="mats">Choose a preset material:</label>
-          <select name="mats" id="mats"
-            onchange="displayinfo()">
-            <option></option>
-            {% for mat in matlist %}
-            <option value="{{mat}}" {{'selected' if value==mat else ''}}>{{mat}}</option>
-            {% endfor %}
-          </select>
-        </p>
+  <form action="{{url_for('formula')}}" method="post">
+    <p>
+      <label for="mats">Choose a preset material:</label>
+      <select name="mats" id="mats"
+        onchange="displayinfo()">
+        <option></option>
+        {% for mat in matlist %}
+        <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
+        {% endfor %}
+      </select>
+    </p>
 
-        <label for="formula">Formula:</label>
-        <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"><br><br>
-        
-        <label for="density">Density:</label>
-        <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
+    <label for="formula">Formula:</label>
+    <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"><br><br>
+    
+    <label for="density">Density:</label>
+    <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
 
-        <label for="energy1">Energy 1:</label>
-        <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
+    <label for="energy1">Energy 1:</label>
+    <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
 
-        <label for="energy2">Energy 2:</label>
-        <input type="text" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
+    <label for="energy2">Energy 2:</label>
+    <input type="text" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
 
-        <label for="step">Energy Step:</label>
-        <select name="step" id="step">
-          <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
-          <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
-          <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
-          <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
-          <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
-          <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
-          <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-        </select>
-        <br>
-        <input type="submit" value="Submit">
-      </form>
-      <p>
-      </p>
+    <label for="step">Energy Step:</label>
+    <select name="step" id="step">
+      <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
+      <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
+      <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
+      <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
+      <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
+      <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
+      <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+    </select>
+    <br>
+    <input type="submit" value="Submit">
+  </form>
+  <p>
+  </p>
+
+  <div class="flex-container">
+    <div class="flex-child magenta">
       {% if num %}
         <table>
           <tr>
@@ -90,21 +93,22 @@
           {% endfor %}
         </table>
       {% endif %}
+    </div>
 
+    <div class="flex-child green">
+      {% if mu_plot %}
+      Plot of mu(E):
+
+      <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+        <div id="mu_plot">
+          <script  type="text/javascript">
+            var graph = {{mu_plot | safe}};
+            Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
+          </script>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
-
-
-{% if mu_plot %}
-<hr>
-Plot of mu(E):
-
-<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
-<div id="mu_plot">
-  <script  type="text/javascript">
-    var graph = {{mu_plot | safe}};
-    Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
-  </script>
-</div>
-{% endif %}
 
 {% endblock %}
