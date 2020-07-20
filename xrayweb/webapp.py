@@ -136,6 +136,7 @@ def formula(material=None):
         energy1 = request.form.get('energy1')
         energy2 = request.form.get('energy2')
         step = request.form.get('step')
+        mode = request.form.get('mode')
 
         #TODO: formula validation
         #once energy ranges can be inputted, extra verification needed to make sure the max is higher than the min
@@ -177,8 +178,9 @@ def formula(material=None):
             energy2 = "50000"
             ef2 = float(energy2)
 
-        if step:
-            sf = float(step)
+        sf = float(step)
+        
+        isLog = True if mode == 'Log' else False
 
         if not message:
             message = 'Input is valid'
@@ -257,7 +259,7 @@ def formula(material=None):
         if formula not in ('', 'None', None):
             mu_array = xraydb.material_mu(formula, en_array, density=float(density))
 
-        mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=True)
+        mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=isLog)
 
 
     return render_template('formulas.html', message=message, abslen=abslen,

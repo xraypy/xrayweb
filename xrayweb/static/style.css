@@ -10,6 +10,8 @@ h2         {font-size: 1.2em; }
 .body a.active    {color: #C61;  background-color: #FDFDFA;}
 .body a:hover     {color: #C61;  background-color: #F0F0F6;}
 
+.colSpacing {padding:0 5px;}
+
 .flex-container {display: flex;}
 .flex-child {flex: 1;}
 .flex-child:first-child {margin-right: 20px;}

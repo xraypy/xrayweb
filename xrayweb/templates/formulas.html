@@ -67,8 +67,14 @@
       <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
       <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
       <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+    </select> &nbsp;
+
+    <label for="mode">Plot Mode:</label>
+    <select name="mode" id="mode">
+      <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
+      <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
     </select>
-    <br>
+    <br><br>
     <input type="submit" value="Submit">
   </form>
   <p>
@@ -79,9 +85,9 @@
       {% if num %}
         <table>
           <tr>
-            <th>Energy</th>
-            <th>Absorption Quantity</th>
-            <th>Absorption Length</th>
+            <th>Energy &nbsp;</th>
+            <th>Absorption Quantity &nbsp;</th>
+            <th>Absorption Length &nbsp;</th>
           </tr>
 
           {% for x in range(num) %}
