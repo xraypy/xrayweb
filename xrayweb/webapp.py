@@ -3,6 +3,7 @@ import base64
 import jinja2
 from io import BytesIO
 import numpy as np
+import math
 
 from flask import Flask, redirect, url_for, render_template, json
 from flask import request, session
@@ -17,6 +18,52 @@ env = jinja2.Environment()
 
 import xraydb
 
+def nformat(val, length=11):
+    """Format a number with '%g'-like format.
+
+    Except that:
+        a) the length of the output string is fixed.
+        b) positive numbers will have a leading blank.
+        b) the precision will be as high as possible.
+        c) trailing zeros will not be trimmed.
+
+    The precision will typically be at least ``length-7``,
+    with ``length-6`` significant digits shown.
+
+    Parameters
+    ----------
+    val : float
+        Value to be formatted.
+    length : int, optional
+        Length of output string (default is 11).
+
+    Returns
+    -------
+    str
+        String of specified length.
+
+    Notes
+    ------
+    Positive values will have leading blank.
+
+    """
+    try:
+        expon = int(math.log10(abs(val)))
+    except (OverflowError, ValueError):
+        expon = 0
+    length = max(length, 7)
+    form = 'e'
+    prec = length - 7
+    if abs(expon) > 99:
+        prec -= 1
+    elif ((expon >= 0 and expon < (prec+4)) or
+          (expon <= 0 and -expon < (prec-1))):
+        form = 'f'
+        prec += 4
+        if expon > 0:
+            prec -= expon
+    fmt = '{0: %i.%i%s}' % (length, prec, form)
+    return fmt.format(val)[:length]
 
 def make_plot(x, y, material_name, formula_name, ytitle='mu',
                 xlog_scale=False, ylog_scale=False):
@@ -170,16 +217,15 @@ def formula(material=None):
             absq.append(val)
             abslen.append(10000 / val)
         num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
-        #number formatting
-        energies = ["{:.0f}".format(x) for x in energies]
-        absq = ["{:.4f}".format(x) for x in absq]
-        abslen = ["{:.4f}".format(x) for x in abslen]
+        energies = [nformat(x) for x in energies]
+        absq = [nformat(x) for x in absq]
+        abslen = [nformat(x) for x in abslen]
         message = ''
 
 
     materials_dict = xraydb.materials._read_materials_db()
     #print(materials_dict)
-    
+
 
     matlist = list(materials_dict.keys())
     matlist = sorted(matlist)
