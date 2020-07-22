@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class=body>
+    {% if error %}
+        <p>{{error}}</p>
+    {% endif %}
+
+    <form action="{{url_for('crystal')}}" method="POST">
+        
+    </form>
+</div>
+{% endblock %}
