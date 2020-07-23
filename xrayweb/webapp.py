@@ -4,6 +4,7 @@ import jinja2
 from io import BytesIO
 import numpy as np
 import math
+import xraydb
 
 from flask import Flask, redirect, url_for, render_template, json
 from flask import request, session
@@ -16,7 +17,10 @@ from matplotlib.figure import Figure
 
 env = jinja2.Environment()
 
-import xraydb
+materials_dict = xraydb.materials._read_materials_db()
+matlist = list(materials_dict.keys())
+matlist = sorted(matlist)
+materials_dict = json.dumps(materials_dict)
 
 def nformat(val, length=11):
     """Format a number with '%g'-like format.
@@ -106,69 +110,87 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
                        plot_config})
 
 #takes form input and verifies that each is present and of the correct format
-#returns a dictionary containing all the inputs converted into float if necessary along with any error message
+#returns a dictionary containing all the inputs converted into float if necessary along with a list of error messages
+#if the input is valid then the output will be {'message': ['Input is valid']}
 #the recipient must then extract the data they need from the dictionary
-def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001'):
+def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001', 
+    page='formula'):
     output = {}
-    message = ''
-
+    message = []
+    message.append('Error(s): ')
+    df = ef = ef2 = sf = af = 0
+    isLog = True
+    
     if not formula:
-        message = 'Formula is a required field'
+        message.append('Formula is a required field.')
     elif not material:
         #verify formula using function
         if not xraydb.validate_formula(formula):
-            message = 'Unable to compute formula'
+            message.append('Unable to compute formula.')
 
     if density:
         try:
             df = float(density)
             if df <= 0:
-                message = 'Density must be a positive number'
+                message.append('Density must be a positive number.')
         except:
-            message = 'Density must be a positive number'
+            message.append('Density must be a positive number.')
     else:
-        message = "Density is a required field"
+        message.append('Density is a required field.')
 
-    try:
-        ef = float(energy1)
-        if ef <= 0:
-            message = 'Energy must be a positive number'
-    except:
-        message = 'Energy must be a positive number'
+    if energy1:
+        try:
+            ef = float(energy1)
+            if ef <= 0:
+                message.append('Energy1 must be a positive number.')
+        except:
+            message.append('Energy1 must be a positive number.')
+    else:
+        ef = 1000.0
 
-    try:
-        ef2 = float(energy2)
-        if ef2 <= 0:
-            message = 'Energy must be a positive number'
-    except:
-        message = 'Energy must be a positive number'
-
-    if ef > ef2:
-        message = 'Energy1 must be less than Energy2'
-    elif ef == ef2:
-        ef2 += 1
+    if energy2:
+        try:
+            ef2 = float(energy2)
+            if ef2 <= 0:
+                message.append('Energy2 must be a positive number.')
+        except:
+            print('hi')
+            message.append('Energy2 must be a positive number.')
+    else:
+        ef2 = 50000.0
 
     sf = float(step)
+
+    if ef > ef2:
+        message.append('Energy1 must be less than Energy2.')
+    elif ef == ef2:
+        ef2 += sf
     
     isLog = True if mode == 'Log' else False
+    
+    if page == 'reflectivity':
+        if angle:
+            try:
+                af = float(angle)
+                if af < 0:
+                    message.append('Angle must be positive.')
+            except:
+                message.append('Angle must be a number.')
+        else:
+            angle = 0.001
 
-    try:
-        af = float(angle)
-    except:
-        message = 'Angle must be a number'
-
-    if not message:
-        message = 'Input is valid'
+    if len(message) == 1:
+        message[0] = 'Input is valid'
     
     output['message'] = message
-    if message == 'Input is valid':
+    if message[0] == 'Input is valid':
         output['df'] = df
         output['ef'] = ef
         output['ef2'] = ef2
         output['sf'] = sf
         output['isLog'] = isLog
         output['af'] = af
-    
+    #print(message)
     return output
 
 
@@ -183,14 +205,16 @@ def element(elem=None):
         edges= xraydb.xray_edges(elem)
         atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem), 'density': xraydb.atomic_density(elem)}
         lines= xraydb.xray_lines(elem)
-    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines)
+    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines, materials_dict=materials_dict)
 
 @app.route('/formula/', methods=['GET', 'POST'])
 @app.route('/formula/<material>', methods=['GET', 'POST'])
 def formula(material=None):
-    message = ''
+    message = ['']
     abslen = absq = energies = []
     mu_plot = output = {}
+    num = errors = 0
+    isLog = True
 
     if request.method == 'POST':
         formula = request.form.get('formula')
@@ -201,10 +225,10 @@ def formula(material=None):
         mode = request.form.get('mode')
 
         #input validation
-        output = validate_input(formula, density, step, energy1, energy2, mode, material)
+        output = validate_input(formula, density, step, energy1, energy2, mode, material, page='formula')
         message = output['message']
 
-    if message == 'Input is valid':
+    if message[0] == 'Input is valid':
         #unpack floats
         df = output['df']
         ef = output['ef']
@@ -223,24 +247,24 @@ def formula(material=None):
         absq = [nformat(x) for x in mu_array]
         abslen = [10000 / float(nformat(x)) for x in mu_array]
 
-        message = ''
+        message = []
+    else:
+        errors = len(message)
 
-    materials_dict = xraydb.materials._read_materials_db()
-    matlist = list(materials_dict.keys())
-    matlist = sorted(matlist)
-    materials_dict = json.dumps(materials_dict)
-
-    return render_template('formulas.html', message=message, abslen=abslen,
+    return render_template('formulas.html', message=message, errors=errors, abslen=abslen,
                            mu_plot=mu_plot,
                            absq=absq, energies=energies, num=num,
                            matlist=matlist, materials_dict=materials_dict, input=input)
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
 def reflectivity(material=None):
-    message = ''
+    message = ['']
     ref_plot = output = {}
     energies = reflectivities = []
-    num = 0
+    num = errors = 0
+    df = ef = ef2 = sf = af = 0
+    isLog = True
+
     if request.method == 'POST':
         #obtain form input and verify
         formula = request.form.get('formula')
@@ -251,11 +275,11 @@ def reflectivity(material=None):
         step = request.form.get('step')
         mode = request.form.get('mode')
 
-        output = validate_input(formula, density, step, energy1, energy2, mode, material, angle)
+        output = validate_input(formula, density, step, energy1, energy2, mode, material, angle, page='reflectivity')
         message = output['message']
 
     #if verification passes, calculate output and pass to render_template
-    if message == 'Input is valid':
+    if message[0] == 'Input is valid':
         df = output['df']
         ef = output['ef']
         ef2 = output['ef2']
@@ -274,19 +298,16 @@ def reflectivity(material=None):
 
 
         if num > 2:
-            ref_plot = make_plot(en_array, ref_array, material, formula, ylog_scale=isLog)
+            ref_plot = make_plot(en_array, ref_array, material, formula, ytitle='Reflectivity', ylog_scale=isLog)
 
         energies = [nformat(x) for x in en_array]
         reflectivities = [nformat(x) for x in ref_array]
 
-        message = ''
+        message = []
+    else:
+        errors = len(message)
 
-    materials_dict = xraydb.materials._read_materials_db()
-    matlist = list(materials_dict.keys())
-    matlist = sorted(matlist)
-    materials_dict = json.dumps(materials_dict)
-
-    return render_template('reflectivity.html', message=message, ref_plot=ref_plot, 
+    return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot, 
                             energies=energies, reflectivities=reflectivities, num=num,
                             matlist=matlist, materials_dict=materials_dict)
 

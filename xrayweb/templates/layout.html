@@ -3,6 +3,32 @@
   <head>
     <title>X-ray Data</title>
     <link rel=stylesheet type=text/css  href="{{ url_for('static', filename='style.css') }}">
+    <script type=text/javascript>
+      var temp = {{materials_dict | tojson}};
+      var mdict = JSON.parse(temp);
+      var keys = Object.keys(mdict);
+      var vals = Object.values(mdict);
+    
+      function toFormula(name) {
+        var i = keys.indexOf(name);
+        if (i != -1) {
+          return vals[i][0];
+        }
+        return "";
+      }
+      function toDensity(name) {
+        var i = keys.indexOf(name);
+        if (i != -1) {
+          return vals[i][1];
+        }
+        return "";
+      }
+      function displayinfo() {
+        var dropdown = document.getElementById('mats');
+        document.getElementById('formula').value=toFormula(dropdown.options[dropdown.selectedIndex].text);
+        document.getElementById('density').value=toDensity(dropdown.options[dropdown.selectedIndex].text);
+      }
+    </script>
   </head>
   <body>
 

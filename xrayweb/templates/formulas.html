@@ -1,53 +1,29 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<script type=text/javascript>
-  var temp = {{materials_dict | tojson}};
-  var mdict = JSON.parse(temp);
-  var keys = Object.keys(mdict);
-  var vals = Object.values(mdict);
-
-  function toFormula(name) {
-    var i = keys.indexOf(name);
-    if (i != -1) {
-      return vals[i][0];
-    }
-    return "";
-  }
-  function toDensity(name) {
-    var i = keys.indexOf(name);
-    if (i != -1) {
-      return vals[i][1];
-    }
-    return "";
-  }
-  function displayinfo() {
-    var dropdown = document.getElementById('mats');
-    document.getElementById('formula').value=toFormula(dropdown.options[dropdown.selectedIndex].text);
-    document.getElementById('density').value=toDensity(dropdown.options[dropdown.selectedIndex].text);
-  }
-</script>
 <p><div class=subtitle>Enter Chemical Formula for Results</div></p>
 <div class=body>
 
-  {% if message %}
-    <p>{{message}}</p>
+  {% if errors %}
+    {% for e in range(errors) %}
+      <p>{{message[e]}}</p>
+    {% endfor %}
   {% endif %}
 
   <form action="{{url_for('formula')}}" method="post">
-    <p>
-      <label for="mats">Choose a preset material:</label>
-      <select name="mats" id="mats"
-        onchange="displayinfo()">
-        <option></option>
-        {% for mat in matlist %}
-        <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
-        {% endfor %}
-      </select>
-    </p>
+    
+    <label for="mats">Choose a preset material:</label>
+    <select name="mats" id="mats"
+      onchange="displayinfo()">
+      <option></option>
+      {% for mat in matlist %}
+      <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
+      {% endfor %}
+    </select>
+    &nbsp;
 
     <label for="formula">Formula:</label>
-    <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"><br><br>
+    <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"> &nbsp;
     
     <label for="density">Density:</label>
     <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
@@ -67,7 +43,7 @@
       <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
       <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
       <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-    </select> &nbsp;
+    </select> <br><br>
 
     <label for="mode">Plot Mode:</label>
     <select name="mode" id="mode">
