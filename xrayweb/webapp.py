@@ -106,6 +106,8 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
                        plot_config})
 
 #takes form input and verifies that each is present and of the correct format
+#returns a dictionary containing all the inputs converted into float if necessary along with any error message
+#the recipient must then extract the data they need from the dictionary
 def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001'):
     output = {}
     message = ''
@@ -186,16 +188,10 @@ def element(elem=None):
 @app.route('/formula/', methods=['GET', 'POST'])
 @app.route('/formula/<material>', methods=['GET', 'POST'])
 def formula(material=None):
-    #env.filters['b64decode'] = base64.b64decode
-    formula = message = ''
-    abslen = 0.0
-    absq = 0.0
-    energies = 0.0
-    num = 0.0
-    df = ef = ef2 = sf = 0.0
-    energy1 = energy2 = step = None
+    message = ''
+    abslen = absq = energies = []
     mu_plot = output = {}
-    isLog = True
+
     if request.method == 'POST':
         formula = request.form.get('formula')
         density = request.form.get('density')
@@ -216,60 +212,23 @@ def formula(material=None):
         sf = output['sf']
         isLog = output['isLog']
 
-        energies = []
-        absq = []
-        abslen = []
-
-        i = ef
-        while i < ef2:
-            energies.append(i)
-            val = xraydb.material_mu(formula, i, df)
-            absq.append(val)
-            abslen.append(10000 / val)
-            i += sf
-        energies.append(ef2)
-        val = xraydb.material_mu(formula, ef2, df)
-        absq.append(val)
-        abslen.append(10000 / val)
-        num = len(energies) #this represents the number of energies and also corresponds to the number of absorption quantities/lengths
-        energies = [nformat(x) for x in energies]
-        absq = [nformat(x) for x in absq]
-        abslen = [nformat(x) for x in abslen]
-
         #make plot
         en_array = np.arange(ef, ef2, sf)
-        mu_array = xraydb.material_mu(formula, en_array, density=float(density))
+        num = en_array.size
+        mu_array = xraydb.material_mu(formula, en_array, density=df)
+        if num > 2:
+            mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=isLog)
 
-        mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=isLog)
+        energies = [nformat(x) for x in en_array]
+        absq = [nformat(x) for x in mu_array]
+        abslen = [10000 / float(nformat(x)) for x in mu_array]
 
         message = ''
-
 
     materials_dict = xraydb.materials._read_materials_db()
     matlist = list(materials_dict.keys())
     matlist = sorted(matlist)
     materials_dict = json.dumps(materials_dict)
-
-
-
-    #for name, data in materials_dict.items():
-        #print(name, data)
-    #print('Formula: ' + formula + ' Density: ' + density + ' Energy: ' + energy)
-    """
-    import matplotlib.pyplot as plt, mpld3
-    fig = Figure()
-    ax = fig.subplots()
-    ax.plot([1, 2, 3, 4], [1, 4, 2, 3])
-    buf = BytesIO()
-    fig.savefig(buf, format="png")
-    data = base64.b64encode(buf.getbuffer()).decode("ascii")
-    pstr = f"<img src='data:image/png;base64,{data}'/>"
-    print(env.filters['b64decode'])
-    with open("plt.html", "w") as file:
-        file.write(pstr)
-    """
-
-
 
     return render_template('formulas.html', message=message, abslen=abslen,
                            mu_plot=mu_plot,
@@ -303,9 +262,6 @@ def reflectivity(material=None):
         sf = output['sf']
         isLog = output['isLog']
         af = output['af']
-
-        #compute reflectivity using DB function
-        #plot will be reflectivity vs energy
         
         en_array = np.arange(ef, ef2, sf)
         num = en_array.size
@@ -324,7 +280,6 @@ def reflectivity(material=None):
         reflectivities = [nformat(x) for x in ref_array]
 
         message = ''
-
 
     materials_dict = xraydb.materials._read_materials_db()
     matlist = list(materials_dict.keys())
