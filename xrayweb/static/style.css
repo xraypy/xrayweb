@@ -10,6 +10,10 @@ h2         {font-size: 1.2em; }
 .body a.active    {color: #C61;  background-color: #FDFDFA;}
 .body a:hover     {color: #C61;  background-color: #F0F0F6;}
 
+table td, table td * {
+    vertical-align: top;
+}
+
 .colSpacing {padding:0 5px;}
 
 .flex-container {display: flex;}

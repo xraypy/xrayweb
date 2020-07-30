@@ -8,7 +8,7 @@
       var mdict = JSON.parse(temp);
       var keys = Object.keys(mdict);
       var vals = Object.values(mdict);
-    
+
       function toFormula(name) {
         var i = keys.indexOf(name);
         if (i != -1) {
@@ -23,10 +23,10 @@
         }
         return "";
       }
-      function displayinfo() {
-        var dropdown = document.getElementById('mats');
-        document.getElementById('formula').value=toFormula(dropdown.options[dropdown.selectedIndex].text);
-        document.getElementById('density').value=toDensity(dropdown.options[dropdown.selectedIndex].text);
+      function displayinfo(mats, formula, density) {
+        var dropdown = document.getElementById(mats);
+        document.getElementById(formula).value=toFormula(dropdown.options[dropdown.selectedIndex].text);
+        document.getElementById(density).value=toDensity(dropdown.options[dropdown.selectedIndex].text);
       }
     </script>
   </head>
@@ -42,8 +42,9 @@
 
   <ul class=topmenu>
     <li>   <a href="{{url_for('element')}}"> Elements </a> </li>
-    <li>   <a href="{{url_for('formula')}}"> Formulas </a> </li> 
-    <li>   <a href="{{url_for('reflectivity')}}"> Mirror Reflectivity </a> </li> 
+    <li>   <a href="{{url_for('formula')}}"> Formulas </a> </li>
+    <li>   <a href="{{url_for('reflectivity')}}"> Mirror Reflectivity </a> </li>
     </ul>
-{% block body %}
-{% endblock %}
+  {% block body %}
+
+  {% endblock %}

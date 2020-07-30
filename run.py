@@ -7,3 +7,4 @@ from xrayweb import app
 
 app.jinja_env.cache = {}
 app.run(debug=True, port=4966)
+app.config['DOWNLOAD_FOLDER'] = '/tmp/'

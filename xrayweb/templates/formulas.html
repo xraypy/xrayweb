@@ -10,77 +10,80 @@
     {% endfor %}
   {% endif %}
 
-  <form action="{{url_for('formula')}}" method="post">
-    
-    <label for="mats">Choose a preset material:</label>
-    <select name="mats" id="mats"
-      onchange="displayinfo()">
-      <option></option>
-      {% for mat in matlist %}
-      <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
-      {% endfor %}
-    </select>
-    &nbsp;
+    <form action="{{url_for('formula')}}" method="post">
 
-    <label for="formula">Formula:</label>
-    <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"> &nbsp;
-    
-    <label for="density">Density:</label>
-    <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
+   <table cellpadding=2 border=0>
+       <tr>
+	 <td><label for="formula">Chemical Formula:</label></td>
 
-    <label for="energy1">Energy 1:</label>
-    <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
+         <td><input style="width: 180px;" type="text" id="formula"
+		    name="formula" value="{{ request.form['formula'] }}">
+	 </td>
+	 <td><label for="density">Density (g/cm^3):</label></td>
+	 <td><input style="width: 100px;" type="text" id="density"
+		    name="density" value="{{ request.form['density'] }}">
+	 </td>
+	 <td><label for="mats">Select known material:</label></td>
+	 <td>
+           <select name="mats" id="mats" style="width: 150px;"
+		   onchange="displayinfo('mats', 'formula', 'density')">
+            <option></option>
+            {% for mat in matlist %}
+            <option value="{{mat}}"
+		    {% if request.form['mats'] == mat %} selected {% endif %}>
+	      {{mat}}</option>
+            {% endfor %}
+        </select>
+       </td></tr>
 
-    <label for="energy2">Energy 2:</label>
-    <input type="text" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
+       <tr>
+	 <td> <label for="energy1">Energy Range (eV):</label></td>
+	 <td> <input style="width: 80px;" type="text" id="energy1" name="energy1"
+		     value="{{ request.form['energy1'] }}">
+	  <label for="energy2">:</label>
+	  <input style="width: 80px;" type="text" id="energy2" name="energy2"
+		 value="{{ request.form['energy2'] }}"> </td>
+	 <td> <label for="step"> Energy Step (eV):</label></td>
+	 <td>
+           <select style="width: 100px;" name="step" id="step">
+             <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
+             <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
+             <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
+             <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
+             <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
+             <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
+             <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+           </select>
+	 </td>
 
-    <label for="step">Energy Step:</label>
-    <select name="step" id="step">
-      <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
-      <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
-      <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
-      <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
-      <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
-      <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
-      <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-    </select> <br><br>
+	 <td> <label for="mode">Plot Mode:</label> </td>
+	 <td>
+           <select style="width: 100px;" name="mode" id="mode">
+             <option value="Log"    {% if request.form['mode'] == "Log" %}
+		     selected {% endif %}>  Log</option>
+             <option value="Linear" {% if request.form['mode'] == "Linear" %}
+		     selected {% endif %}>Linear</option>
+           </select>
+	 </td>
+       </tr>
 
-    <label for="mode">Plot Mode:</label>
-    <select name="mode" id="mode">
-      <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
-      <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
-    </select>
-    <br><br>
-    <input type="submit" value="Submit">
+       <tr>
+	 <td> <label for="thickness">Thickness (mm):</label></td>
+	 <td> <input style="width: 80px;" type="text" id="thickness" name="thickness"
+		     value="{{ request.form['thickness'] }}">
+	 </td>
+       </tr>
+
+       <tr><td>  <input type="submit" value="Submit"></td></tr>
+	</table>
+
   </form>
   <p>
   </p>
 
   <div class="flex-container">
-    <div class="flex-child magenta">
-      {% if num %}
-        <table>
-          <caption><b>Results Table:</b></caption>
-          <tr>
-            <th>Energy &nbsp;</th>
-            <th>Absorption Quantity &nbsp;</th>
-            <th>Absorption Length &nbsp;</th>
-          </tr>
-
-          {% for x in range(num) %}
-          <tr>
-            <td>{{energies[x]}}</td>
-            <td>{{absq[x]}}</td>
-            <td>{{abslen[x]}}</td>
-          </tr>
-          {% endfor %}
-        </table>
-      {% endif %}
-    </div>
-
     <div class="flex-child green">
       {% if mu_plot %}
-      Plot of mu(E):
 
       <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
         <div id="mu_plot">
@@ -91,6 +94,26 @@
         </div>
       {% endif %}
     </div>
+
+    <div class="flex-child magenta">
+      {% if num %}
+        <table>
+          <caption><b>Results Table:</b></caption>
+          <tr>
+            <th>Energy (eV) &nbsp;</th>
+            <th>1/e length (mm) &nbsp;</th>
+          </tr>
+
+          {% for x in range(num) %}
+          <tr>
+            <td>{{energies[x]}}</td>
+            <td>{{abslen[x]}}</td>
+          </tr>
+          {% endfor %}
+        </table>
+      {% endif %}
+    </div>
+
   </div>
 </div>
 

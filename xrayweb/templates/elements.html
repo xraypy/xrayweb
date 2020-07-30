@@ -4,44 +4,41 @@
 <p> <div class=subtitle>Select Element for X-ray Properties </div></p>
 
 <div class=body>
-    {% include "periodic_table.html" %}	
+    {% include "periodic_table.html" %}
 
     {% if elem %}
 
     <hr>
-     X-ray edges for {{elem}}
-    
      <table>
            <tr>
-                  <th >Elemental Data</th>
-                 <th >X-ray edges for {{elem}}</th>
-                 <th >X-ray lines for {{elem}}</th>
+             <th >Elemental Data for {{elem}}</th>
+             <th >X-ray edges for {{elem}}</th>
+             <th >X-ray lines for {{elem}}</th>
            </tr>
-           
-           <tr>
-                  <td><table>
-                        <tr>
-                              <th> &nbsp; Number </th>
-                              <th> &nbsp; Mass (AMU) </th>
-                              <th> &nbsp; Density (gm/cm^3) </th>
-                        </tr>
 
-                        <tr>
-                              <td> &nbsp; {{atomic.n}}</td>
-                              <td> &nbsp; {{atomic.mass}}</td>
-                              <td> &nbsp; {{atomic.density}}</td>
-                        </tr>
-                  </table></td>
+           <tr> <td><table cellspacing=5 cellpadding=2>
+                      <tr>
+                        <th> &nbsp; Number </th>
+                        <th> &nbsp; Mass (AMU) </th>
+                        <th> &nbsp; Density (gm/cm^3) </th>
+                      </tr>
 
-                 <td><table cellspacing=5 cellpadding=2>
+                      <tr>
+                        <td> &nbsp; {{atomic.n}}</td>
+                        <td> &nbsp; {{atomic.mass}}</td>
+                        <td> &nbsp; {{atomic.density}}</td>
+                      </tr>
+             </table></td>
+
+             <td><table cellspacing=5 cellpadding=2>
                   <tr>
                   <th >   &nbsp; Edge &nbsp;</th>
                   <th >  &nbsp; Energy (eV) &nbsp;</th>
                   <th >  &nbsp; Fluorescence Yield</th>
                   <th >  &nbsp; Edge Jump</th>
                   </tr>
-                  
-                  
+
+
                   {% for name ,data in edges.items() %}
                   <tr class={{ loop.cycle('odd', 'even') }}>
                   <td> &nbsp; &nbsp; {{name}} </td>
@@ -60,8 +57,8 @@
                   <th >  &nbsp; Initial Level</th>
                   <th >  &nbsp; Final Level</th>
                   </tr>
-                  
-                  
+
+
                   {% for name ,data in lines.items() %}
                   <tr class={{ loop.cycle('odd', 'even') }}>
                   <td> &nbsp; &nbsp; {{name}} </td>
