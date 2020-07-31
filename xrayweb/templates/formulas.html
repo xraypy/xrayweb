@@ -81,21 +81,22 @@
   <p>
   </p>
 
+
+  {% if mu_plot %}
+  <a href="{{datalink}}"> download data file</a>   <br>
+
   <div class="flex-container">
     <div class="flex-child green">
-      {% if mu_plot %}
-      <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
         <div id="mu_plot">
           <script  type="text/javascript">
             var graph = {{mu_plot | safe}};
             Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
           </script>
         </div>
-      {% endif %}
     </div>
 
     <div class="flex-child green">
-      {% if mu_plot %}
       <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
         <div id="atten_plot">
           <script  type="text/javascript">
@@ -103,27 +104,9 @@
             Plotly.plot('atten_plot',   graph.data,   graph.layout || {},  config=graph.config);
           </script>
         </div>
-      {% endif %}
     </div>
+    {% endif %}
 
-    <div class="flex-child magenta">
-      {% if num %}
-        <table>
-          <caption><b>Results Table:</b></caption>
-          <tr>
-            <th>Energy (eV) &nbsp;</th>
-            <th>1/e length (mm) &nbsp;</th>
-          </tr>
-
-          {% for x in range(num) %}
-          <tr>
-            <td>{{energies[x]}}</td>
-            <td>{{abslen[x]}}</td>
-          </tr>
-          {% endfor %}
-        </table>
-      {% endif %}
-    </div>
 
   </div>
 </div>

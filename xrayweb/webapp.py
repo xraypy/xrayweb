@@ -74,16 +74,26 @@ def nformat(val, length=11):
     return fmt.format(val)[:length]
 
 def make_plot(x, y, material_name, formula_name, ytitle='mu',
-                xlog_scale=False, ylog_scale=False):
+              xlog_scale=False, ylog_scale=False, y2=None,
+              y1label='data', y2label='data2', yrange=None):
     """
     build a plotly-style JSON plot
     """
     data = [{'x': x.tolist(),
              'y': y.tolist(),
              'type': 'scatter',
-             'name': 'data',
+             'name': y1label,
              'line': {'width': 3},
              'hoverinfo': 'skip'}]
+    if y2 is not None:
+        data.append({'x': x.tolist(),
+                     'y': y2.tolist(),
+                     'type': 'scatter',
+                     'name': y2label,
+                     'line': {'width': 3},
+                     'hoverinfo': 'skip'})
+
+
     title = formula_name
     if material_name not in ('', 'None', None):
         title = material_name
@@ -91,12 +101,22 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
         title = ''
 
     xtype = 'linear'
-    if xlog_scale:    xtype = 'log'
+    if xlog_scale:
+        xtype = 'log'
     ytype = 'linear'
-    if ylog_scale:   ytype = 'log'
+    yrange = None
+    if ylog_scale:
+        ytype = 'log'
+        ymax = np.log10(y).max()
+        ymin = max(np.log10(y).min(), -9)
+        if y2 is not None:
+            ymin = min(np.log10(y2).min(), ymin)
+            ymax = max(np.log10(y2).max(), ymax)
+        yrange = (ymin-0.5, ymax+0.5)
+
     layout = {'title': title,
-              'height': 450,
-              'width': 650,
+              'height': 400,
+              'width': 600,
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': 'Energy (eV)'},
                         'type': xtype,
@@ -104,7 +124,12 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
               'yaxis': {'title': {'text': ytitle},
                         'zeroline': False,
                         'type': ytype,
-                        'tickformat': '.2g'}    }
+                        'range': yrange,
+                        'tickformat': '.2g'}}
+
+    if yrange is not None:
+        layout['yaxis']['range'] = yrange
+
     plot_config = {'displaylogo': False,
                    'modeBarButtonsToRemove': [ 'hoverClosestCartesian',
                                                'hoverCompareCartesian',
@@ -113,10 +138,10 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     return json.dumps({'data': data, 'layout': layout, 'config':
                        plot_config})
 
-#takes form input and verifies that each is present and of the correct format
-#returns a dictionary containing all the inputs converted into float if necessary along with a list of error messages
-#if the input is valid then the output will be {'message': ['Input is valid']}
-#the recipient must then extract the data they need from the dictionary
+# takes form input and verifies that each is present and of the correct format
+# returns a dictionary containing all the inputs converted into float if necessary along with a list of error messages
+# if the input is valid then the output will be {'message': ['Input is valid']}
+# the recipient must then extract the data they need from the dictionary
 def validate_input(formula, density, step,
                    energy1='1000', energy2='50000', mode='Log',
                    material=None, angle='0.001', page='formula'):
@@ -239,8 +264,8 @@ def formula(material=None):
         request.form = {'mats': 'silicon',
                         'formula': materials_['silicon'].formula,
                         'density': materials_['silicon'].density,
-                        'energy1': 1000,
-                        'energy2': 50000,
+                        'energy1':  1000,
+                        'energy2': 51000,
                         'step': '100',
                         'thickness': 1.00,
                         'mode': 'Linear'}
@@ -257,24 +282,34 @@ def formula(material=None):
         en_array = np.arange(ef, ef2, sf)
         num = en_array.size
         mu_array = xraydb.material_mu(formula, en_array, density=df)
+        t = float(thickness)
+        trans = np.exp(-0.1*t*mu_array)
+        atten = 1 - trans
+
         if num > 2:
+
             mu_plot = make_plot(en_array, 10/mu_array, material, formula,
                                 ylog_scale=isLog, ytitle='1/e length (mm)')
-            t = float(thickness)
-            atten_plot = make_plot(en_array, np.exp(-0.1*t*mu_array),
+            atten_plot = make_plot(en_array, trans,
                                    material, "%.3f mm %s" % (t, formula),
                                    ylog_scale=isLog,
-                                   ytitle='transmitted fraction')
-
+                                   y2=atten, yrange=[1.e-8, 1.05],
+                                   ytitle='transmitted/attenuated fraction',
+                                   y1label='transmitted',
+                                   y2label='attenuated')
 
         energies = ["%.1f" % x for x in en_array]
         abslen = [nformat(10/float(x), length=12) for x in mu_array]
+        atten  = [nformat(x, length=12) for x in atten]
+        trans  = [nformat(x, length=12) for x in trans]
         message = []
     else:
         errors = len(message)
 
     return render_template('formulas.html', message=message, errors=errors,
-                           abslen=abslen, energies=energies, num=num,
+                           datalink='foo',
+                           # abslen=abslen, energies=energies, num=num,
+                           # atten=atten, trans=trans,
                            mu_plot=mu_plot, atten_plot=atten_plot,
                            matlist=matlist,
                            materials_dict=materials_dict, input=input)
