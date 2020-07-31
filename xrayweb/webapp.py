@@ -95,8 +95,8 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     ytype = 'linear'
     if ylog_scale:   ytype = 'log'
     layout = {'title': title,
-              'height': 500,
-              'width': 700,
+              'height': 450,
+              'width': 650,
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': 'Energy (eV)'},
                         'type': xtype,
@@ -208,16 +208,18 @@ def element(elem=None):
     edges = atomic = lines = {}
     if elem is not None:
         edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem), 'density': xraydb.atomic_density(elem)}
+        atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem),
+                 'density': xraydb.atomic_density(elem)}
         lines= xraydb.xray_lines(elem)
-    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines, materials_dict=materials_dict)
+    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic,
+                           lines=lines, materials_dict=materials_dict)
 
 @app.route('/formula/', methods=['GET', 'POST'])
 @app.route('/formula/<material>', methods=['GET', 'POST'])
 def formula(material=None):
     message = ['']
     abslen = absq = energies = []
-    mu_plot = output = {}
+    mu_plot = atten_plot = output = {}
     num = errors = 0
     isLog = True
 
@@ -240,7 +242,7 @@ def formula(material=None):
                         'energy1': 1000,
                         'energy2': 50000,
                         'step': '100',
-                        'thickness': 10,
+                        'thickness': 1.00,
                         'mode': 'Linear'}
 
     if message[0] == 'Input is valid':
@@ -258,6 +260,12 @@ def formula(material=None):
         if num > 2:
             mu_plot = make_plot(en_array, 10/mu_array, material, formula,
                                 ylog_scale=isLog, ytitle='1/e length (mm)')
+            t = float(thickness)
+            atten_plot = make_plot(en_array, np.exp(-0.1*t*mu_array),
+                                   material, "%.3f mm %s" % (t, formula),
+                                   ylog_scale=isLog,
+                                   ytitle='transmitted fraction')
+
 
         energies = ["%.1f" % x for x in en_array]
         abslen = [nformat(10/float(x), length=12) for x in mu_array]
@@ -267,7 +275,8 @@ def formula(material=None):
 
     return render_template('formulas.html', message=message, errors=errors,
                            abslen=abslen, energies=energies, num=num,
-                           mu_plot=mu_plot, matlist=matlist,
+                           mu_plot=mu_plot, atten_plot=atten_plot,
+                           matlist=matlist,
                            materials_dict=materials_dict, input=input)
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])

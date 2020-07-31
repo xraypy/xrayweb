@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<p><div class=subtitle>Enter Chemical Formula for Results</div></p>
+<p><div class=subtitle>X-ray Attenuation of Materials: Enter Chemical Formula</div></p>
 <div class=body>
 
   {% if errors %}
@@ -84,12 +84,23 @@
   <div class="flex-container">
     <div class="flex-child green">
       {% if mu_plot %}
-
       <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
         <div id="mu_plot">
           <script  type="text/javascript">
             var graph = {{mu_plot | safe}};
             Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
+          </script>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="flex-child green">
+      {% if mu_plot %}
+      <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+        <div id="atten_plot">
+          <script  type="text/javascript">
+            var graph = {{atten_plot | safe}};
+            Plotly.plot('atten_plot',   graph.data,   graph.layout || {},  config=graph.config);
           </script>
         </div>
       {% endif %}
