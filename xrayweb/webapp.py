@@ -1,21 +1,14 @@
 #!/usr/bin/env python
-import base64
-import jinja2
-from io import BytesIO
+import os
+import time
 import numpy as np
 import math
 import xraydb
 
 from flask import Flask, redirect, url_for, render_template, json
-from flask import request, session
+from flask import Response, request, session, send_from_directory
 
 import plotly.graph_objects as go
-
-from matplotlib.figure import Figure
-
-# from jinja2_base64_filters import jinja2_base64_filters
-
-env = jinja2.Environment()
 
 materials_ = xraydb.materials._read_materials_db()
 matlist = sorted(list(materials_.keys()))
@@ -25,6 +18,30 @@ mirror_list = ('None', 'silicon', 'quartz', 'zerodur', 'ule glass',
                'iridium', 'platinum', 'gold')
 
 materials_dict = json.dumps(materials_)
+
+from random import seed, randrange
+from string import printable
+
+def random_string(n):
+    """  random_string(n)
+    generates a random string of length n, that will match:
+       [a-z][a-z0-9](n-1)
+    """
+    seed(time.time())
+    s = [printable[randrange(0,36)] for i in range(n-1)]
+    s.insert(0, printable[randrange(10,36)])
+    return ''.join(s)
+
+def make_asciifile(header, array_names, arrays):
+    buff = ['# %s' % l for l in header]
+    buff.append("#---------------------")
+    buff.append("# %s" % ' '.join(array_names))
+    for i in range(len(arrays[0])):
+        row = [a[i] for a in arrays]
+        l = [nformat(x, length=12) for x in row]
+        buff.append('  '.join(l))
+    buff.append('')
+    return '\n'.join(buff)
 
 def nformat(val, length=11):
     """Format a number with '%g'-like format.
@@ -104,7 +121,7 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     if xlog_scale:
         xtype = 'log'
     ytype = 'linear'
-    yrange = None
+
     if ylog_scale:
         ytype = 'log'
         ymax = np.log10(y).max()
@@ -112,11 +129,12 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
         if y2 is not None:
             ymin = min(np.log10(y2).min(), ymin)
             ymax = max(np.log10(y2).max(), ymax)
-        yrange = (ymin-0.5, ymax+0.5)
+        if yrange is None:
+            yrange = (ymin-0.5, ymax+0.5)
 
     layout = {'title': title,
-              'height': 400,
-              'width': 600,
+              'height': 450,
+              'width': 550,
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': 'Energy (eV)'},
                         'type': xtype,
@@ -227,6 +245,61 @@ def validate_input(formula, density, step,
 app = Flask('xrayweb', static_folder='static')
 app.config.from_object(__name__)
 
+@app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<estep>')
+def attendata(formula, rho, t, e1, e2, estep):
+    en_array = np.arange(float(e1), float(e2), float(estep))
+    rho = float(rho)
+    mu_array = xraydb.material_mu(formula, en_array, density=rho)
+    t = float(t)
+    trans = np.exp(-0.1*t*mu_array)
+    atten = 1 - trans
+
+    header = (' X-ray attenuation data from xrayweb  %s ' % time.ctime(),
+              ' Material.formula   : %s ' % formula,
+              ' Material.density   : %.3f gr/cm^3 ' % rho,
+              ' Material.thickness : %.3f mm ' % t,
+              ' Column.1: energy (eV)',
+              ' Column.2: atten_length (mm)' ,
+              ' Column.3: trans_fraction',
+              ' Column.4: atten_fraction')
+
+    arr_names = ('energy       ', 'atten_length ',
+                 'trans_fract  ', 'atten_fract  ')
+
+    txt = make_asciifile(header, arr_names,
+                         (en_array, 10/mu_array, trans, atten))
+
+    fname = 'xrayweb_atten_%s_%s.txt' % (formula,
+                                         time.strftime('%Y%h%d_%H%M%S'))
+    return Response(txt, mimetype='text/plain',
+                    headers={"Content-Disposition":
+                             "attachment;filename=%s" % fname})
+
+@app.route('/mirrordata/<formula>/<rho>/<angle>/<e1>/<e2>/<estep>')
+def mirrordata(formula, rho, angle, e1, e2, estep):
+    en_array = np.arange(float(e1), float(e2), float(estep))
+    angle = float(angle)/1000.0
+    rho   = float(rho)
+    reflectivity = xraydb.mirror_reflectivity(formula, angle, en_array, rho)
+
+    header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
+              ' Material.formula   : %s ' % formula,
+              ' Material.density   : %.3f gr/cm^3 ' % rho,
+              ' Material.angle     : %.3f mrad ' % angle,
+              ' Column.1: energy (eV)',
+              ' Column.2: reflectivity')
+
+    arr_names = ('energy       ', 'reflectivity ')
+
+    txt = make_asciifile(header, arr_names,
+                         (en_array, reflectivity))
+
+    fname = 'xrayweb_mirror_%s_%s.txt' % (formula,
+                                          time.strftime('%Y%h%d_%H%M%S'))
+    return Response(txt, mimetype='text/plain',
+                    headers={"Content-Disposition":
+                             "attachment;filename=%s" % fname})
+
 @app.route('/element/', methods=['GET', 'POST'])
 @app.route('/element/<elem>',  methods=['GET', 'POST'])
 def element(elem=None):
@@ -247,9 +320,10 @@ def formula(material=None):
     mu_plot = atten_plot = output = {}
     num = errors = 0
     isLog = True
-
+    datalink = None
     if request.method == 'POST':
         formula = request.form.get('formula')
+        matname = request.form.get('matname')
         density = request.form.get('density')
         energy1 = request.form.get('energy1')
         energy2 = request.form.get('energy2')
@@ -293,25 +367,18 @@ def formula(material=None):
             atten_plot = make_plot(en_array, trans,
                                    material, "%.3f mm %s" % (t, formula),
                                    ylog_scale=isLog,
-                                   y2=atten, yrange=[1.e-8, 1.05],
+                                   y2=atten,
+                                   yrange=[1.e-8, 1.05],
                                    ytitle='transmitted/attenuated fraction',
                                    y1label='transmitted',
                                    y2label='attenuated')
-
-        energies = ["%.1f" % x for x in en_array]
-        abslen = [nformat(10/float(x), length=12) for x in mu_array]
-        atten  = [nformat(x, length=12) for x in atten]
-        trans  = [nformat(x, length=12) for x in trans]
         message = []
     else:
         errors = len(message)
 
     return render_template('formulas.html', message=message, errors=errors,
-                           datalink='foo',
-                           # abslen=abslen, energies=energies, num=num,
-                           # atten=atten, trans=trans,
-                           mu_plot=mu_plot, atten_plot=atten_plot,
-                           matlist=matlist,
+                           datalink=datalink, mu_plot=mu_plot,
+                           atten_plot=atten_plot, matlist=matlist,
                            materials_dict=materials_dict, input=input)
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
@@ -329,10 +396,10 @@ def reflectivity(material=None):
         angle1 = request.form.get('angle1', '0')
         material1 = request.form.get('mats1', 'silicon')
 
-        formula2 = request.form.get('formula2', 'None')
-        density2 = request.form.get('density2', '')
-        angle2 = request.form.get('angle2', '0')
-        material2 = request.form.get('mats2', 'None')
+#         formula2 = request.form.get('formula2', 'None')
+#         density2 = request.form.get('density2', '')
+#         angle2 = request.form.get('angle2', '0')
+#         material2 = request.form.get('mats2', 'None')
 
         energy1 = request.form.get('energy1', '1000')
         energy2 = request.form.get('energy2', '50000')
@@ -344,9 +411,9 @@ def reflectivity(material=None):
                                  page='reflectivity')
 
         message = output1['message']
-        if material2 is not 'None':
-            output2 = validate_input(formula2, density2, estep, energy1, energy2, mode,
-                                     material2, angle2, page='reflectivity')
+        # if material2 is not 'None':
+        #     output2 = validate_input(formula2, density2, estep, energy1, energy2, mode,
+        #                              material2, angle2, page='reflectivity')
     else:
         request.form = {'mats1': 'silicon',
                         'formula1': materials_['silicon'].formula,
@@ -380,19 +447,22 @@ def reflectivity(material=None):
         ref_array = xraydb.mirror_reflectivity(formula1, af, en_array, df)
 
         if num > 2:
-            ref_plot = make_plot(en_array, ref_array, material, formula1,
+            title = "%s, %s mrad" % (formula1, angle1)
+            ref_plot = make_plot(en_array, ref_array, title, formula1,
                                  ytitle='Reflectivity', ylog_scale=isLog)
 
         energies = [nformat(x) for x in en_array]
         reflectivities = [nformat(x) for x in ref_array]
-
         message = []
     else:
         errors = len(message)
 
-    return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot,
-                           energies=energies, reflectivities=reflectivities, num=num,
-                           matlist=mirror_list, materials_dict=materials_dict)
+    return render_template('reflectivity.html', message=message,
+                           errors=errors, ref_plot=ref_plot,
+                           energies=energies,
+                           reflectivities=reflectivities, num=num,
+                           matlist=mirror_list,
+                           materials_dict=materials_dict)
 
 @app.route('/crystal/', methods=['GET', 'POST'])
 def crystal():
