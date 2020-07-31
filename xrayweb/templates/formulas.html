@@ -38,14 +38,17 @@
 
        <tr>
 	 <td> <label for="energy1">Energy Range (eV):</label></td>
-	 <td> <input style="width: 80px;" type="text" id="energy1" name="energy1"
-		     value="{{ request.form['energy1'] }}">
+	 <td> <input style="width: 80px;" type="number" id="energy1" name="energy1"
+		     step="50" value="{{ request.form['energy1'] }}">
 	  <label for="energy2">:</label>
-	  <input style="width: 80px;" type="text" id="energy2" name="energy2"
-		 value="{{ request.form['energy2'] }}"> </td>
+	  <input style="width: 80px;" type="number" id="energy2" name="energy2"
+		 step="50" value="{{ request.form['energy2'] }}"> </td>
 	 <td> <label for="step"> Energy Step (eV):</label></td>
 	 <td>
            <select style="width: 100px;" name="step" id="step">
+             <option value="1" {% if request.form['step'] == "1" %} selected {% endif %}>1</option>
+             <option value="2" {% if request.form['step'] == "2" %} selected {% endif %}>2</option>
+             <option value="5" {% if request.form['step'] == "5" %} selected {% endif %}>5</option>
              <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
              <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
              <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
@@ -69,8 +72,8 @@
 
        <tr>
 	 <td> <label for="thickness">Thickness (mm):</label></td>
-	 <td> <input style="width: 80px;" type="text" id="thickness" name="thickness"
-		     value="{{ request.form['thickness'] }}">
+	 <td> <input style="width: 80px;" type="number" id="thickness" name="thickness"
+		     step="0.01" value="{{ request.form['thickness'] }}">
 	 </td>
        </tr>
 
@@ -83,7 +86,14 @@
 
 
   {% if mu_plot %}
-  <a href="{{datalink}}"> download data file</a>   <br>
+
+   <a href="{{url_for('attendata',
+	   formula=request.form['formula'],
+	   rho=request.form['density'],
+	   t=request.form['thickness'],
+	   e1=request.form['energy1'],
+	   e2=request.form['energy2'],
+	   estep=request.form['step'])}}"> download data file</a><br>
 
   <div class="flex-container">
     <div class="flex-child green">
