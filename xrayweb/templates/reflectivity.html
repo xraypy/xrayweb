@@ -22,13 +22,23 @@
         &nbsp;
     
         <label for="formula">Formula:</label>
-        <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}">&nbsp;
+        <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"> &nbsp;
         
         <label for="density">Density:</label>
         <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
 
         <label for="angle">Angle (Radians):</label>
-        <input type="text" id="angle" name="angle" value="{{ request.form['angle'] }}"><br><br>
+        <input type="text" id="angle" name="angle" value="{{ request.form['angle'] }}"> &nbsp;
+        
+        <label for="roughness">Roughness (Å):</label>
+        <input type="text" id="roughness" name="roughness" value="{{ request.form['roughness'] }}"> &nbsp;
+
+        <label for="polarization">Polarization:</label>
+        <select name="polarization" id="polarization">
+          <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
+          <option value="p" {% if request.form['polarization'] == "p" %} selected {% endif %}>p</option>
+        </select> 
+        <br><br>
     
         <label for="energy1">Energy 1:</label>
         <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
@@ -47,7 +57,7 @@
         <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
         </select> &nbsp;
     
-        <label for="mode">Plot Mode:</label>
+        <label for="mode">Plot Scaling:</label>
         <select name="mode" id="mode">
         <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
         <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
@@ -69,7 +79,7 @@
               </tr>
     
               {% for x in range(num) %}
-              <tr>
+              <tr class={{ loop.cycle('odd', 'even') }}>
                 <td>{{energies[x]}}</td>
                 <td>{{reflectivities[x]}}</td>
               </tr>

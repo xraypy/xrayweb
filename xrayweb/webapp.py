@@ -114,11 +114,11 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
 #if the input is valid then the output will be {'message': ['Input is valid']}
 #the recipient must then extract the data they need from the dictionary
 def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001', 
-    page='formula'):
+    roughness = '0.0', page='formula'):
     output = {}
     message = []
     message.append('Error(s): ')
-    df = ef = ef2 = sf = af = 0
+    df = ef = ef2 = sf = af = rf = 0
     isLog = True
     
     if not formula:
@@ -163,8 +163,6 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
 
     if ef > ef2:
         message.append('Energy1 must be less than Energy2.')
-    elif ef == ef2:
-        ef2 += sf
     
     isLog = True if mode == 'Log' else False
     
@@ -179,6 +177,16 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
         else:
             angle = 0.001
 
+        if roughness:
+            try:
+                rf = float(roughness)
+                if rf < 0:
+                    message.append('Roughness must be positive.')
+            except:
+                message.append('Roughness must be a number.')
+        else:
+            roughness = 0.0
+
     if len(message) == 1:
         message[0] = 'Input is valid'
     
@@ -190,6 +198,7 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
         output['sf'] = sf
         output['isLog'] = isLog
         output['af'] = af
+        output['rf'] = rf
     #print(message)
     return output
 
@@ -223,6 +232,7 @@ def formula(material=None):
         energy2 = request.form.get('energy2')
         step = request.form.get('step')
         mode = request.form.get('mode')
+        data = request.form.get('data')
 
         #input validation
         output = validate_input(formula, density, step, energy1, energy2, mode, material, page='formula')
@@ -237,10 +247,19 @@ def formula(material=None):
         isLog = output['isLog']
 
         #make plot
+        while ef2 < (ef + (sf * 2)): #this ensures that there are always at least 3 energy values for a meaningful plot
+            ef2 += sf
+        ef2 += sf #this includes energy2 in the plot, normally np.arrage excludes the upper bound
         en_array = np.arange(ef, ef2, sf)
         num = en_array.size
         mu_array = xraydb.material_mu(formula, en_array, density=df)
-        if num > 2:
+
+        if data == 'Abslen':
+            len_array = np.array([])
+            for i in mu_array:
+                len_array = np.append(len_array, 10000 / i)
+            mu_plot = make_plot(en_array, len_array, material, formula, ylog_scale=isLog)
+        else:
             mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=isLog)
 
         energies = [nformat(x) for x in en_array]
@@ -262,7 +281,7 @@ def reflectivity(material=None):
     ref_plot = output = {}
     energies = reflectivities = []
     num = errors = 0
-    df = ef = ef2 = sf = af = 0
+    df = ef = ef2 = sf = af = rf = 0
     isLog = True
 
     if request.method == 'POST':
@@ -270,12 +289,14 @@ def reflectivity(material=None):
         formula = request.form.get('formula')
         density = request.form.get('density')
         angle = request.form.get('angle')
+        roughness = request.form.get('roughness')
+        polarization = request.form.get('polarization')
         energy1 = request.form.get('energy1')
         energy2 = request.form.get('energy2')
         step = request.form.get('step')
         mode = request.form.get('mode')
 
-        output = validate_input(formula, density, step, energy1, energy2, mode, material, angle, page='reflectivity')
+        output = validate_input(formula, density, step, energy1, energy2, mode, material, angle, roughness, page='reflectivity')
         message = output['message']
 
     #if verification passes, calculate output and pass to render_template
@@ -286,15 +307,11 @@ def reflectivity(material=None):
         sf = output['sf']
         isLog = output['isLog']
         af = output['af']
+        rf = output['rf']
         
         en_array = np.arange(ef, ef2, sf)
-        num = en_array.size
-        """
-        if not num:
-            np.append(en_array, [ef])
-            print(num, en_array)
-        """    
-        ref_array = xraydb.mirror_reflectivity(formula, af, en_array, df)
+        num = en_array.size    
+        ref_array = xraydb.mirror_reflectivity(formula, af, en_array, df, rf, polarization)
 
 
         if num > 2:

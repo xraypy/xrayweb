@@ -45,10 +45,16 @@
       <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
     </select> <br><br>
 
-    <label for="mode">Plot Mode:</label>
+    <label for="mode">Plot Scaling:</label>
     <select name="mode" id="mode">
       <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
       <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
+    </select> &nbsp;
+
+    <label for="data">Data to Graph:</label>
+    <select name="data" id="data">
+      <option value="Absq" {% if request.form['data'] == "Absq" %} selected {% endif %}>Mu (1/cm)</option>
+      <option value="Abslen" {% if request.form['data'] == "Abslen" %} selected {% endif %}>10000/Mu (µm)</option>
     </select>
     <br><br>
     <input type="submit" value="Submit">
@@ -62,13 +68,13 @@
         <table>
           <caption><b>Results Table:</b></caption>
           <tr>
-            <th>Energy &nbsp;</th>
-            <th>Absorption Quantity &nbsp;</th>
-            <th>Absorption Length &nbsp;</th>
+            <th>Energy (eV) &nbsp;</th>
+            <th>Absorption Quantity (1 / cm) &nbsp;</th>
+            <th>Absorption Length (µm) &nbsp;</th>
           </tr>
 
           {% for x in range(num) %}
-          <tr>
+          <tr class={{ loop.cycle('odd', 'even') }}>
             <td>{{energies[x]}}</td>
             <td>{{absq[x]}}</td>
             <td>{{abslen[x]}}</td>
