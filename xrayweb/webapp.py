@@ -4,6 +4,7 @@ import time
 import numpy as np
 import math
 import xraydb
+from collections import OrderedDict
 
 from flask import Flask, redirect, url_for, render_template, json
 from flask import Response, request, session, send_from_directory
@@ -101,14 +102,14 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
              'type': 'scatter',
              'name': y1label,
              'line': {'width': 3},
-             'hoverinfo': 'skip'}]
+             'hoverinfo': 'x+y'}]
     if y2 is not None:
         data.append({'x': x.tolist(),
                      'y': y2.tolist(),
                      'type': 'scatter',
                      'name': y2label,
                      'line': {'width': 3},
-                     'hoverinfo': 'skip'})
+                     'hoverinfo': 'x+y'})
 
 
     title = formula_name
@@ -135,6 +136,7 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     layout = {'title': title,
               'height': 450,
               'width': 550,
+              'hovermode': 'closest',
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': 'Energy (eV)'},
                         'type': xtype,
@@ -149,9 +151,9 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
         layout['yaxis']['range'] = yrange
 
     plot_config = {'displaylogo': False,
-                   'modeBarButtonsToRemove': [ 'hoverClosestCartesian',
-                                               'hoverCompareCartesian',
-                                               'toggleSpikelines']}
+                   'modeBarButtonsToRemove': ['hoverClosestCartesian',
+                                              'hoverCompareCartesian',
+                                              'toggleSpikelines']}
 
     return json.dumps({'data': data, 'layout': layout, 'config':
                        plot_config})
@@ -278,9 +280,9 @@ def attendata(formula, rho, t, e1, e2, estep):
 @app.route('/mirrordata/<formula>/<rho>/<angle>/<e1>/<e2>/<estep>')
 def mirrordata(formula, rho, angle, e1, e2, estep):
     en_array = np.arange(float(e1), float(e2), float(estep))
-    angle = float(angle)/1000.0
+    angle = float(angle)
     rho   = float(rho)
-    reflectivity = xraydb.mirror_reflectivity(formula, angle, en_array, rho)
+    reflectivity = xraydb.mirror_reflectivity(formula, 0.001*angle, en_array, rho)
 
     header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
               ' Material.formula   : %s ' % formula,
@@ -290,9 +292,7 @@ def mirrordata(formula, rho, angle, e1, e2, estep):
               ' Column.2: reflectivity')
 
     arr_names = ('energy       ', 'reflectivity ')
-
-    txt = make_asciifile(header, arr_names,
-                         (en_array, reflectivity))
+    txt = make_asciifile(header, arr_names, (en_array, reflectivity))
 
     fname = 'xrayweb_mirror_%s_%s.txt' % (formula,
                                           time.strftime('%Y%h%d_%H%M%S'))
@@ -305,10 +305,19 @@ def mirrordata(formula, rho, angle, e1, e2, estep):
 def element(elem=None):
     edges = atomic = lines = {}
     if elem is not None:
-        edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem),
+        atomic= {'n': xraydb.atomic_number(elem),
+                 'mass': xraydb.atomic_mass(elem),
                  'density': xraydb.atomic_density(elem)}
-        lines= xraydb.xray_lines(elem)
+        _edges= xraydb.xray_edges(elem)
+        _lines= xraydb.xray_lines(elem)
+        lines = OrderedDict()
+        for k in sorted(_lines.keys()):
+            lines[k] = _lines[k]
+
+        edges = OrderedDict()
+        for k in sorted(_edges.keys()):
+            edges[k] = _edges[k]
+
     return render_template('elements.html', edges=edges, elem=elem, atomic=atomic,
                            lines=lines, materials_dict=materials_dict)
 
@@ -396,10 +405,10 @@ def reflectivity(material=None):
         angle1 = request.form.get('angle1', '0')
         material1 = request.form.get('mats1', 'silicon')
 
-#         formula2 = request.form.get('formula2', 'None')
-#         density2 = request.form.get('density2', '')
-#         angle2 = request.form.get('angle2', '0')
-#         material2 = request.form.get('mats2', 'None')
+        formula2 = request.form.get('formula2', 'None')
+        density2 = request.form.get('density2', '')
+        angle2  = request.form.get('angle2', '0')
+        material2 = request.form.get('mats2', 'None')
 
         energy1 = request.form.get('energy1', '1000')
         energy2 = request.form.get('energy2', '50000')
@@ -411,9 +420,9 @@ def reflectivity(material=None):
                                  page='reflectivity')
 
         message = output1['message']
-        # if material2 is not 'None':
-        #     output2 = validate_input(formula2, density2, estep, energy1, energy2, mode,
-        #                              material2, angle2, page='reflectivity')
+        if material2 is not 'None':
+            output2 = validate_input(formula2, density2, estep, energy1, energy2, mode,
+                                     material2, angle2, page='reflectivity')
     else:
         request.form = {'mats1': 'silicon',
                         'formula1': materials_['silicon'].formula,
@@ -445,11 +454,19 @@ def reflectivity(material=None):
             print(num, en_array)
         """
         ref_array = xraydb.mirror_reflectivity(formula1, af, en_array, df)
+        ref_array2 = None
+        if formula2 not in ('', 'None', None) and angle2 is not '':
+            try:
+                ref_array2 = xraydb.mirror_reflectivity(formula2, float(angle2),
+                                                        en_array, float(density2))
+            except:
+                ref_array2 = None
 
         if num > 2:
             title = "%s, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
-                                 ytitle='Reflectivity', ylog_scale=isLog)
+                                 ytitle='Reflectivity', ylog_scale=isLog,
+                                 y2=ref_array2)
 
         energies = [nformat(x) for x in en_array]
         reflectivities = [nformat(x) for x in ref_array]
