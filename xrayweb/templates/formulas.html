@@ -73,7 +73,7 @@
        <tr>
 	 <td> <label for="thickness">Thickness (mm):</label></td>
 	 <td> <input style="width: 80px;" type="number" id="thickness" name="thickness"
-		     step="0.01" value="{{ request.form['thickness'] }}">
+		     step="0.01" min="0" value="{{ request.form['thickness'] }}">
 	 </td>
        </tr>
 
