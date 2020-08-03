@@ -22,6 +22,10 @@ matlist = list(materials_dict.keys())
 matlist = sorted(matlist)
 materials_dict = json.dumps(materials_dict)
 
+mirror_list = ('None', 'silicon', 'quartz', 'zerodur', 'ule glass',
+               'aluminum', 'chromium', 'nickel', 'rhodium', 'palladium',
+               'iridium', 'platinum', 'gold')
+
 def nformat(val, length=11):
     """Format a number with '%g'-like format.
 
@@ -79,7 +83,7 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
              'type': 'scatter',
              'name': 'data',
              'line': {'width': 3},
-             'hoverinfo': 'skip'}]
+             'hoverinfo': 'x+y'}]
     title = formula_name
     if material_name not in ('', 'None', None):
         title = material_name
@@ -93,6 +97,7 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     layout = {'title': title,
               'height': 500,
               'width': 700,
+              'hovermode': 'closest',
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': 'Energy (eV)'},
                         'type': xtype,
@@ -113,14 +118,14 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
 #returns a dictionary containing all the inputs converted into float if necessary along with a list of error messages
 #if the input is valid then the output will be {'message': ['Input is valid']}
 #the recipient must then extract the data they need from the dictionary
-def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001', 
+def validate_input(formula, density, step, energy1='1000', energy2='50000', mode='Log', material=None, angle='0.001',
     roughness = '0.0', page='formula'):
     output = {}
     message = []
     message.append('Error(s): ')
     df = ef = ef2 = sf = af = rf = 0
     isLog = True
-    
+
     if not formula:
         message.append('Formula is a required field.')
     elif not material:
@@ -163,9 +168,9 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
 
     if ef > ef2:
         message.append('Energy1 must be less than Energy2.')
-    
+
     isLog = True if mode == 'Log' else False
-    
+
     if page == 'reflectivity':
         if angle:
             try:
@@ -189,7 +194,7 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
 
     if len(message) == 1:
         message[0] = 'Input is valid'
-    
+
     output['message'] = message
     if message[0] == 'Input is valid':
         output['df'] = df
@@ -308,9 +313,9 @@ def reflectivity(material=None):
         isLog = output['isLog']
         af = output['af']
         rf = output['rf']
-        
+
         en_array = np.arange(ef, ef2, sf)
-        num = en_array.size    
+        num = en_array.size
         ref_array = xraydb.mirror_reflectivity(formula, af, en_array, df, rf, polarization)
 
 
@@ -324,9 +329,9 @@ def reflectivity(material=None):
     else:
         errors = len(message)
 
-    return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot, 
+    return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot,
                             energies=energies, reflectivities=reflectivities, num=num,
-                            matlist=matlist, materials_dict=materials_dict)
+                            matlist=mirror_list, materials_dict=materials_dict)
 
 @app.route('/crystal/', methods=['GET', 'POST'])
 def crystal():
