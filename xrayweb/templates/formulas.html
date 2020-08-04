@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<p><div class=subtitle>Enter Chemical Formula for Results</div></p>
+<p><div class=subtitle>Enter Chemical Formula for Absoprtion Quantity and Length</div></p>
 <div class=body>
 
   {% if errors %}
@@ -43,7 +43,7 @@
       <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
       <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
       <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-    </select> <br><br>
+    </select> &nbsp;
 
     <label for="mode">Plot Scaling:</label>
     <select name="mode" id="mode">

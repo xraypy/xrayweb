@@ -255,10 +255,10 @@ def formula(material=None):
         mu_array = xraydb.material_mu(formula, en_array, density=df)
 
         if data == 'Abslen':
-            len_array = np.array([])
+            len_array = np.empty((0,))
             for i in mu_array:
-                len_array = np.append(len_array, 10000 / i)
-            mu_plot = make_plot(en_array, len_array, material, formula, ylog_scale=isLog)
+                len_array = np.append(len_array, [10000 / i], axis=0)
+            mu_plot = make_plot(en_array, len_array, material, formula, ytitle='10000 / mu', ylog_scale=isLog)
         else:
             mu_plot = make_plot(en_array, mu_array, material, formula, ylog_scale=isLog)
 
