@@ -71,6 +71,18 @@
     <div class="flex-container">
         <div class="flex-child magenta">
           {% if num %}
+
+	<a href="{{url_for('reflectdata',
+		 formula=request.form['formula'],
+		 rho=request.form['density'],
+		 angle=request.form['angle'],
+		 rough=request.form['roughness'],
+		 polar=request.form['polarization'],
+		 e1=request.form['energy1'],
+		 e2=request.form['energy2'],
+		 estep=request.form['step'])}}"> download data file
+	</a><br>
+
             <table>
               <caption><b>Results Table:</b></caption>
               <tr>
