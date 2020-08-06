@@ -5,9 +5,10 @@ from io import BytesIO
 import numpy as np
 import math
 import xraydb
+import time
 
 from flask import Flask, redirect, url_for, render_template, json
-from flask import request, session
+from flask import request, session, Response
 
 import plotly.graph_objects as go
 
@@ -339,6 +340,56 @@ def reflectivity(material=None):
     return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot,
                             energies=energies, reflectivities=reflectivities, num=num,
                             matlist=mirror_list, materials_dict=materials_dict_j)
+
+
+def random_string(n):
+    """  random_string(n)
+    generates a random string of length n, that will match:
+       [a-z][a-z0-9](n-1)
+    """
+    seed(time.time())
+    s = [printable[randrange(0,36)] for i in range(n-1)]
+    s.insert(0, printable[randrange(10,36)])
+    return ''.join(s)
+
+def make_asciifile(header, array_names, arrays):
+    buff = ['# %s' % l for l in header]
+    buff.append("#---------------------")
+    buff.append("# %s" % ' '.join(array_names))
+    for i in range(len(arrays[0])):
+        row = [a[i] for a in arrays]
+        l = [nformat(x, length=12) for x in row]
+        buff.append('  '.join(l))
+    buff.append('')
+    return '\n'.join(buff)
+
+@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>')
+def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep):
+    """mirror reflectivity data as file"""
+    en_array = np.arange(float(e1), float(e2), float(estep))
+    angle = float(angle)
+    rho   = float(rho)
+    rough = float(rough)
+    reflectivity = xraydb.mirror_reflectivity(formula, angle, en_array, rho,
+                                              roughness=rough, polarization=polar)
+
+    header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
+              ' Material.formula   : %s ' % formula,
+              ' Material.density   : %.3f gr/cm^3 ' % rho,
+              ' Material.angle     : %.6f rad ' % angle,
+              ' Material.roughness : %.3f Ang ' % rough,
+              ' Material.polarization: %s ' % polar,
+              ' Column.1: energy (eV)',
+              ' Column.2: reflectivity')
+
+    arr_names = ('energy       ', 'reflectivity ')
+    txt = make_asciifile(header, arr_names, (en_array, reflectivity))
+
+    fname = 'xrayweb_reflect_%s_%s.txt' % (formula,
+                                          time.strftime('%Y%h%d_%H%M%S'))
+    return Response(txt, mimetype='text/plain',
+                    headers={"Content-Disposition":
+                             "attachment;filename=%s" % fname})
 
 @app.route('/crystal/', methods=['GET', 'POST'])
 def crystal():
