@@ -19,6 +19,10 @@ h2         {font-size: 1.2em; }
 .even {background-color: #F3F3F0;}
 .odd {background-color: #FFFFFF;}
 
+input[type=number]{
+    width: 80px;
+} 
+
 .entries        { list-style: none; margin: 0; padding: 0; }
 .entries li     { margin: 0.2em 30em; }
 .entries li h2  { margin-left: -1em; }

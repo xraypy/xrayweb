@@ -20,7 +20,7 @@ env = jinja2.Environment()
 materials_dict = xraydb.materials._read_materials_db()
 matlist = list(materials_dict.keys())
 matlist = sorted(matlist)
-materials_dict = json.dumps(materials_dict)
+materials_dict_j = json.dumps(materials_dict)
 
 mirror_list = ('None', 'silicon', 'quartz', 'zerodur', 'ule glass',
                'aluminum', 'chromium', 'nickel', 'rhodium', 'palladium',
@@ -172,15 +172,7 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
     isLog = True if mode == 'Log' else False
 
     if page == 'reflectivity':
-        if angle:
-            try:
-                af = float(angle)
-                if af < 0:
-                    message.append('Angle must be positive.')
-            except:
-                message.append('Angle must be a number.')
-        else:
-            angle = 0.001
+        af = float(angle)
 
         if roughness:
             try:
@@ -219,7 +211,7 @@ def element(elem=None):
         edges= xraydb.xray_edges(elem)
         atomic= {'n': xraydb.atomic_number(elem), 'mass': xraydb.atomic_mass(elem), 'density': xraydb.atomic_density(elem)}
         lines= xraydb.xray_lines(elem)
-    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines, materials_dict=materials_dict)
+    return render_template('elements.html', edges=edges, elem=elem, atomic=atomic, lines=lines, materials_dict=materials_dict_j)
 
 @app.route('/formula/', methods=['GET', 'POST'])
 @app.route('/formula/<material>', methods=['GET', 'POST'])
@@ -242,6 +234,12 @@ def formula(material=None):
         #input validation
         output = validate_input(formula, density, step, energy1, energy2, mode, material, page='formula')
         message = output['message']
+    else:
+        request.form = {'formula': materials_dict['silicon'].formula,
+                        'density': materials_dict['silicon'].density,
+                        'energy1': '1000',
+                        'energy2': '50000',
+                        'step': '100'}
 
     if message[0] == 'Input is valid':
         #unpack floats
@@ -278,7 +276,7 @@ def formula(material=None):
     return render_template('formulas.html', message=message, errors=errors, abslen=abslen,
                            mu_plot=mu_plot,
                            absq=absq, energies=energies, num=num,
-                           matlist=matlist, materials_dict=materials_dict, input=input)
+                           matlist=matlist, materials_dict=materials_dict_j, input=input)
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
 def reflectivity(material=None):
@@ -303,6 +301,14 @@ def reflectivity(material=None):
 
         output = validate_input(formula, density, step, energy1, energy2, mode, material, angle, roughness, page='reflectivity')
         message = output['message']
+    else:
+        request.form = {'formula': materials_dict['silicon'].formula,
+                        'density': materials_dict['silicon'].density,
+                        'energy1': '1000',
+                        'energy2': '50000',
+                        'step': '100',
+                        'angle': '0.001',
+                        'roughness': '0'}
 
     #if verification passes, calculate output and pass to render_template
     if message[0] == 'Input is valid':
@@ -314,13 +320,14 @@ def reflectivity(material=None):
         af = output['af']
         rf = output['rf']
 
+        while ef2 < (ef + (sf * 2)): #this ensures that there are always at least 3 energy values for a meaningful plot
+            ef2 += sf
+        ef2 += sf #this includes energy2 in the plot, normally np.arrage excludes the upper bound
         en_array = np.arange(ef, ef2, sf)
         num = en_array.size
         ref_array = xraydb.mirror_reflectivity(formula, af, en_array, df, rf, polarization)
 
-
-        if num > 2:
-            ref_plot = make_plot(en_array, ref_array, material, formula, ytitle='Reflectivity', ylog_scale=isLog)
+        ref_plot = make_plot(en_array, ref_array, material, formula, ytitle='Reflectivity', ylog_scale=isLog)
 
         energies = [nformat(x) for x in en_array]
         reflectivities = [nformat(x) for x in ref_array]
@@ -331,7 +338,7 @@ def reflectivity(material=None):
 
     return render_template('reflectivity.html', message=message, errors=errors, ref_plot=ref_plot,
                             energies=energies, reflectivities=reflectivities, num=num,
-                            matlist=mirror_list, materials_dict=materials_dict)
+                            matlist=mirror_list, materials_dict=materials_dict_j)
 
 @app.route('/crystal/', methods=['GET', 'POST'])
 def crystal():
