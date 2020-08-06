@@ -11,52 +11,80 @@
   {% endif %}
 
   <form action="{{url_for('formula')}}" method="post">
-    
-    <label for="mats">Choose a preset material:</label>
-    <select name="mats" id="mats"
-      onchange="displayinfo()">
-      <option></option>
-      {% for mat in matlist %}
-      <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
-      {% endfor %}
-    </select>
-    &nbsp;
+    <table>
+      <tr>
+        <th>Enter chemical formula and density</th>
+        <th></th>
+        <th>OR</th>
+        <th>Select a known material</th>
+      </tr>
+      <tr>
+        <td>
+          <label for="formula">Formula:</label>
+          <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"> &nbsp;
+        </td>
 
-    <label for="formula">Formula:</label>
-    <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}"> &nbsp;
-    
-    <label for="density">Density:</label>
-    <input type="text" id="density" name="density" value="{{ request.form['density'] }}"><br><br>
+        <td>
+          <label for="density">Density:</label>
+          <input type="number" min="0" step="0.001" id="density" name="density" value="{{ request.form['density'] }}">
+        </td>
 
-    <label for="energy1">Energy 1:</label>
-    <input type="text" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
+        <td></td>
 
-    <label for="energy2">Energy 2:</label>
-    <input type="text" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
+        <td>
+          <label for="mats">Choose a preset material:</label>
+          <select name="mats" id="mats"
+            onchange="displayinfo()">
+            <option></option>
+            {% for mat in matlist %}
+            <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
+            {% endfor %}
+          </select>
+          &nbsp;
+        </td>
+      </tr>
 
-    <label for="step">Energy Step:</label>
-    <select name="step" id="step">
-      <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
-      <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
-      <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
-      <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
-      <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
-      <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
-      <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-    </select> &nbsp;
+      <tr>
+        <td>
+          <label for="energy1">Energy 1:</label>
+          <input type="number" min="0" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
+        </td>
 
-    <label for="mode">Plot Scaling:</label>
-    <select name="mode" id="mode">
-      <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
-      <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
-    </select> &nbsp;
+        <td>
+          <label for="energy2">Energy 2:</label>
+          <input type="number" min="0" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
+        </td>
 
-    <label for="data">Data to Graph:</label>
-    <select name="data" id="data">
-      <option value="Absq" {% if request.form['data'] == "Absq" %} selected {% endif %}>Mu (1/cm)</option>
-      <option value="Abslen" {% if request.form['data'] == "Abslen" %} selected {% endif %}>10000/Mu (µm)</option>
-    </select>
-    <br><br>
+        <td>
+          <label for="step">Energy Step:</label>
+          <select name="step" id="step">
+            <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
+            <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
+            <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
+            <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
+            <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
+            <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
+            <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+          </select> &nbsp;
+        </td>
+
+        <td>
+          <label for="mode">Plot Scaling:</label>
+          <select name="mode" id="mode">
+            <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
+            <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
+          </select> &nbsp;
+        </td>
+
+        <td>
+          <label for="data">Data to Graph:</label>
+          <select name="data" id="data">
+            <option value="Absq" {% if request.form['data'] == "Absq" %} selected {% endif %}>Mu (1/cm)</option>
+            <option value="Abslen" {% if request.form['data'] == "Abslen" %} selected {% endif %}>10000/Mu (µm)</option>
+          </select>
+        </td>
+      </tr>
+    </table>
     <input type="submit" value="Submit">
   </form>
   <p>
@@ -86,7 +114,6 @@
 
     <div class="flex-child green">
       {% if mu_plot %}
-      Plot of mu(E):
 
       <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
         <div id="mu_plot">
