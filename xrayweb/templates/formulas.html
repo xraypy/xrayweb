@@ -26,7 +26,7 @@
 
         <td>
           <label for="density">Density:</label>
-          <input type="number" min="0" step="0.001" id="density" name="density" value="{{ request.form['density'] }}">
+          <input type="text" id="density" name="density" value="{{ request.form['density'] }}">
         </td>
 
         <td></td>
@@ -47,12 +47,12 @@
       <tr>
         <td>
           <label for="energy1">Energy 1:</label>
-          <input type="number" min="0" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
+          <input type="number" min="0" step="50" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
         </td>
 
         <td>
           <label for="energy2">Energy 2:</label>
-          <input type="number" min="0" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
+          <input type="number" min="0" step="50" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
         </td>
 
         <td>

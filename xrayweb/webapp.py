@@ -23,7 +23,7 @@ matlist = list(materials_dict.keys())
 matlist = sorted(matlist)
 materials_dict_j = json.dumps(materials_dict)
 
-mirror_list = ('None', 'silicon', 'quartz', 'zerodur', 'ule glass',
+mirror_list = ('silicon', 'quartz', 'zerodur', 'ule glass',
                'aluminum', 'chromium', 'nickel', 'rhodium', 'palladium',
                'iridium', 'platinum', 'gold')
 
@@ -145,23 +145,12 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
         message.append('Density is a required field.')
 
     if energy1:
-        try:
-            ef = float(energy1)
-            if ef <= 0:
-                message.append('Energy1 must be a positive number.')
-        except:
-            message.append('Energy1 must be a positive number.')
+        ef = float(energy1)
     else:
         ef = 1000.0
 
     if energy2:
-        try:
-            ef2 = float(energy2)
-            if ef2 <= 0:
-                message.append('Energy2 must be a positive number.')
-        except:
-            print('hi')
-            message.append('Energy2 must be a positive number.')
+        ef2 = float(energy2)
     else:
         ef2 = 50000.0
 
@@ -173,17 +162,15 @@ def validate_input(formula, density, step, energy1='1000', energy2='50000', mode
     isLog = True if mode == 'Log' else False
 
     if page == 'reflectivity':
-        af = float(angle)
+        if angle:            
+            af = float(angle)
+        else:
+            af = 0.001
 
         if roughness:
-            try:
-                rf = float(roughness)
-                if rf < 0:
-                    message.append('Roughness must be positive.')
-            except:
-                message.append('Roughness must be a number.')
+            rf = float(roughness)
         else:
-            roughness = 0.0
+            rf = 0.0
 
     if len(message) == 1:
         message[0] = 'Input is valid'
