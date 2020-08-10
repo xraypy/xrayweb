@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<div class=body>
+    {% if error %}
+        <p>{{error}}</p>
+    {% endif %}
+
+
+	Xrayweb was written by Alex Nicolellis and Matthew Newville at the
+	University of Chicago, using the
+	<a href=https://xraypy.github.io/XrayDB/>XrayDB Python library</a>,
+	with Python, Flask, and Plotly.
+ 	
+ 
+
+    <a href="{{ url_for('static', filename='style.css')  }}">[</a>   <br>
+
+	
+</div>
+{% endblock %}
