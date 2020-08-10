@@ -6,75 +6,58 @@
 <div class=body>
     {% include "periodic_table.html" %}	
 
-    <br><br>
-      <hr>
     {% if elem %}
-    X-ray edges for {{elem}}
-      <div class="flex-container">
-            <div class="flex-child magenta">
-                  <table>
-                        <caption><b>Elemental Data for {{elem}}</b></caption>
-                        <tr>
-                              <th> &nbsp; Number </th>
-                              <th> &nbsp; Mass (AMU) </th>
-                              <th> &nbsp; Density (gm/cm^3) </th>
-                        </tr>
+    <br>   <hr> <br>
 
-                        <tr>
-                              <td> &nbsp; {{atomic.n}}</td>
-                              <td> &nbsp; {{atomic.mass}}</td>
-                              <td> &nbsp; {{atomic.density}}</td>
-                        </tr>
-                  </table>
-            </div>
-
-            <div class="flex-child green">
+    <table style='vertical-align: top;' cellspacing=10 border=0>
+      <tr><td rowspan=40 align=top>
+          <table cellspacing=5 cellpadding=2>
+            <caption><b>Atomic Data for {{elem}}</b></caption>	    
+            <tr> <th > &nbsp;Property &nbsp;</th>     <th > &nbsp; Value&nbsp;</th>
+            <tr class='odd'><td> &nbsp; Atomic  Number: </td>  <td> &nbsp;  {{atomic.n}}</td></tr>
+            <tr class='even'> <td> &nbsp; Atomic  Mass:  </td>  <td> &nbsp;  {{atomic.mass}}</td></tr>
+            <tr class='odd'> <td> &nbsp; Density (gm / cm^3): </td>  <td> &nbsp;  {{atomic.density}}</td></tr>
+          </table>
+	</td>
+	<td rowspan=40 align=top>
+          <table cellspacing=5 cellpadding=2>
+            <caption><b>X-ray absorption edges for {{elem}} </b></caption>
+            <tr>
+              <th > &nbsp; Edge &nbsp;</th>
+              <th > &nbsp; Energy (eV) &nbsp;</th>
+              <th >  &nbsp; Fluorescence Yield</th>
+              <th >  &nbsp; Edge Jump</th>
+            </tr>
+            
+            {% for name ,data in edges.items() %}
+            <tr class={{ loop.cycle('odd', 'even') }}>
+              <td> &nbsp; &nbsp; {{name}} </td>
+              <td> &nbsp; {{data.energy}} </td>
+              <td> &nbsp; {{data.fyield}} </td>
+              <td> &nbsp; {{data.jump_ratio}} </td>
+            </tr>
+            {% endfor %}
+          </table>
+      </td><td rowspan=40 align=top>
                   <table cellspacing=5 cellpadding=2>
-                        <caption><b>X-ray edges for {{elem}}</b></caption>
+                        <caption><b>X-ray fluorescence lines for {{elem}}</b></caption>
                         <tr>
-                        <th >   &nbsp; Edge &nbsp;</th>
-                        <th >  &nbsp; Energy (eV) &nbsp;</th>
-                        <th >  &nbsp; Fluorescence Yield</th>
-                        <th >  &nbsp; Edge Jump</th>
-                        </tr>
-                        
-                        
-                        {% for name ,data in edges.items() %}
-                        <tr class={{ loop.cycle('odd', 'even') }}>
-                        <td> &nbsp; &nbsp; {{name}} </td>
-                        <td> &nbsp; {{data.energy}} </td>
-                        <td> &nbsp; {{data.fyield}} </td>
-                        <td> &nbsp; {{data.jump_ratio}} </td>
-                        </tr>
-                        {% endfor %}
-                  </table>
-            </div>
-
-            <div class="flex-child orange">
-                  <table cellspacing=5 cellpadding=2>
-                        <caption><b>X-ray lines for {{elem}}</b></caption>
-                        <tr>
-                        <th >   &nbsp; Siegbahn Notation &nbsp;</th>
+                        <th >   &nbsp; Line &nbsp;</th>
                         <th >  &nbsp; Energy (eV) &nbsp;</th>
                         <th >  &nbsp; Intensity</th>
-                        <th >  &nbsp; Initial Level</th>
-                        <th >  &nbsp; Final Level</th>
                         </tr>
-                        
-                        
+                                               
                         {% for name ,data in lines.items() %}
                         <tr class={{ loop.cycle('odd', 'even') }}>
-                        <td> &nbsp; &nbsp; {{name}} </td>
+                        <td> &nbsp; &nbsp; {{name}}      ({{data.initial_level}} - {{data.final_level}} )   </td>
                         <td> &nbsp; {{data.energy}} </td>
                         <td> &nbsp; {{data.intensity}} </td>
-                        <td> &nbsp; {{data.initial_level}} </td>
-                        <td> &nbsp; {{data.final_level}} </td>
+
                         </tr>
                         {% endfor %}
                   </table>
-            </div>
-      </div>
-
+      </td></tr>
+    </table>
     {% endif %}
 </div>
 
