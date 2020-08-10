@@ -12,6 +12,8 @@ h2         {font-size: 1.2em; }
 
 .colSpacing {padding:0 5px;}
 
+table td, table td * {     vertical-align: top; }
+
 .flex-container {display: flex; flex-direction: row; margin: 2px;} 
 .flex-child {flex: 1;}
 .flex-child:first-child {margin-right: 20px;}
@@ -19,14 +21,6 @@ h2         {font-size: 1.2em; }
 .even {background-color: #F3F3F0;}
 .odd {background-color: #FFFFFF;}
 
-input[type=number]{
-    width: 80px;
-    margin: 3px;
-} 
-
-input[type=text] {
-    margin: 3px;
-}
 
 .entries        { list-style: none; margin: 0; padding: 0; }
 .entries li     { margin: 0.2em 30em; }
@@ -74,7 +68,7 @@ h2 {font:bold 18px verdana,arial,sans-serif;color:#044484;font-weight:bold;}
 		  transition: 0.5s ease-in;
 		  margin: 5px 5px 5px 5px;}
 
-.topmenu { font: bold 14px verdana, arial, sans-serif; margin: 0px;
+.topmenu { font: bold 13px verdana, arial, sans-serif; margin: 0px;
            padding: 0px 0px 16px 0px;   border: 3px solid #16C;
            background-color: #FDFDFA;}
 
