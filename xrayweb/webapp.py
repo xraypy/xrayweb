@@ -10,18 +10,11 @@ from flask import (Flask, redirect, url_for, render_template,
 
 import xraydb
 
-print("STAT ", os.path.abspath(os.path.join(__file__, 'static')))
-print(os.path.abspath(os.path.join(__file__, 'static')))
-
-
-top, _f = os.path.split(__file__)
-
-print(os.path.abspath(os.path.join(top, 'static')))
+top, _ =  os.path.split(os.path.abspath(__file__))
 
 app = Flask('xrayweb',
-            static_folder=os.path.abspath(os.path.join(top, 'static')),
-            template_folder=os.path.abspath(os.path.join(top, 'templates')))
-
+            static_folder=os.path.join(top, 'static'),
+            template_folder=os.path.join(top, 'templates'))
 app.config.from_object(__name__)
 
 materials_ = xraydb.materials._read_materials_db()
@@ -184,7 +177,7 @@ def element(elem=None):
 @app.route('/about/')
 def about():
     return render_template('about.html',
-                           materials_dict=materials_dict)                           
+                           materials_dict=materials_dict)
 
 @app.route('/atten/', methods=['GET', 'POST'])
 @app.route('/atten/<material>', methods=['GET', 'POST'])
@@ -234,7 +227,7 @@ def atten(material=None):
                                    ytitle='transmitted/attenuated fraction',
                                    y1label='transmitted',
                                    y2label='attenuated')
-        
+
 
 
     else:
@@ -286,13 +279,13 @@ def reflectivity(material=None):
             en_array = np.arange(float(energy1), float(energy2)+float(estep),
                                  float(estep))
             use_log = mode.lower() == 'log'
-            
+
             ref_array = xraydb.mirror_reflectivity(formula1, 0.001*float(angle1),
-                                                   en_array, density)            
+                                                   en_array, density)
             title = "%s, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
                                  ytitle='Reflectivity', ylog_scale=use_log)
-            
+
             title = "%s Reflectivity, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
                                  ytitle='Reflectivity', ylog_scale=use_log)
@@ -322,7 +315,7 @@ def reflectivity(material=None):
 
 
     return render_template('reflectivity.html', message=message,
-                           errors=len(message), ref_plot=ref_plot, angc_plot=angc_plot, 
+                           errors=len(message), ref_plot=ref_plot, angc_plot=angc_plot,
                            has_data=has_data,
                            matlist=mirror_mat,
                            materials_dict=materials_dict)
@@ -481,7 +474,7 @@ def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep):
 
     _del, _bet, _ = xraydb.xray_delta_beta(formula, rho, en_array)
     ang_crit = 1000*(np.pi/2 - np.arcsin(1 - _del - 1j*_bet)).real
-    
+
     header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
               ' Material.formula   : %s ' % formula,
               ' Material.density   : %.4f gr/cm^3 ' % rho,
@@ -552,4 +545,3 @@ plt.show()
     return Response(script, mimetype='text/plain',
                     headers={"Content-Disposition":
                              "attachment;filename=%s" % fname})
-
