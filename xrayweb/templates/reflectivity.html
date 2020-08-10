@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block body %}
-<p><div class=subtitle>Enter Formula and Density for Mirror Reflectivity</div></p>
+<p><div class=subtitle>Mirror Reflectivity</div></p>
 <div class=body>
   {% if errors %}
     {% for e in range(errors) %}
@@ -9,48 +9,43 @@
     {% endfor %}
   {% endif %}
 
-  <form action="{{url_for('reflectivity')}}" method="POST">
-    <table>
-      <tr>
-        <th>Enter chemical formula and density</th>
-        <th></th>
-        <th>OR</th>
-        <th>Select a known material</th>
-      </tr>
-      <tr>
-        <td>
-          <label for="formula">Formula:</label>
-          <input type="text" id="formula" name="formula" value="{{ request.form['formula'] }}">
-        </td>
+   <form action="{{url_for('reflectivity')}}" method="POST">
 
-        <td>
-          <label for="density">Density:</label>
-          <input type="text" id="density" name="density" value="{{ request.form['density'] }}">
-        </td>
+     <table cellpadding=2 border=0>
 
-        <td></td>
+       <tr><td><b>Mirror Material</b></td><td colspan=5><hr></td></tr>
+       <tr>
+	 <td><label for="formula1">Chemical Formula:</label></td>
 
-        <td>
-          <label for="mats">Choose a preset material:</label>
-          <select name="mats" id="mats"
-            onchange="displayinfo()">
+         <td><input style="width: 180px;" type="text" id="formula1"
+		    name="formula1" value="{{ request.form['formula1'] }}">
+	 </td>
+	 <td><label for="density1">Density (g/cm^3):</label></td>
+	 <td><input style="width: 100px;" type="text" id="density1"
+		    name="density1" value="{{ request.form['density1'] }}">
+	 </td>
+	 <td><label for="mats1">Select known material:</label></td>
+	 <td>
+           <select name="mats1" id="mats1" style="width: 150px;"
+		   onchange="displayinfo('mats1', 'formula1', 'density1')">
             <option></option>
             {% for mat in matlist %}
-            <option value="{{mat}}" {% if request.form['mats'] == "{{mat}}" %} selected {% endif %}>{{mat}}</option>
+            <option value="{{mat}}"
+		    {% if request.form['mats1'] == mat %} selected {% endif %}>
+	      {{mat}}</option>
             {% endfor %}
-          </select>
-        </td>
-      </tr>
+        </select>
+       </td></tr>
 
-      <tr>
-        <td>
-          <label for="angle">Angle (radians):</label>
-          <input type="number" min="0" step="0.001" id="angle" name="angle" value="{{ request.form['angle'] }}">
-        </td>
-
+       <tr><td> <label for="angle1">Angle (milliradians):</label></td>
+	 <td><input style="width: 80px;" type="number" id="angle1" name="angle1"
+		    min="0" step="0.1" value="{{ request.form['angle1'] }}">
+	 </td>
         <td>
           <label for="roughness">Roughness (Å):</label>
-          <input type="number" min="0" id="roughness" name="roughness" size="8" value="{{ request.form['roughness'] }}">
+	  </td><td>
+          <input type="number" min="0" id="roughness" name="roughness"
+		 size="8"  value="{{ request.form['roughness'] }}">
         </td>
 
         <td>
@@ -60,91 +55,98 @@
             <option value="p" {% if request.form['polarization'] == "p" %} selected {% endif %}>p</option>
           </select>
         </td>
-      </tr>
+       </tr>
 
-      <tr>
-        <td>
-          <label for="energy1">Energy 1:</label>
-          <input type="number" min="0" step="50" id="energy1" name="energy1" value="{{ request.form['energy1'] }}"> &nbsp;
-        </td>
+       <tr><td><b>X-ray Energy</b></td><td colspan=5><hr></td></tr>
+       <tr>
+	 <td> <label for="energy1">Energy Range (eV):</label></td>
+	 <td> <input style="width: 80px;" type="number" id="energy1" name="energy1"
+		     min="0" step="50" value="{{ request.form['energy1'] }}">
+	  <label for="energy2">:</label>
+	  <input style="width: 80px;" type="number" id="energy2" name="energy2"
+		 min="0" step="50" value="{{ request.form['energy2'] }}"> </td>
+	 <td> <label for="step"> Energy Step (eV):</label></td>
+	 <td>
+           <select style="width: 100px;" name="step" id="step">
+             <option value="1" {% if request.form['step'] == "1" %} selected {% endif %}>1</option>
+             <option value="2" {% if request.form['step'] == "2" %} selected {% endif %}>2</option>
+             <option value="5" {% if request.form['step'] == "5" %} selected {% endif %}>5</option>
+             <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
+             <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
+             <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
+             <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
+             <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
+             <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
+             <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
+           </select>
+	 </td>
 
-        <td>
-          <label for="energy2">Energy 2:</label>
-          <input type="number" min="0" step="50" id="energy2" name="energy2" value="{{ request.form['energy2'] }}"> &nbsp;
-        </td>
+	 <td> <label for="mode">Plot Mode:</label> </td>
+	 <td>
+           <select style="width: 100px;" name="mode" id="mode">
+             <option value="Log"    {% if request.form['mode'] == "Log" %}
+		     selected {% endif %}>  Log</option>
+             <option value="Linear" {% if request.form['mode'] == "Linear" %}
+		     selected {% endif %}>Linear</option>
+           </select>
+	 </td>
 
-        <td>
-          <label for="step">Energy Step:</label>
-          <select name="step" id="step">
-          <option value="10" {% if request.form['step'] == "10" %} selected {% endif %}>10</option>
-          <option value="20" {% if request.form['step'] == "20" %} selected {% endif %}>20</option>
-          <option value="50" {% if request.form['step'] == "50" %} selected {% endif %}>50</option>
-          <option value="100" {% if request.form['step'] == "100" %} selected {% endif %}>100</option>
-          <option value="200" {% if request.form['step'] == "200" %} selected {% endif %}>200</option>
-          <option value="500" {% if request.form['step'] == "500" %} selected {% endif %}>500</option>
-          <option value="1000" {% if request.form['step'] == "1000" %} selected {% endif %}>1000</option>
-          </select> &nbsp;
-        </td>
+       </tr>
 
-        <td>
-          <label for="mode">Plot Scaling:</label>
-          <select name="mode" id="mode">
-          <option value="Log" {% if request.form['mode'] == "Log" %} selected {% endif %}>Log</option>
-          <option value="Linear" {% if request.form['mode'] == "Linear" %} selected {% endif %}>Linear</option>
-          </select>
-        </td>
-      </tr>
-    </table>
 
-    <br><br>
-    <input type="submit" value="Submit">
-  </form>
-  <p>
-  </p>
 
-  <div class="flex-container">
-    <div class="flex-child magenta">
-      {% if num %}
-      <a href="{{url_for('reflectdata',
-        formula=request.form['formula'],
-        rho=request.form['density'],
-        angle=request.form['angle'],
-        rough=request.form['roughness'],
-        polar=request.form['polarization'],
-        e1=request.form['energy1'],
-        e2=request.form['energy2'],
-        estep=request.form['step'])}}"> download data file
-      </a><br>
-        <table>
-          <caption><b>Results Table:</b></caption>
-          <tr>
-            <th>Energy &nbsp;</th>
-            <th>Mirror Reflectivity &nbsp;</th>
-          </tr>
+       <tr><td>  <input type="submit" value="Submit"></td></tr>
+     </table>
 
-          {% for x in range(num) %}
-          <tr class={{ loop.cycle('odd', 'even') }}>
-            <td>{{energies[x]}}</td>
-            <td>{{reflectivities[x]}}</td>
-          </tr>
-          {% endfor %}
-        </table>
-      {% endif %}
-    </div>
+    </form>
+    <p>
+    </p>
 
-    <div class="flex-child green">
-        {% if ref_plot %}
-        <b>Mirror Reflectivity vs. Energy:</b>
+    {% if has_data %}
+    <a href="{{url_for('reflectdata',
+		 formula=request.form['formula1'],
+		 rho=request.form['density1'],
+		 angle=request.form['angle1'],
+		 rough=request.form['roughness'],
+		 polar=request.form['polarization'],
+		 e1=request.form['energy1'],
+		 e2=request.form['energy2'],
+		 estep=request.form['step'])}}"> download data file</a>
+    
+    &nbsp; &nbsp;
+    
+    <a href="{{url_for('reflectscript',
+		 formula=request.form['formula1'],
+		 rho=request.form['density1'],
+		 angle=request.form['angle1'],
+		 rough=request.form['roughness'],
+		 polar=request.form['polarization'],
+		 e1=request.form['energy1'],
+		 e2=request.form['energy2'],
+		 estep=request.form['step'])}}"> download python script</a><br>
+    
+    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
 
-        <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
-          <div id="ref_plot">
-            <script  type="text/javascript">
-              var graph = {{ref_plot | safe}};
-              Plotly.plot('ref_plot',   graph.data,   graph.layout || {},  config=graph.config);
-            </script>
-          </div>
-        {% endif %}
-    </div>
-  </div>
+   <table cellpadding=2 border=0 style='vertical-align: top; '>
+     <tr style='vertical-align: top; '>
+       
+       <td>
+         <div id="ref_plot">
+           <script  type="text/javascript">
+             var graph = {{ref_plot | safe}};
+             Plotly.plot('ref_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
+       </td><td>
+         <div id="angc_plot">
+           <script  type="text/javascript">
+             var graph = {{angc_plot | safe}};
+             Plotly.plot('angc_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
+   </td></tr></table>
+
+   
+   {% endif %}
 </div>
 {% endblock %}

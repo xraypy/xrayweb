@@ -8,7 +8,7 @@
       var mdict = JSON.parse(temp);
       var keys = Object.keys(mdict);
       var vals = Object.values(mdict);
-    
+
       function toFormula(name) {
         var i = keys.indexOf(name);
         if (i != -1) {
@@ -23,10 +23,10 @@
         }
         return "";
       }
-      function displayinfo() {
-        var dropdown = document.getElementById('mats');
-        document.getElementById('formula').value=toFormula(dropdown.options[dropdown.selectedIndex].text);
-        document.getElementById('density').value=toDensity(dropdown.options[dropdown.selectedIndex].text);
+      function displayinfo(mats, formula, density) {
+        var dropdown = document.getElementById(mats);
+        document.getElementById(formula).value=toFormula(dropdown.options[dropdown.selectedIndex].text);
+        document.getElementById(density).value=toDensity(dropdown.options[dropdown.selectedIndex].text);
       }
     </script>
   </head>
@@ -42,8 +42,13 @@
 
   <ul class=topmenu>
     <li>   <a href="{{url_for('element')}}"> X-ray Edges and Lines </a> </li>
-    <li>   <a href="{{url_for('formula')}}"> X-ray Absorption </a> </li> 
+    <li>   <a href="{{url_for('atten')}}"> X-ray Attenuation </a> </li> 
+    <!-- <li>   <a href="{{url_for('ionchamber')}}"> Ion Chamber Flux </a> </li> -->
     <li>   <a href="{{url_for('reflectivity')}}"> Mirror Reflectivity </a> </li> 
+    <!-- <li>   <a href="{{url_for('darwinwidth')}}"> Mono Darwin Widths </a> </li> -->
+    <!-- <li>   <a href="{{url_for('scattering')}}"> Scattering Factors </a> </li>  -->
+    <li align='right'>   <a href="{{url_for('about')}}"> About </a> </li> 
     </ul>
-{% block body %}
+
+    {% block body %}
 {% endblock %}
