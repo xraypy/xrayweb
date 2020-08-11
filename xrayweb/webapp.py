@@ -374,7 +374,7 @@ def ionchamber(elem=None):
 
         else:
             if mat2 in (None, 'None', ''):
-                mat = mat1
+                mat = {mat1: 1.0}
             else:
                 mat = {mat1: float(frac1), mat2: 1-float(frac1)}
             
@@ -615,10 +615,9 @@ amp_units = '{amp_units:s}'
 
 if t_units == 'microns':
      thick = 0.001 * thick
-
      
 if mat2 in (None, 'None', ''):
-    mat = mat1
+    mat = dict(mat1=1.0)
 else:
     mat = dict(mat1=float(frac1), mat2=1-float(frac1))
 
