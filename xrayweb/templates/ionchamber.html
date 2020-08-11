@@ -10,12 +10,12 @@
   <p>{{message[e]}}</p>
   {% endfor %}
   {% endif %}
-  
-  
+
+
   <form action="{{url_for('ionchamber')}}" method="post">
-    
+
     <table cellpadding=2 border=0>
-      <tr><td><b>Detector</b></td><td colspan=5><hr></td></tr>
+      <tr><td><b>Detector Materials</b></td><td colspan=5><hr></td></tr>
       <tr>
 	<td> Primary Gas / Material: </td>
 	<td>
@@ -28,7 +28,7 @@
 
 	<td> Fraction of Primary Gass: </td>
 	<td> <input style="width: 80px;" type="number" id="frac1" name="frac1"
-		 min="0" max="1" step="any" value="{{ request.form['frac1'] }}"> </td>
+		    min="0" max="1" step="any" value="{{ request.form['frac1'] }}"> </td>
 
 	<td> Secondary Gas: </td>
 	<td>
@@ -40,101 +40,97 @@
 	</td>
       </tr>
       <tr>
-        <td> Length/Thickness: </td>
+        <td> Length/Thickness (mm): </td>
 	<td> <input style="width: 80px;" type="number" id="thick" name="thick"
 		    min="0" step="any"  value="{{ request.form['thick'] }}">
 	</td>
-	<td> Length Units: </td>
-	<td>
-          <select name="t_units" id="t_units" style="width: 80px;">
-            {% for units in tunitslist %}
-            <option value="{{units}}"  {% if request.form['t_units'] == units %} selected {% endif %}> {{units}}</option>
-            {% endfor %}
-          </select>
-	</td>
-
-	<td> Pressure (atm): </td>
+	<td> Gas Pressure (atm): </td>
 	<td> <input style="width: 80px;" type="number" id="pressure" name="pressure"
 		    min="0"  step="any"  value="{{ request.form['pressure'] }}">
-	</td>	
+	</td>
       </tr>
 
-      <tr><td><b>Current Amplifier</b></td><td colspan=5><hr></td></tr>      
+      <tr><td><b>Current Amplifier</b></td><td colspan=5><hr></td></tr>
+      <tr>
+	<td> Sensitivity: </td>
+	<td>
+          <select style="width: 80px;" name="amp_val" id="amp_val">
+            <option value="1"     {% if request.form['amp_val'] == "1" %} selected {% endif %}>1</option>
+            <option value="2"     {% if request.form['amp_val'] == "2" %} selected {% endif %}>2</option>
+            <option value="5"     {% if request.form['amp_val'] == "5" %} selected {% endif %}>5</option>
+            <option value="10"   {% if request.form['amp_val'] == "10" %} selected {% endif %}>10</option>
+            <option value="20"   {% if request.form['amp_val'] == "20" %} selected {% endif %}>20</option>
+            <option value="50"   {% if request.form['amp_val'] == "50" %} selected {% endif %}>50</option>
+            <option value="100" {% if request.form['amp_val'] == "100" %} selected {% endif %}>100</option>
+            <option value="200" {% if request.form['amp_val'] == "200" %} selected {% endif %}>200</option>
+            <option value="500" {% if request.form['amp_val'] == "500" %} selected {% endif %}>500</option>
+          </select>
+	</td>
+	<td>
+          <select style="width: 80px;" name="amp_units" id="amp_units">
+            <option value="fA/V"    {% if request.form['amp_units'] == "fA/V" %} selected {% endif %}>fA/V</option>
+            <option value="pA/V"   {% if request.form['amp_units'] == "pA/V" %} selected {% endif %}>pA/V</option>
+            <option value="nA/V"   {% if request.form['amp_units'] == "nA/V" %} selected {% endif %}>nA/V</option>
+            <option value="uA/V"   {% if request.form['amp_units'] == "uA/V" %} selected {% endif %}>uA/V</option>
+            <option value="mA/V"  {% if request.form['amp_units'] == "mA/V" %} selected {% endif %}>mA/V</option>
+            <option value="A/V"     {% if request.form['amp_units'] == "A/V" %} selected {% endif %}>A/V</option>
+          </select>
+	</td>
+      </tr>
 
-      	 <td> Sensitivity: </td>
-	 <td>
-           <select style="width: 80px;" name="amp_val" id="amp_val">
-             <option value="1"     {% if request.form['amp_val'] == "1" %} selected {% endif %}>1</option>
-             <option value="2"     {% if request.form['amp_val'] == "2" %} selected {% endif %}>2</option>
-             <option value="5"     {% if request.form['amp_val'] == "5" %} selected {% endif %}>5</option>
-             <option value="10"   {% if request.form['amp_val'] == "10" %} selected {% endif %}>10</option>
-             <option value="20"   {% if request.form['amp_val'] == "20" %} selected {% endif %}>20</option>
-             <option value="50"   {% if request.form['amp_val'] == "50" %} selected {% endif %}>50</option>
-             <option value="100" {% if request.form['amp_val'] == "100" %} selected {% endif %}>100</option>
-             <option value="200" {% if request.form['amp_val'] == "200" %} selected {% endif %}>200</option>
-             <option value="500" {% if request.form['amp_val'] == "500" %} selected {% endif %}>500</option>
-           </select>
-	 </td>
-
-	 <td> Units: </td>
-	 <td>
-           <select style="width: 80px;" name="amp_units" id="amp_units">
-             <option value="fA/V"    {% if request.form['amp_units'] == "fA/V" %} selected {% endif %}>fA/V</option>
-             <option value="pA/V"   {% if request.form['amp_units'] == "pA/V" %} selected {% endif %}>pA/V</option>
-             <option value="nA/V"   {% if request.form['amp_units'] == "nA/V" %} selected {% endif %}>nA/V</option>
-             <option value="uA/V"   {% if request.form['amp_units'] == "uA/V" %} selected {% endif %}>uA/V</option>
-             <option value="mA/V"  {% if request.form['amp_units'] == "mA/V" %} selected {% endif %}>mA/V</option>
-             <option value="A/V"     {% if request.form['amp_units'] == "A/V" %} selected {% endif %}>A/V</option>
-           </select>
-	 </td>
-     </tr>
-
-      <tr><td><b>Measurement</b></td><td colspan=5><hr></td></tr>      
+      <tr><td><b>Measurement</b></td><td colspan=5><hr></td></tr>
       <tr>
 	 <td> X-ray Energy  (eV): </td>
 	 <td> <input style="width: 80px;" type="number" id="energy" name="energy"
-		     min="0" step="any" value="{{ request.form['energy'] }}">
-	 </td></tr><tr>
-	 <td> Measured Voltage  (V): </td>
-	 <td> <input style="width: 80px;" type="number" id="voltage" name="voltage"
-		     min="0"  step="any"  value="{{ request.form['voltage'] }}">
-	 </td>
-	 
+		     min="0" step="any" value="{{ request.form['energy'] }}"> </td>
       </tr>
-      
-      <tr><td>  <input type="submit" value="Submit"></td></tr>
-</table>
+      <tr>
+	<td> Measured Voltage  (V): </td>
+	<td> <input style="width: 80px;" type="number" id="voltage" name="voltage"
+		    min="0"  step="any"  value="{{ request.form['voltage'] }}"></td>
+      </tr>
+      <tr><td><input type="submit" value="Calculate"></td><td colspan=5><hr></td></tr>
+
+      <tr>
+	<td>
+	{% if incident_flux %}
+	<a href="{{url_for('fluxscript',
+		 mat1=request.form['mat1'],
+		 mat2=request.form['mat2'],
+		 frac1=request.form['frac1'],
+		 thick=request.form['thick'],
+		 pressure=request.form['pressure'],
+		 energy=request.form['energy'],
+		 voltage=request.form['voltage'],
+		 amp_val=request.form['amp_val'],
+		 amp_units=request.form['amp_units'].replace('/', '_'),
+		 fname='xrayweb_flux.py')}}"> python script </a>
+
+	{% endif %}
+	</td>
+
+	<td colspan=4>
+	  <table cellpadding=2 border=0 style='vertical-align: top; '>
+	    <tr style='vertical-align: top; '>
+	      <th > &nbsp; Location &nbsp;</th>
+	      <th > &nbsp; Flux (Hz)  &nbsp;</th>
+	    </tr>
+	    <tr class='odd'>
+	      <td> &nbsp; Absorbed for Photo Current:  </td>
+	      <td> &nbsp;  {{photo_flux}}</td></tr>
+	    <tr class='even'>
+	      <td> &nbsp; Incident to Detector: </td>
+	      <td> &nbsp;  {{incident_flux}}</td></tr>
+	    <tr class='odd'>
+	      <td> &nbsp; Transmitted through Detector: </td>
+	      <td> &nbsp;  {{transmitted_flux}}</td>
+	    </tr>
+	  </table>
+	<td>
+
+    </table>
 
 </form>
 
-<p>
-  <hr>
-  
-   &nbsp; &nbsp;
-   
-  {% if incident_flux %}
-  <a href="{{url_for('fluxscript',
-	   mat1=request.form['mat1'],
-	   mat2=request.form['mat2'],
-	   frac1=request.form['frac1'],
-	   thick=request.form['thick'],
-	   t_units=request.form['t_units'],
-	   pressure=request.form['pressure'],
-	   energy=request.form['energy'],
-	   voltage=request.form['voltage'],
-	   amp_val=request.form['amp_val'],
-	   amp_units=request.form['amp_units'].replace('/', '_'),
-	   fname='xrayweb_flux.py')}}"> python script </a>
-
-  {% endif %}
-
-  <table cellpadding=2 border=0 style='vertical-align: top; '>
-    <tr style='vertical-align: top; '>   <th > &nbsp; Location &nbsp;</th>  <th > &nbsp; Flux (Hz)  &nbsp;</th>      </tr>
-    <tr class='odd'><td> &nbsp; Incident to Detector: </td>  <td> &nbsp;  {{incident_flux}}</td></tr>
-    <tr class='even'> <td> &nbsp; Absorbed for Photo Current:  </td>  <td> &nbsp;  {{photo_flux}}</td></tr>
-    <tr class='odd'> <td> &nbsp; Transmitted out of Detector: </td>  <td> &nbsp;  {{transmitted_flux}}</td>
-  </table>
-  
-    
 </div>
 {% endblock %}
