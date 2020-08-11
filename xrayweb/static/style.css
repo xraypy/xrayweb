@@ -14,7 +14,7 @@ h2         {font-size: 1.2em; }
 
 table td, table td * {     vertical-align: top; }
 
-.flex-container {display: flex; flex-direction: row; margin: 2px;} 
+.flex-container {display: flex; flex-direction: row; margin: 2px;}
 .flex-child {flex: 1;}
 .flex-child:first-child {margin-right: 20px;}
 
@@ -45,19 +45,13 @@ h3 {font:bold 16px verdana,arial,sans-serif;color:#A42424; font-weight:bold;font
 
 h2 {font:bold 18px verdana,arial,sans-serif;color:#044484;font-weight:bold;}
 
+.ptable {background-color:#FDFDFD;}
 
-.ptable {background-color:#FDFDFA;}
-
-.elem {font: bold 16px verdana; color: #333; background-color:#FDFDFA;
+.elem {font: bold 16px verdana; color: #333; background-color:#FDFDFD;
        text-align:justify; padding: 2px;}
 .elem a, a.active {color: #16C; text-decoration: none; }
-.elem a.active {color: #C61;  background-color: #FDFDFA;}
+.elem a.active {color: #C61;  background-color: #FDFDFD;}
 .elem a:hover  {color: #C61;  background-color: #F0F0F6;}
-
-.spectra {text-align:justify;}
-.spectra a, a.active {color: #16C;  ; text-decoration: none; }
-.spectra a.active {color: #C61;  background-color: #FDFDFA;}
-.spectra a:hover {color: #C61;  background-color: #FDFDFA;}
 
 .topbar {font: bold 16px verdana, arial, sans-serif;
 	 padding: 2px 4px 4px 4px;text-decoration: none;
@@ -70,7 +64,7 @@ h2 {font:bold 18px verdana,arial,sans-serif;color:#044484;font-weight:bold;}
 
 .topmenu { font: bold 13px verdana, arial, sans-serif; margin: 0px;
            padding: 0px 0px 16px 0px;   border: 3px solid #16C;
-           background-color: #FDFDFA;}
+           background-color: #FDFDFD;}
 
 .topmenu ul {margin: 0px;  padding: 0px}
 .topmenu li {float: left;  display: inline;
