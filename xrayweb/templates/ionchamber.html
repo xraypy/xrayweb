@@ -47,7 +47,7 @@
 	<td> Length Units: </td>
 	<td>
           <select name="t_units" id="t_units" style="width: 80px;">
-            {% for units in t_units %}
+            {% for units in tunitslist %}
             <option value="{{units}}"  {% if request.form['t_units'] == units %} selected {% endif %}> {{units}}</option>
             {% endfor %}
           </select>

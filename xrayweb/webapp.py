@@ -340,7 +340,7 @@ def ionchamber(elem=None):
     message = []
  
     incident_flux = transmitted_flux = photo_flux = ''
-    t_units = ('mm', 'microns')
+    tunitslist = ('mm', 'microns')
     mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe') # 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
@@ -404,7 +404,7 @@ def ionchamber(elem=None):
                            photo_flux=photo_flux,                           
                            mat1list=mat1list,
                            mat2list=mat2list,
-                           t_units=t_units, 
+                           tunitslist=tunitslist,
                            materials_dict=materials_dict)
 
 
