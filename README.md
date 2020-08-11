@@ -1,19 +1,8 @@
 # xrayweb
-Web interface for X-ray properties of the elements, using Python and Flask
+Web interface for X-ray properties of the elements, using https://github.com/xraypy/XrayDB,
+Python, Flask, and Plotly.
 
-
-This library provides a web interface to X-ray properties of the elements, including
-
-- physical properties
-- absorption edge energies
-- emission edge energies
-
-- attenuation coefficients
-
-
-In addition, this includes a form to calculate X-ray attenuation and
-scattering factors for materials and compounds given the chemical formula
-and density.
+For a live demo, see https://millenia.cars.aps.anl.gov/xraydb
 
 
 ## install
@@ -25,17 +14,8 @@ Download and unpack this code and install with
 
 
 ## status
-
-This is at the  "proof of concept" stage.
-
-Running the script "run.py" with
+Run the script "run.py" with
 
       > python run.py
 
-will launch a local web server with the app running at
-http://127.0.0.1:4966/
-
-
-
-
-
+will launch a local web server with the app running at http://127.0.0.1:4966/
