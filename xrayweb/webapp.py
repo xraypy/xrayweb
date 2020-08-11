@@ -337,16 +337,75 @@ def scattering(elem=None):
 
 @app.route('/ionchamber/', methods=['GET', 'POST'])
 def ionchamber(elem=None):
-    edges = atomic = lines = {}
-    if elem is not None:
-        edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem),
-                 'mass': xraydb.atomic_mass(elem),
-                 'density': xraydb.atomic_density(elem)}
-        lines= xraydb.xray_lines(elem)
-    return render_template('ionchamber.html', edges=edges, elem=elem,
-                           atomic=atomic, lines=lines, materials_dict=materials_dict)
+    message = []
+ 
+    incident_flux = transmitted_flux = photo_flux = ''
+    t_units = ('mm', 'microns')
+    mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe') # 'Si (diode)', 'Ge (diode)')
+    mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
+    if request.method == 'POST':
+        mat1 = request.form.get('mat1', 'None')
+        mat2 = request.form.get('mat2', 'None')
+        frac1 = request.form.get('frac1', '1')
+        thick = request.form.get('thick', '1')
+        t_units = request.form.get('t_units', 'mm')
+        pressure = request.form.get('pressure', '1')
+        energy = request.form.get('energy', '10000')
+        voltage = request.form.get('voltage', '1')
+        amp_val = request.form.get('amp_val', '1')
+        amp_units = request.form.get('amp_units', 'nA/V')
+
+        amp_val = float(amp_val)
+        pressure  = float(pressure)
+        energy  = float(energy)
+        voltage = float(voltage)
+
+        thick   = float(thick)
+        if t_units == 'microns':
+            thick = 0.001 * thick
+
+        if 'diode' in mat1:
+            mat1 = mat1.replace(' (diode)', '')
+            if mat1.startswith('Si'):
+                wfun = 3.68 # Si effective ionization potential
+            else:
+                wfun = 2.97 # Ge effective ionization potential
+
+        else:
+            if mat2 in (None, 'None', ''):
+                mat = mat1
+            else:
+                mat = {mat1: float(frac1), mat2: 1-float(frac1)}
+            
+        flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
+                                        length=thick*pressure,
+                                        sensitivity=amp_val,
+                                        sensitivity_units=amp_units)
+         
+        incident_flux = "%.7g" % flux.incident
+        transmitted_flux = "%.7g" % flux.transmitted
+        photo_flux = "%.7g" % flux.photo
+    else:
+        request.form = {'mat1': 'N2',
+                        'mat2': 'None',
+                        'frac1': 1.0,
+                        'thick': 100.0,
+                        't_units': 'mm',
+                        'pressure': 1,
+                        'energy':  10000,
+                        'voltage': 1.000,
+                        'amp_val': '1',
+                        'amp_units': 'nA/V'}
+
+    return render_template('ionchamber.html',
+                           incident_flux=incident_flux,
+                           transmitted_flux=transmitted_flux,
+                           photo_flux=photo_flux,                           
+                           mat1list=mat1list,
+                           mat2list=mat2list,
+                           t_units=t_units, 
+                           materials_dict=materials_dict)
 
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
@@ -385,8 +444,8 @@ def make_asciifile(header, array_names, arrays):
     buff.append('')
     return '\n'.join(buff)
 
-@app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<estep>')
-def attendata(formula, rho, t, e1, e2, estep):
+@app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<estep>/<fname>')
+def attendata(formula, rho, t, e1, e2, estep, fname):
     en_array = np.arange(float(e1), float(e2)+float(estep), float(estep))
     rho = float(rho)
     mu_array = xraydb.material_mu(formula, en_array, density=rho)
@@ -399,9 +458,9 @@ def attendata(formula, rho, t, e1, e2, estep):
               ' Material.density   : %.3f gr/cm^3 ' % rho,
               ' Material.thickness : %.3f mm ' % t,
               ' Column.1: energy (eV)',
-              ' Column.2: atten_length (mm)' ,
-              ' Column.3: trans_fraction',
-              ' Column.4: atten_fraction')
+              ' Column.2: attenuation_length (mm)' ,
+              ' Column.3: transmitted_fraction',
+              ' Column.4: attenuated_fraction')
 
     arr_names = ('energy       ', 'atten_length ',
                  'trans_fract  ', 'atten_fract  ')
@@ -409,18 +468,14 @@ def attendata(formula, rho, t, e1, e2, estep):
     txt = make_asciifile(header, arr_names,
                          (en_array, 10/mu_array, trans, atten))
 
-    fname = 'xrayweb_atten_%s_%s.txt' % (formula,
-                                         time.strftime('%Y%h%d_%H%M%S'))
-    return Response(txt, mimetype='text/plain',
-                    headers={"Content-Disposition":
-                             "attachment;filename=%s" % fname})
+    return Response(txt, mimetype='text/plain')
 
-@app.route('/attenscript/<formula>/<rho>/<t>/<e1>/<e2>/<estep>')
-def attenscript(formula, rho, t, e1, e2, estep):
+@app.route('/attenscript/<formula>/<rho>/<t>/<e1>/<e2>/<estep>/<fname>')
+def attenscript(formula, rho, t, e1, e2, estep, fname):
     """attenuation data as python code"""
     script = """#!/usr/bin/env python
 #
-# X-rau attenuation calculations
+# X-ray attenuation calculations
 # this requires Python3, numpy, matplotlib, and xraydb modules. Use:
 #        pip install xraydb
 
@@ -454,16 +509,12 @@ plt.title('attenuation for %s' % formula)
 plt.show()
 """.format(formula=formula, density=float(rho), thick=float(t),
            e1=float(e1), e2=float(e2), estep=float(estep))
-
-    fname = 'xrayweb_atten_%s_%s.py' % (formula,
-                                          time.strftime('%Y%h%d_%H%M%S'))
-    return Response(script, mimetype='text/plain',
-                    headers={"Content-Disposition":
-                             "attachment;filename=%s" % fname})
+    return Response(script, mimetype='text/plain')
 
 
-@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>')
-def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep):
+
+@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>/<fname>')
+def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep, fname):
     """mirror reflectivity data as file"""
     en_array = np.arange(float(e1), float(e2)+float(estep), float(estep))
     angle = float(angle)
@@ -483,21 +534,15 @@ def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep):
               ' Material.polarization: %s ' % polar,
               ' Column.1: energy (eV)',
               ' Column.2: reflectivity',
-              ' Column.3: crit_angle (mrad)')
+              ' Column.3: critical_angle (mrad)')
 
     arr_names = ('energy       ', 'reflectivity ', 'crit_angle    ')
-
     txt = make_asciifile(header, arr_names, (en_array, reflectivity, ang_crit))
-
-    fname = 'xrayweb_reflect_%s_%s.txt' % (formula,
-                                          time.strftime('%Y%h%d_%H%M%S'))
-    return Response(txt, mimetype='text/plain',
-                    headers={"Content-Disposition":
-                             "attachment;filename=%s" % fname})
+    return Response(txt, mimetype='text/plain')
 
 
-@app.route('/reflectscript/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>')
-def reflectscript(formula, rho, angle, rough, polar, e1, e2, estep):
+@app.route('/reflectscript/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>/<fname>')
+def reflectscript(formula, rho, angle, rough, polar, e1, e2, estep, fname):
     """mirror reflectivity data as python code"""
 
     script = """#!/usr/bin/env python
@@ -539,9 +584,61 @@ plt.show()
 """.format(formula=formula, density=float(rho),  angle=float(angle),
            rough=float(rough), polar=polar, e1=float(e1),
            e2=float(e2), estep=float(estep))
+    return Response(script, mimetype='text/plain')
 
-    fname = 'xrayweb_reflect_%s_%s.py' % (formula,
-                                          time.strftime('%Y%h%d_%H%M%S'))
-    return Response(script, mimetype='text/plain',
-                    headers={"Content-Disposition":
-                             "attachment;filename=%s" % fname})
+@app.route('/fluxscript/<mat1>/<mat2>/<frac1>/<thick>/<t_units>/<pressure>/<energy>/<voltage>/<amp_val>/<amp_units>/<fname>')
+def fluxscript(mat1, mat2, frac1, thick, t_units, pressure, energy,
+               voltage, amp_val, amp_units, fname):
+    """ion chamber flux script"""
+    script = """#!/usr/bin/env python
+#
+# X-ray ion chamber flux calculation
+# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
+#        pip install xraydb
+
+import numpy as np
+import matplotlib.pyplot as plt
+import xraydb
+
+# inputs from web form
+mat1 = '{mat1:s}'
+mat2 = '{mat2:s}'
+frac1 = {frac1:s}
+
+thick = {thick:s}
+t_units = '{t_units:s}'
+pressure = {pressure:s}
+voltage = {voltage:s}
+energy = {energy:s}
+amp_val = {amp_val:s}
+amp_units = '{amp_units:s}'
+
+if t_units == 'microns':
+     thick = 0.001 * thick
+
+     
+if mat2 in (None, 'None', ''):
+    mat = mat1
+else:
+    mat = dict(mat1=float(frac1), mat2=1-float(frac1))
+
+flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
+                                length=thick*pressure,
+                                sensitivity=amp_val,
+                                sensitivity_units=amp_units)
+         
+print('Incident to Detector: %.7g' % flux.incident)
+print('Absorbed for Photo Current: %.7g ' % flux.photo)
+print('Transmitted out of Detector: %.7g ' % flux.transmitted)
+
+
+
+""".format(mat1=mat1, mat2=mat2, frac1=frac1, thick=thick,
+           t_units=t_units, pressure=pressure, voltage=voltage,
+           energy=energy, amp_val=amp_val, amp_units=amp_units.replace('_', '/'))
+
+    return Response(script, mimetype='text/plain')
+
+
+
+        
