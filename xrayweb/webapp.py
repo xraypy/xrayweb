@@ -74,6 +74,7 @@ def nformat(val, length=11):
     return fmt.format(val)[:length]
 
 def make_plot(x, y, material_name, formula_name, ytitle='mu',
+              xtitle='Energy (eV)',
               xlog_scale=False, ylog_scale=False, y2=None,
               y1label='data', y2label='data2', yrange=None):
     """
@@ -119,7 +120,7 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
               'width': 550,
               'hovermode': 'closest',
               'showlegend': len(data) > 1,
-              'xaxis': {'title': {'text': 'Energy (eV)'},
+              'xaxis': {'title': {'text': xtitle},
                         'type': xtype,
                         'tickformat': '.0f'},
               'yaxis': {'title': {'text': ytitle},
@@ -338,9 +339,8 @@ def scattering(elem=None):
 @app.route('/ionchamber/', methods=['GET', 'POST'])
 def ionchamber(elem=None):
     message = []
- 
+
     incident_flux = transmitted_flux = photo_flux = ''
-    tunitslist = ('mm', 'microns')
     mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe') # 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
@@ -349,21 +349,17 @@ def ionchamber(elem=None):
         mat2 = request.form.get('mat2', 'None')
         frac1 = request.form.get('frac1', '1')
         thick = request.form.get('thick', '1')
-        t_units = request.form.get('t_units', 'mm')
         pressure = request.form.get('pressure', '1')
         energy = request.form.get('energy', '10000')
         voltage = request.form.get('voltage', '1')
         amp_val = request.form.get('amp_val', '1')
-        amp_units = request.form.get('amp_units', 'nA/V')
+        amp_units = request.form.get('amp_units', 'uA/V')
 
         amp_val = float(amp_val)
         pressure  = float(pressure)
         energy  = float(energy)
         voltage = float(voltage)
-
         thick   = float(thick)
-        if t_units == 'microns':
-            thick = 0.001 * thick
 
         if 'diode' in mat1:
             mat1 = mat1.replace(' (diode)', '')
@@ -377,12 +373,12 @@ def ionchamber(elem=None):
                 mat = {mat1: 1.0}
             else:
                 mat = {mat1: float(frac1), mat2: 1-float(frac1)}
-            
+
         flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                         length=thick*pressure,
                                         sensitivity=amp_val,
                                         sensitivity_units=amp_units)
-         
+
         incident_flux = "%.7g" % flux.incident
         transmitted_flux = "%.7g" % flux.transmitted
         photo_flux = "%.7g" % flux.photo
@@ -391,35 +387,69 @@ def ionchamber(elem=None):
                         'mat2': 'None',
                         'frac1': 1.0,
                         'thick': 100.0,
-                        't_units': 'mm',
                         'pressure': 1,
                         'energy':  10000,
                         'voltage': 1.000,
                         'amp_val': '1',
-                        'amp_units': 'nA/V'}
+                        'amp_units': 'uA/V'}
 
     return render_template('ionchamber.html',
                            incident_flux=incident_flux,
                            transmitted_flux=transmitted_flux,
-                           photo_flux=photo_flux,                           
+                           photo_flux=photo_flux,
                            mat1list=mat1list,
                            mat2list=mat2list,
-                           tunitslist=tunitslist,
                            materials_dict=materials_dict)
 
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
-@app.route('/darwinwidth/<elem>',  methods=['GET', 'POST'])
-def darwinwidth(elem=None):
-    edges = atomic = lines = {}
-    if elem is not None:
-        edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem),
-                 'mass': xraydb.atomic_mass(elem),
-                 'density': xraydb.atomic_density(elem)}
-        lines= xraydb.xray_lines(elem)
-    return render_template('darwinwidth.html', edges=edges, elem=elem,
-                           atomic=atomic, lines=lines, materials_dict=materials_dict)
+def darwinwidth():
+    xtal_list = ('Si', 'Ge', 'C')
+    hkl_list = ('111', '220', '311', '331', '333', '400',
+                '422', '440', '444', '511', '531', '533',
+                '551', '553', '555', '620', '642', '660',
+                '664', '711', '731', '733', '751', '753',
+                '755', '771', '773', '775', '777', '800',
+                '822', '840', '844', '862', '866', '880',
+                '884', '888', '911', '931', '933', '951',
+                '953', '955', '971', '973', '975', '977',
+                '991', '993', '995', '997', '999')
+    dtheta_plot = denergy_plot = None
+    theta_deg = theta_fwhm = energy_fwhm = ''
+    if request.method == 'POST':
+        xtal = request.form.get('xtal', 'Si')
+        hkl = request.form.get('hkl', '111')
+        harmonic= request.form.get('harmonic', '1')
+        energy = request.form.get('energy', '10000')
+
+        hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
+        m = int(harmonic)
+        energy = float(energy)
+        out = xraydb.darwin_width(energy, xtal, hkl_tuple, m=m)
+
+        title='%s(%s), order=%d, E=%.1f eV' % (xtal, hkl, m, energy)
+        dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity,  title, xtal,
+                                ytitle='reflectivity', xtitle='Angle (microrad)')
+
+        denergy_plot = make_plot(out.denergy, out.intensity,  title, xtal,
+                                ytitle='reflectivity', xtitle='Energy (eV)')
+
+        theta_deg = "%.5f" % (out.theta * 180 / np.pi)
+        theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
+        energy_fwhm = "%.5f" % out.energy_fwhm
+    else:
+        request.form = {'xtal': 'Si', 'hkl':'111',
+                        'harmonic':'1', 'energy':'10000'}
+
+    return render_template('darwinwidth.html',
+                           dtheta_plot=dtheta_plot,
+                           denergy_plot=denergy_plot,
+                           theta_deg=theta_deg,
+                           theta_fwhm=theta_fwhm,
+                           energy_fwhm=energy_fwhm,
+                           xtal_list=xtal_list,
+                           hkl_list=hkl_list,
+                           materials_dict=materials_dict)
 
 
 
@@ -443,6 +473,71 @@ def make_asciifile(header, array_names, arrays):
         buff.append('  '.join(l))
     buff.append('')
     return '\n'.join(buff)
+
+@app.route('/darwindata/<xtal>/<hkl>/<m>/<energy>/<fname>')
+def darwindata(xtal, hkl, m, energy, fname):
+    hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
+    out = xraydb.darwin_width(float(energy), xtal, hkl_tuple, m=int(m))
+
+    header = (' X-ray Monochromator Darwin Width from xrayweb  %s ' % time.ctime(),
+              ' Monochromator.xtal       : %s ' % xtal,
+              ' Monochromator.hkl        : %s ' % hkl,
+              ' Monochromator.harmonic   : %s ' % m,
+              ' Monochromator.theta      : %.5f (deg) ' % (out.theta*180/np.pi),
+              ' Monochromator.theta_fwhm : %.5f (microrad) ' % (out.theta_fwhm*1e6),
+              ' Monochromator.energy_fwhm: %.5f (eV) ' % out.energy_fwhm,
+              ' Xray.Energy              : %s (eV)' % energy,
+              ' Column.1: dtheta (microrad)' ,
+              ' Column.2: denergy (eV)',
+              ' Column.3: zeta (delta_lambda / lambda)',
+              ' Column.4: intensity')
+    arr_names = ('dtheta       ', 'denergy      ',
+                 'zeta         ', 'intensity    ')
+
+    txt = make_asciifile(header, arr_names,
+                         (out.dtheta*1e6, out.denergy, out.zeta, out.intensity))
+
+    return Response(txt, mimetype='text/plain')
+
+@app.route('/darwinscript/<xtal>/<hkl>/<m>/<energy>/<fname>')
+def darwinscript(xtal, hkl, m, energy, fname):
+    script = """#!/usr/bin/env python
+#
+# X-ray monochromator Darwin Width calculations
+# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
+#        pip install xraydb
+
+import numpy as np
+import matplotlib.pyplot as plt
+import xraydb
+
+# inputs from web form
+xtal    = '{xtal:s}'
+h, k, l = ({h:s}, {k:s}, {l:s})
+harmonic = {m:s}
+energy = {energy:s}
+
+dw = xraydb.darwin_width(energy, xtal, (h, k, l), m=harmonic)
+
+print('Mono Angle: %.5f deg' % (dw.theta*180/np.pi))
+print('Angular width FWHM: %.5f microrad' % (dw.theta_fwhm*1.e6))
+print('Energy width FWHM: %.5f eV' % (dw.energy_fwhm))
+
+plt.plot(dw.denergy, dw.intensity)
+plt.xlabel('Energy (eV)')
+plt.ylabel('reflectivity')
+plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
+plt.show()
+
+plt.plot(dw.dtheta*1e6, dw.intensity)
+plt.xlabel('Angle (microrad)')
+plt.ylabel('reflectivity')
+plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
+plt.show()
+
+""".format(xtal=xtal, hkl=hkl, h=hkl[0], k=hkl[1], l=hkl[2], m=m, energy=energy)
+    return Response(script, mimetype='text/plain')
+
 
 @app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<estep>/<fname>')
 def attendata(formula, rho, t, e1, e2, estep, fname):
@@ -586,8 +681,8 @@ plt.show()
            e2=float(e2), estep=float(estep))
     return Response(script, mimetype='text/plain')
 
-@app.route('/fluxscript/<mat1>/<mat2>/<frac1>/<thick>/<t_units>/<pressure>/<energy>/<voltage>/<amp_val>/<amp_units>/<fname>')
-def fluxscript(mat1, mat2, frac1, thick, t_units, pressure, energy,
+@app.route('/fluxscript/<mat1>/<mat2>/<frac1>/<thick>/<pressure>/<energy>/<voltage>/<amp_val>/<amp_units>/<fname>')
+def fluxscript(mat1, mat2, frac1, thick, pressure, energy,
                voltage, amp_val, amp_units, fname):
     """ion chamber flux script"""
     script = """#!/usr/bin/env python
@@ -604,18 +699,13 @@ import xraydb
 mat1 = '{mat1:s}'
 mat2 = '{mat2:s}'
 frac1 = {frac1:s}
-
 thick = {thick:s}
-t_units = '{t_units:s}'
 pressure = {pressure:s}
 voltage = {voltage:s}
 energy = {energy:s}
 amp_val = {amp_val:s}
 amp_units = '{amp_units:s}'
 
-if t_units == 'microns':
-     thick = 0.001 * thick
-     
 if mat2 in (None, 'None', ''):
     mat = dict(mat1=1.0)
 else:
@@ -625,19 +715,15 @@ flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                 length=thick*pressure,
                                 sensitivity=amp_val,
                                 sensitivity_units=amp_units)
-         
+
 print('Incident to Detector: %.7g' % flux.incident)
 print('Absorbed for Photo Current: %.7g ' % flux.photo)
 print('Transmitted out of Detector: %.7g ' % flux.transmitted)
 
 
 
-""".format(mat1=mat1, mat2=mat2, frac1=frac1, thick=thick,
-           t_units=t_units, pressure=pressure, voltage=voltage,
-           energy=energy, amp_val=amp_val, amp_units=amp_units.replace('_', '/'))
+""".format(mat1=mat1, mat2=mat2, frac1=frac1, thick=thick, pressure=pressure,
+           voltage=voltage, energy=energy, amp_val=amp_val,
+           amp_units=amp_units.replace('_', '/'))
 
     return Response(script, mimetype='text/plain')
-
-
-
-        
