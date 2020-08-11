@@ -43,8 +43,8 @@
         <td>
           <label for="roughness">Roughness (Å):</label>
 	  </td><td>
-          <input type="number" min="0" id="roughness" name="roughness"
-		 size="8"  value="{{ request.form['roughness'] }}">
+          <input type="number" style="width: 100px;" min="0" id="roughness" name="roughness"
+		 value="{{ request.form['roughness'] }}">
         </td>
 
         <td>
@@ -112,9 +112,9 @@
 		 e2=request.form['energy2'],
 		 estep=request.form['step'],
 		 fname='xrayweb_reflect.txt')}}">  data file</a>
-    
+
     &nbsp; &nbsp;
-    
+
     <a href="{{url_for('reflectscript',
 		 formula=request.form['formula1'],
 		 rho=request.form['density1'],
@@ -125,13 +125,13 @@
 		 e2=request.form['energy2'],
 		 estep=request.form['step'],
 		 fname='xrayweb_reflect.py')}}"> python script </a>
-    
-    
+
+
     <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
 
    <table cellpadding=2 border=0 style='vertical-align: top; '>
      <tr style='vertical-align: top; '>
-       
+
        <td>
          <div id="ref_plot">
            <script  type="text/javascript">
@@ -148,7 +148,7 @@
          </div>
    </td></tr></table>
 
-   
+
    {% endif %}
 </div>
 {% endblock %}
