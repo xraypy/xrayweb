@@ -359,7 +359,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50', mode='Log'):
                             ylog_scale=True, yrange=yrange,
                             y1label='Total',
                             y2=mu_photo, y2label='Photo-electric',
-                            y3=mu_incoh, y3label='Inchorent',
+                            y3=mu_incoh, y3label='Incoherent',
                             y4=mu_coher, y4label='Coherent')
 
         f1 = xraydb.f1_chantler(elem, energy)
