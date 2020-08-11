@@ -41,13 +41,16 @@
 </div>
 
 <ul class=topmenu>
-  <li>   <a href="{{url_for('element')}}"> X-ray Edges and Lines </a> </li>
-  <li>   <a href="{{url_for('atten')}}"> X-ray Attenuation </a> </li> 
-  <li>   <a href="{{url_for('ionchamber')}}">  Ion Chamber Flux </a> </li> 
-  <li>   <a href="{{url_for('reflectivity')}}"> Mirror Reflectivity </a> </li> 
-  <!-- <li>   <a href="{{url_for('darwinwidth')}}"> Mono Darwin Widths </a> </li> -->
-  <!-- <li>   <a href="{{url_for('scattering')}}"> Scattering Factors </a> </li>  -->
-  <li align='right'>   <a href="{{url_for('about')}}"> About </a> </li> 
+  <li> <a href="{{url_for('element')}}"> X-ray Edges and Lines </a> </li>
+  <li> <a href="{{url_for('atten')}}"> X-ray Attenuation </a> </li>
+  <li> <a href="{{url_for('ionchamber')}}">  Ion Chamber Flux </a> </li>
+  <li> <a href="{{url_for('reflectivity')}}"> Mirror Reflectivity </a> </li>
+  <li> <a href="{{url_for('darwinwidth')}}"> Mono Darwin Widths </a> </li>
+  <li> <a href="{{url_for('scattering')}}"> Scattering Factors </a> </li>
+  <li> <a href="{{url_for('about')}}"> About </a> </li>
+<!--
+  <li> <a href="{{url_for('static', filename='style.css')}}"> _ </a></li>
+-->
 </ul>
 
     {% block body %}

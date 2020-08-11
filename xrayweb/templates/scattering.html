@@ -1,12 +1,223 @@
 {% extends "layout.html" %}
 
 {% block body %}
+<p> <div class=subtitle>Atomic Scattering and Form Factors </div></p>
+
 <div class=body>
-    {% if error %}
-        <p>{{error}}</p>
+  {% if error %}  <p>{{error}}</p>  {% endif %}
+
+
+  <form action="{{url_for('scattering')}}" method="POST">
+    <input type=hidden name=elem value={{elem}}>
+    <table cellspacing=0 cellpadding=0>
+      <tr>
+	<td rowspan=9>
+	  <table class="ptable" cellspacing=0 cellpadding=0>
+	    <tr>
+	      <td class=elem width=30> <a href="{{url_for('scattering')}}H/{{e1}}/{{e2}}/{{de}}/{{mode}}">H </a> </td>
+	      <td colspan=16></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}He/{{e1}}/{{e2}}/{{de}}/{{mode}}">He </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Li/{{e1}}/{{e2}}/{{de}}/{{mode}}">Li </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Be/{{e1}}/{{e2}}/{{de}}/{{mode}}">Be </a></td>
+	      <td colspan=10></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}B/{{e1}}/{{e2}}/{{de}}/{{mode}}">B </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}C/{{e1}}/{{e2}}/{{de}}/{{mode}}">C </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}N/{{e1}}/{{e2}}/{{de}}/{{mode}}">N </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}O/{{e1}}/{{e2}}/{{de}}/{{mode}}">O </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}F/{{e1}}/{{e2}}/{{de}}/{{mode}}">F </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ne/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ne </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Na/{{e1}}/{{e2}}/{{de}}/{{mode}}">Na </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Mg/{{e1}}/{{e2}}/{{de}}/{{mode}}">Mg </a></td>
+	      <td colspan=10></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Al/{{e1}}/{{e2}}/{{de}}/{{mode}}">Al </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Si/{{e1}}/{{e2}}/{{de}}/{{mode}}">Si </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}P/{{e1}}/{{e2}}/{{de}}/{{mode}}">P </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}S/{{e1}}/{{e2}}/{{de}}/{{mode}}">S </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cl/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cl </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ar/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ar </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}K/{{e1}}/{{e2}}/{{de}}/{{mode}}">K </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ca/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ca </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Sc/{{e1}}/{{e2}}/{{de}}/{{mode}}">Sc </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ti/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ti </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}V/{{e1}}/{{e2}}/{{de}}/{{mode}}" >V  </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cr </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Mn/{{e1}}/{{e2}}/{{de}}/{{mode}}">Mn </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Fe/{{e1}}/{{e2}}/{{de}}/{{mode}}">Fe </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Co/{{e1}}/{{e2}}/{{de}}/{{mode}}">Co </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ni/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ni </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cu/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cu </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Zn/{{e1}}/{{e2}}/{{de}}/{{mode}}">Zn </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ga/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ga </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ge/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ge </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}As/{{e1}}/{{e2}}/{{de}}/{{mode}}">As </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Se/{{e1}}/{{e2}}/{{de}}/{{mode}}">Se </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Br/{{e1}}/{{e2}}/{{de}}/{{mode}}">Br </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Kr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Kr </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Rb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Rb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Sr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Sr </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Y/{{e1}}/{{e2}}/{{de}}/{{mode}}">Y </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Zr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Zr </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Nb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Nb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Mo/{{e1}}/{{e2}}/{{de}}/{{mode}}">Mo </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Tc/{{e1}}/{{e2}}/{{de}}/{{mode}}">Tc </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ru/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ru </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Rh/{{e1}}/{{e2}}/{{de}}/{{mode}}">Rh </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pd/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pd </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ag/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ag </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cd/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cd </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}In/{{e1}}/{{e2}}/{{de}}/{{mode}}">In </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Sn/{{e1}}/{{e2}}/{{de}}/{{mode}}">Sn </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Sb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Sb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Te/{{e1}}/{{e2}}/{{de}}/{{mode}}">Te </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}I/{{e1}}/{{e2}}/{{de}}/{{mode}}">I </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Xe/{{e1}}/{{e2}}/{{de}}/{{mode}}">Xe </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cs/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cs </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ba/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ba </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}La/{{e1}}/{{e2}}/{{de}}/{{mode}}">La </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Hf/{{e1}}/{{e2}}/{{de}}/{{mode}}">Hf </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ta/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ta </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}W/{{e1}}/{{e2}}/{{de}}/{{mode}}">W </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Re/{{e1}}/{{e2}}/{{de}}/{{mode}}">Re </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Os/{{e1}}/{{e2}}/{{de}}/{{mode}}">Os </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ir/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ir </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pt/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pt </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Au/{{e1}}/{{e2}}/{{de}}/{{mode}}">Au </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Hg/{{e1}}/{{e2}}/{{de}}/{{mode}}">Hg </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Tl/{{e1}}/{{e2}}/{{de}}/{{mode}}">Tl </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Bi/{{e1}}/{{e2}}/{{de}}/{{mode}}">Bi </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Po/{{e1}}/{{e2}}/{{de}}/{{mode}}">Po </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}At/{{e1}}/{{e2}}/{{de}}/{{mode}}">At </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Rn/{{e1}}/{{e2}}/{{de}}/{{mode}}">Rn </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Fr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Fr </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ra/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ra </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ac/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ac </a></td>
+	    </tr><tr>
+	      <td colspan=3></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ce/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ce </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pr/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pr </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Nd/{{e1}}/{{e2}}/{{de}}/{{mode}}">Nd </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pm/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pm </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Sm/{{e1}}/{{e2}}/{{de}}/{{mode}}">Sm </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Eu/{{e1}}/{{e2}}/{{de}}/{{mode}}">Eu </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Gd/{{e1}}/{{e2}}/{{de}}/{{mode}}">Gd </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Tb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Tb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Dy/{{e1}}/{{e2}}/{{de}}/{{mode}}">Dy </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Ho/{{e1}}/{{e2}}/{{de}}/{{mode}}">Ho </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Er/{{e1}}/{{e2}}/{{de}}/{{mode}}">Er </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Tm/{{e1}}/{{e2}}/{{de}}/{{mode}}">Tm </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Yb/{{e1}}/{{e2}}/{{de}}/{{mode}}">Yb </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Lu/{{e1}}/{{e2}}/{{de}}/{{mode}}">Lu </a></td>
+	    </tr><tr>
+	      <td colspan=3></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Th/{{e1}}/{{e2}}/{{de}}/{{mode}}">Th </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pa/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pa </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}U/{{e1}}/{{e2}}/{{de}}/{{mode}}">U </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Np/{{e1}}/{{e2}}/{{de}}/{{mode}}">Np </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Pu/{{e1}}/{{e2}}/{{de}}/{{mode}}">Pu </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Am/{{e1}}/{{e2}}/{{de}}/{{mode}}">Am </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cm/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cm </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Bk/{{e1}}/{{e2}}/{{de}}/{{mode}}">Bk </a></td>
+	      <td class=elem width=30>  <a href="{{url_for('scattering')}}Cf/{{e1}}/{{e2}}/{{de}}/{{mode}}">Cf </a></td>
+	    </tr>
+	  </table>
+
+	</td>
+	<td>  &nbsp; &nbsp;  </td> <td>
+
+	  <table>
+	    <tr><td colspan=3> Scattering Factors for Element: <b> {{elem}} <b>  </td></tr>
+
+	    <tr><td><b>X-ray Energy</b></td><td colspan=2><hr></td></tr>
+	  <tr>
+	    <td> <label for="e1">Energy Range (eV):</label></td>
+	    <td> <input style="width: 80px;" type="number" id="e1" name="e1"
+			min="0" step="50" value="{{e1}}">
+	      <label for="e2">:</label>
+	      <input style="width: 80px;" type="number" id="e2" name="e2"
+		     min="0" step="50" value="{{e2}}"></td>
+	  </tr>
+	  <tr>
+	    <td> <label for="de"> Energy Step (eV):</label></td>
+	    <td>
+              <select style="width: 100px;" name="de" id="de">
+             <option value="1" {% if de == "1" %} selected {% endif %}>1</option>
+             <option value="2" {% if de == "2" %} selected {% endif %}>2</option>
+             <option value="5" {% if de == "5" %} selected {% endif %}>5</option>
+             <option value="10" {% if de == "10" %} selected {% endif %}>10</option>
+             <option value="20" {% if de == "20" %} selected {% endif %}>20</option>
+             <option value="50" {% if de == "50" %} selected {% endif %}>50</option>
+             <option value="100" {% if de == "100" %} selected {% endif %}>100</option>
+             <option value="200" {% if de == "200" %} selected {% endif %}>200</option>
+             <option value="500" {% if de == "500" %} selected {% endif %}>500</option>
+             <option value="1000" {% if de == "1000" %} selected {% endif %}>1000</option>
+           </select>
+	    </td>
+	  </tr>
+	  <tr>
+	 <td> <label for="mode">Plot Mode:</label> </td>
+	 <td>
+           <select style="width: 100px;" name="mode" id="mode">
+             <option value="Log" {% if mode == "Log" %} selected {% endif %}>  Log</option>
+             <option value="Linear" {% if mode == "Linear" %} selected {% endif %}>Linear</option>
+           </select>
+	 </td>
+	  </tr>
+	    <tr><td>  <input type="submit" value="Submit"></td></tr>
+	    <tr><td>
+		{% if f1f2_plot %}
+		<a href="{{url_for('scatteringdata',
+			 elem=elem,
+			 e1=e1, e2=e2, de=de, mode=mode,
+			 fname='xrayweb_scatter.txt')}}">data file</a>
+		{% endif %}
+	      </td>
+	      <td>
+		{% if f1f2_plot %}
+		<a href="{{url_for('scatteringscript',
+			 elem=elem,
+			 e1=e1, e2=e2, de=de, mode=mode,
+			 fname='xrayweb_scatter.py')}}">python script</a>
+		{% endif %}
+	      </td>
+	    </tr>
+	</table>
+
+	</td>
+      </tr>
+    </table>
+
+  </form>
+
+  <p>
+
+  {% if f1f2_plot %}
+   <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+   <table cellpadding=2 border=0 style='vertical-align: top; '>
+     <tr style='vertical-align: top; '>
+       <td>
+         <div id="f1f2_plot">
+           <script  type="text/javascript">
+             var graph = {{f1f2_plot | safe}};
+             Plotly.plot('f1f2_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
+       </td> <td>
+         <div id="mu_plot">
+           <script  type="text/javascript">
+             var graph = {{mu_plot | safe}};
+             Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
+	 </td></tr></table>
     {% endif %}
 
-    <form action="{{url_for('scattering')}}" method="POST">
-    </form>
+
 </div>
 {% endblock %}

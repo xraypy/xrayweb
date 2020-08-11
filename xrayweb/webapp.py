@@ -74,9 +74,13 @@ def nformat(val, length=11):
     return fmt.format(val)[:length]
 
 def make_plot(x, y, material_name, formula_name, ytitle='mu',
-              xtitle='Energy (eV)',
-              xlog_scale=False, ylog_scale=False, y2=None,
-              y1label='data', y2label='data2', yrange=None):
+              xtitle='Energy (eV)', y1label='data',
+              xlog_scale=False, ylog_scale=False, yrange=None,
+              y2=None, y2label='data2',
+              y3=None, y3label='data3',
+              y4=None, y4label='data4',
+              y5=None, y5label='data5',
+              y6=None, y6label='data6'):
     """
     build a plotly-style JSON plot
     """
@@ -86,13 +90,16 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
              'name': y1label,
              'line': {'width': 3},
              'hoverinfo': 'x+y'}]
-    if y2 is not None:
-        data.append({'x': x.tolist(),
-                     'y': y2.tolist(),
-                     'type': 'scatter',
-                     'name': y2label,
-                     'line': {'width': 3},
-                     'hoverinfo': 'x+y'})
+
+    for yn, ynlab in ((y2, y2label), (y3, y3label), (y4, y4label),
+                      (y5, y5label), (y6, y6label)):
+        if yn is not None:
+            data.append({'x': x.tolist(),
+                         'y': yn.tolist(),
+                         'type': 'scatter',
+                         'name': ynlab,
+                         'line': {'width': 3},
+                         'hoverinfo': 'x+y'})
 
     title = formula_name
     if material_name not in ('', 'None', None):
@@ -253,7 +260,6 @@ def reflectivity(material=None):
     message = []
     ref_plot = angc_plot = {}
     has_data = False
-
     if request.method == 'POST':
         formula1 = request.form.get('formula1', 'None')
         density1 = request.form.get('density1', '')
@@ -324,16 +330,49 @@ def reflectivity(material=None):
 
 @app.route('/scattering/', methods=['GET', 'POST'])
 @app.route('/scattering/<elem>',  methods=['GET', 'POST'])
-def scattering(elem=None):
-    edges = atomic = lines = {}
-    if elem is not None:
-        edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem),
-                 'mass': xraydb.atomic_mass(elem),
-                 'density': xraydb.atomic_density(elem)}
-        lines= xraydb.xray_lines(elem)
-    return render_template('scattering.html', edges=edges, elem=elem,
-                           atomic=atomic, lines=lines, materials_dict=materials_dict)
+@app.route('/scattering/<elem>/<e1>/<e2>/<de>/<mode>',  methods=['GET', 'POST'])
+def scattering(elem=None, e1='1000', e2='50000', de='50', mode='Log'):
+    f1f2_plot = mu_plot = None
+    if len(request.form) != 0:
+        elem = request.form.get('elem', 'None')
+        e1 = request.form.get('e1', e1)
+        e2 = request.form.get('e2', e2)
+        de = request.form.get('de', de)
+        mode = request.form.get('mode', mode)
+
+    if elem not in (None, 'None', ''):
+        energy = np.arange(float(e1), float(e2)+float(de), float(de))
+
+        mu_total = xraydb.mu_elam(elem, energy, kind='total')
+        mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
+        mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
+        mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
+        yrange = [-0.25+min(-1.8,
+                            np.log10(mu_photo.min()+1.e-5),
+                            np.log10(mu_incoh.min()+1.e-5),
+                            np.log10(mu_coher.min()+1.e-5)),
+                  0.75+np.log10(mu_total.max()+1.e-5)]
+
+        mu_plot = make_plot(energy, mu_total, 'Mass Attenuation for %s' %
+                            elem, elem, ytitle='mu/rho (cm^2/gr)',
+                            xtitle='Energy (eV)', xlog_scale=False,
+                            ylog_scale=True, yrange=yrange,
+                            y1label='Total',
+                            y2=mu_photo, y2label='Photo-electric',
+                            y3=mu_incoh, y3label='Inchorent',
+                            y4=mu_coher, y4label='Coherent')
+
+        f1 = xraydb.f1_chantler(elem, energy)
+        f2 = xraydb.f2_chantler(elem, energy)
+        f1f2_plot = make_plot(energy, f1, 'Resonant Scattering factors for %s' % elem,
+                              elem, ytitle='f1, f2 (electrons/atom)',
+                              xtitle='Energy (eV)',
+                              xlog_scale=False, ylog_scale=False, y2=f2,
+                              y1label='f1', y2label='f2')
+
+    return render_template('scattering.html', elem=elem, e1=e1, e2=e2,
+                           f1f2_plot=f1f2_plot, mu_plot=mu_plot,
+                           de=de, mode=mode, materials_dict=materials_dict)
 
 
 @app.route('/ionchamber/', methods=['GET', 'POST'])
@@ -452,7 +491,6 @@ def darwinwidth():
                            materials_dict=materials_dict)
 
 
-
 def random_string(n):
     """  random_string(n)
     generates a random string of length n, that will match:
@@ -473,6 +511,86 @@ def make_asciifile(header, array_names, arrays):
         buff.append('  '.join(l))
     buff.append('')
     return '\n'.join(buff)
+
+
+
+@app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<mode>/<fname>')
+def scatteringdata(elem, e1, e2, de, mode, fname):
+
+    energy = np.arange(float(e1), float(e2)+float(de), float(de))
+
+    mu_total = xraydb.mu_elam(elem, energy, kind='total')
+    mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
+    mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
+    mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
+    f1 = xraydb.f1_chantler(elem, energy)
+    f2 = xraydb.f2_chantler(elem, energy)
+
+    header = (' X-ray Atomic Scattering Cross-Sections from xrayweb  %s ' % time.ctime(),
+              ' Element : %s ' % elem,
+              ' Column.1: Energy (eV)',
+              ' Column.2: mu_total (cm^2/gr)',
+              ' Column.3: mu_photo (cm^2/gr)  # Photo-electric',
+              ' Column.4: mu_coher (cm^2/gr)  # Rayleigh',
+              ' Column.5: mu_incoh (cm^2/gr)  # Compton',
+              ' Column.6: f1 (electrons/atom) # real resonant',
+              ' Column.7: f2 (electrons/atom) # imag resonant')
+
+    arr_names = ('energy       ', 'mu_total     ',
+                 'mu_photo     ', 'mu_coher     ',
+                 'mu_incoh     ', 'f1           ', 'f2           ')
+
+    txt = make_asciifile(header, arr_names,
+                         (energy, mu_total, mu_photo, mu_coher, mu_incoh, f1, f2))
+    return Response(txt, mimetype='text/plain')
+
+@app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<mode>/<fname>')
+def scatteringscript(elem, e1, e2, de, mode, fname):
+    script = """#!/usr/bin/env python
+#
+# X-ray atomic scattering factors
+# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
+#        pip install xraydb
+
+import numpy as np
+import matplotlib.pyplot as plt
+import xraydb
+
+# inputs from web form
+elem    = '{elem:s}'
+mode    = '{mode:s}'
+energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
+
+mu_total = xraydb.mu_elam(elem, energy, kind='total')
+mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
+mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
+mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
+
+f1 = xraydb.f1_chantler(elem, energy)
+f2 = xraydb.f2_chantler(elem, energy)
+
+plt.plot(energy, f1, label='f1')
+plt.plot(energy, f2, label='f2')
+plt.xlabel('Energy (eV)')
+plt.ylabel('f1, f2 (electrons/atom)')
+plt.title('Resonant Scattering factors for {elem:s}')
+plt.legend(True)
+plt.show()
+
+plt.plot(energy, mu_total, label='Total')
+plt.plot(energy, mu_photo, label='Photo-electric')
+plt.plot(energy, mu_incoh, label='Incoherent')
+plt.plot(energy, mu_coher, label='Coherent')
+plt.xlabel('Energy (eV)')
+plt.ylabel(r'$\mu/\\rho \\rm\,(cm^2/gr)$')
+plt.legend()
+plt.yscale(mode.lower())
+plt.title('Mass Attenuation for {elem:s}')
+plt.show()
+
+""".format(elem=elem, e1=float(e1), e2=float(e2), de=float(de), mode=mode)
+    return Response(script, mimetype='text/plain')
+
 
 @app.route('/darwindata/<xtal>/<hkl>/<m>/<energy>/<fname>')
 def darwindata(xtal, hkl, m, energy, fname):
