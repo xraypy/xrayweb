@@ -149,17 +149,9 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
 
 
 @app.route('/')
-@app.route('/<elem>', methods=['GET', 'POST'])
-def index(elem=None):
-    edges = atomic = lines = {}
-    if elem is not None:
-        edges= xraydb.xray_edges(elem)
-        atomic= {'n': xraydb.atomic_number(elem),
-                 'mass': xraydb.atomic_mass(elem),
-                 'density': xraydb.atomic_density(elem)}
-        lines= xraydb.xray_lines(elem)
-    return render_template('elements.html', edges=edges, elem=elem,
-                           atomic=atomic, lines=lines, materials_dict=materials_dict)
+def index():
+    return render_template('elements.html', elem=None,
+                           materials_dict=materials_dict)
 
 
 @app.route('/element/')
@@ -330,15 +322,14 @@ def reflectivity(material=None):
 
 @app.route('/scattering/', methods=['GET', 'POST'])
 @app.route('/scattering/<elem>',  methods=['GET', 'POST'])
-@app.route('/scattering/<elem>/<e1>/<e2>/<de>/<mode>',  methods=['GET', 'POST'])
-def scattering(elem=None, e1='1000', e2='50000', de='50', mode='Log'):
+@app.route('/scattering/<elem>/<e1>/<e2>/<de>',  methods=['GET', 'POST'])
+def scattering(elem=None, e1='1000', e2='50000', de='50'):
     f1f2_plot = mu_plot = None
     if len(request.form) != 0:
         elem = request.form.get('elem', 'None')
         e1 = request.form.get('e1', e1)
         e2 = request.form.get('e2', e2)
         de = request.form.get('de', de)
-        mode = request.form.get('mode', mode)
 
     if elem not in (None, 'None', ''):
         energy = np.arange(float(e1), float(e2)+float(de), float(de))
@@ -372,7 +363,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50', mode='Log'):
 
     return render_template('scattering.html', elem=elem, e1=e1, e2=e2,
                            f1f2_plot=f1f2_plot, mu_plot=mu_plot,
-                           de=de, mode=mode, materials_dict=materials_dict)
+                           de=de, materials_dict=materials_dict)
 
 
 @app.route('/ionchamber/', methods=['GET', 'POST'])
@@ -514,8 +505,8 @@ def make_asciifile(header, array_names, arrays):
 
 
 
-@app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<mode>/<fname>')
-def scatteringdata(elem, e1, e2, de, mode, fname):
+@app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<fname>')
+def scatteringdata(elem, e1, e2, de, fname):
 
     energy = np.arange(float(e1), float(e2)+float(de), float(de))
 
@@ -544,8 +535,8 @@ def scatteringdata(elem, e1, e2, de, mode, fname):
                          (energy, mu_total, mu_photo, mu_coher, mu_incoh, f1, f2))
     return Response(txt, mimetype='text/plain')
 
-@app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<mode>/<fname>')
-def scatteringscript(elem, e1, e2, de, mode, fname):
+@app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<fname>')
+def scatteringscript(elem, e1, e2, de, fname):
     script = """#!/usr/bin/env python
 #
 # X-ray atomic scattering factors
@@ -558,7 +549,6 @@ import xraydb
 
 # inputs from web form
 elem    = '{elem:s}'
-mode    = '{mode:s}'
 energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
 
 mu_total = xraydb.mu_elam(elem, energy, kind='total')
@@ -584,11 +574,11 @@ plt.plot(energy, mu_coher, label='Coherent')
 plt.xlabel('Energy (eV)')
 plt.ylabel(r'$\mu/\\rho \\rm\,(cm^2/gr)$')
 plt.legend()
-plt.yscale(mode.lower())
+plt.yscale('log')
 plt.title('Mass Attenuation for {elem:s}')
 plt.show()
 
-""".format(elem=elem, e1=float(e1), e2=float(e2), de=float(de), mode=mode)
+""".format(elem=elem, e1=float(e1), e2=float(e2), de=float(de))
     return Response(script, mimetype='text/plain')
 
 
