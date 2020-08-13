@@ -353,7 +353,11 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             y3=mu_incoh, y3label='Incoherent',
                             y4=mu_coher, y4label='Coherent')
 
-        f1 = xraydb.f1_chantler(elem, energy)
+        try:
+            f1 = xraydb.f1_chantler(elem, energy)
+        except:
+            f1 = xraydb.f1_chantler(elem, energy, smoothing=1)
+
         f2 = xraydb.f2_chantler(elem, energy)
         f1f2_plot = make_plot(energy, f1, 'Resonant Scattering factors for %s' % elem,
                               elem, ytitle='f1, f2 (electrons/atom)',
