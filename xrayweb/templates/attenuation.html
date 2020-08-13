@@ -46,25 +46,24 @@
      <tr>
 	 <td> <label for="e1">Energy Range (eV):</label></td>
 	 <td> <input style="width: 80px;" type="number" id="e1" name="e1"
-		     min="50" max="725000" step="50"
-		     value="{{request.form['e1']}}">
+		     min="0" max="725000" step="{{de}}" value="{{request.form['e1']}}">
 	  <label for="e2">:</label>
 	  <input style="width: 80px;" type="number" id="e2" name="e2"
-               min="50" max="725000" step="50" value="{{ request.form['e2'] }}"> </td>
-	 <td> <label for="de"> Energy Step (eV):</label></td>
+               min="0" max="725000" step="{{de}}" value="{{ request.form['e2'] }}"> </td>
+	 <td> <label for="de"> Energy Step (eV):</label> </td>
 	 <td>
-           <select style="width: 100px;" name="de" id="de">
-             <option value="1" {% if request.form['de'] == "1" %} selected {% endif %}>1</option>
-             <option value="2" {% if request.form['de'] == "2" %} selected {% endif %}>2</option>
-             <option value="5" {% if request.form['de'] == "5" %} selected {% endif %}>5</option>
-             <option value="10" {% if request.form['de'] == "10" %} selected {% endif %}>10</option>
-             <option value="20" {% if request.form['de'] == "20" %} selected {% endif %}>20</option>
-             <option value="50" {% if request.form['de'] == "50" %} selected {% endif %}>50</option>
-             <option value="100" {% if request.form['de'] == "100" %} selected {% endif %}>100</option>
-             <option value="200" {% if request.form['de'] == "200" %} selected {% endif %}>200</option>
-             <option value="500" {% if request.form['de'] == "500" %} selected {% endif %}>500</option>
-             <option value="1000" {% if request.form['de'] == "1000" %} selected {% endif %}>1000</option>
-           </select>
+           <select style="width: 100px;" name="de" id="de" onchange="update_step('e1', 'e2', 'de')">
+             <option value="1" {% if de ==1 %} selected {% endif %}>1</option>
+             <option value="2" {% if de == 2 %} selected {% endif %}>2</option>
+             <option value="5" {% if de == 5 %} selected {% endif %}>5</option>
+             <option value="10" {% if de ==10 %} selected {% endif %}>10</option>
+             <option value="20" {% if de == 20 %} selected {% endif %}>20</option>
+             <option value="50" {% if de == 50 %} selected {% endif %}>50</option>
+             <option value="100" {% if de == 100 %} selected {% endif %}>100</option>
+             <option value="200" {% if de == 200 %} selected {% endif %}>200</option>
+             <option value="500" {% if de == 500 %} selected {% endif %}>500</option>
+             <option value="1000" {% if de == 1000 %} selected {% endif %}>1000</option>
+	   </select>
 	 </td>
 
 	 <td> <label for="mode">Plot Mode:</label> </td>

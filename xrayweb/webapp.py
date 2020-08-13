@@ -204,6 +204,7 @@ def atten(material=None):
     num = errors = 0
     mode = 'Linear'
     datalink = None
+    de = 50
     if request.method == 'POST':
         formula = request.form.get('formula')
         matname = request.form.get('matname')
@@ -242,21 +243,18 @@ def atten(material=None):
                                    ytitle='transmitted/attenuated fraction',
                                    y1label='transmitted',
                                    y2label='attenuated')
-
-
-
     else:
         request.form = {'mats': 'silicon',
                         'formula': materials_['silicon'].formula,
                         'density': materials_['silicon'].density,
                         'e1':  1000,
                         'e2': 51000,
-                        'de': "50",
+                        'de': de,
                         'thickness': 1.00,
                         'mode': 'Linear'}
 
     return render_template('attenuation.html', message=message, errors=len(message),
-                           datalink=datalink, mu_plot=mu_plot,
+                           datalink=datalink, mu_plot=mu_plot, de=int(de),
                            atten_plot=atten_plot, matlist=matlist,
                            materials_dict=materials_dict, input=input)
 
@@ -267,6 +265,7 @@ def reflectivity(material=None):
     message = []
     ref_plot = angc_plot = {}
     has_data = False
+    de = '50'
     if request.method == 'POST':
         formula1 = request.form.get('formula1', 'None')
         density1 = request.form.get('density1', '')
@@ -275,7 +274,7 @@ def reflectivity(material=None):
 
         e1 = request.form.get('e1', '1000')
         e2 = request.form.get('e2', '50000')
-        de  = request.form.get('de', '100')
+        de  = request.form.get('de', '50')
         mode = request.form.get('mode', 'Linear')
         roughness = request.form.get('roughness')
         polarization = request.form.get('polarization')
@@ -321,7 +320,7 @@ def reflectivity(material=None):
                         'angle2': 2.5,
                         'e1': 1000,
                         'e2': 50000,
-                        'de': '50',
+                        'de': de,
                         'polarization': 's',
                         'roughness': '0',
                         'mode': 'Linear'}
@@ -330,7 +329,7 @@ def reflectivity(material=None):
     return render_template('reflectivity.html', message=message,
                            errors=len(message), ref_plot=ref_plot, angc_plot=angc_plot,
                            has_data=has_data,
-                           matlist=mirror_mat,
+                           matlist=mirror_mat, de=int(de),
                            materials_dict=materials_dict)
 
 
@@ -378,7 +377,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                               xlog_scale=False, ylog_scale=False, y2=f2,
                               y1label='f1', y2label='f2')
 
-    return render_template('scattering.html', elem=elem, e1=e1, e2=e2, de=de,
+    return render_template('scattering.html', elem=elem, e1=e1, e2=e2, de=int(de),
                            f1f2_plot=f1f2_plot, mu_plot=mu_plot,
                            materials_dict=materials_dict)
 
@@ -547,7 +546,7 @@ def scatteringdata(elem, e1, e2, de, fname):
                  'mu_incoh     ', 'f1           ', 'f2           ')
 
     txt = make_asciifile(header, arr_names,
-                         (energy, mu_total, mu_photo, mu_coher, mu_incoh, f1, f2))
+                         (en_array, mu_total, mu_photo, mu_coher, mu_incoh, f1, f2))
     return Response(txt, mimetype='text/plain')
 
 @app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<fname>')
@@ -555,11 +554,8 @@ def scatteringscript(elem, e1, e2, de, fname):
     e1 = min(EN_MAX, max(EN_MIN, float(e1)))
     e2 = min(EN_MAX, max(EN_MIN, float(e2)))
     de = max(1, float(de))
-    script = """#!/usr/bin/env python
-#
+    script = """{header:s}
 # X-ray atomic scattering factors
-{script_common:s}
-
 # inputs from web form
 elem    = '{elem:s}'
 energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
@@ -591,7 +587,7 @@ plt.yscale('log')
 plt.title('Mass Attenuation for {elem:s}')
 plt.show()
 
-""".format(elem=elem, e1=e1, e2=e2, de=de)
+""".format(header=PY_TOP, elem=elem, e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
 
 

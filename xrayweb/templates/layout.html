@@ -28,6 +28,11 @@
         document.getElementById(formula).value=toFormula(dropdown.options[dropdown.selectedIndex].text);
         document.getElementById(density).value=toDensity(dropdown.options[dropdown.selectedIndex].text);
       }
+
+      function update_step(e1, e2, de) {
+	 document.getElementById(e1).step = document.getElementById(de).value;
+	 document.getElementById(e2).step = document.getElementById(de).value;
+      }
     </script>
   </head>
   <body>
