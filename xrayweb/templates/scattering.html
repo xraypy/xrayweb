@@ -138,10 +138,10 @@
 	  <tr>
 	    <td> <label for="e1">Energy Range (eV):</label></td>
 	    <td> <input style="width: 80px;" type="number" id="e1" name="e1"
-			min="0" step="50" value="{{e1}}">
-	      <label for="e2">:</label>
+			min="50" max="725000" step="50" value="{{e1}}">
+	    <label for="e2">:</label>
 	      <input style="width: 80px;" type="number" id="e2" name="e2"
-		     min="0" step="50" value="{{e2}}"></td>
+		     min="50" max="725000" step="50" value="{{e2}}"></td>
 	  </tr>
 	  <tr>
 	    <td> <label for="de"> Energy Step (eV):</label></td>
@@ -164,7 +164,7 @@
 	    <tr><td>
 		{% if f1f2_plot %}
 		<a href="{{url_for('scatteringdata',
-			 elem=elem, e1=e1, e2=e2, de=de, 
+			 elem=elem, e1=e1, e2=e2, de=de,
 			 fname='xrayweb_scatter.txt')}}">data file</a>
 		{% endif %}
 	      </td>

@@ -26,6 +26,23 @@ mirror_mat = ('silicon', 'quartz', 'zerodur', 'ule glass',
 
 materials_dict = json.dumps(materials_)
 
+
+PY_TOP = """#!/usr/bin/env python
+# this script requires Python3, numpy, matplotlib, and xraydb modules. Use:
+#        pip install xraydb
+import numpy as np
+import matplotlib.pyplot as plt
+import xraydb
+"""
+
+EN_MIN = 50
+EN_MAX = 725000
+def energy_array(e1, e2, de):
+    e1x = min(EN_MAX, max(EN_MIN, float(e1)))
+    e2x = min(EN_MAX, max(EN_MIN, float(e2)))
+    dex = max(1, float(de))
+    return np.arange(e1x, e2x+dex, dex)
+
 def nformat(val, length=11):
     """Format a number with '%g'-like format.
 
@@ -183,7 +200,6 @@ def about():
 @app.route('/atten/<material>', methods=['GET', 'POST'])
 def atten(material=None):
     message = []
-    energies = []
     mu_plot = atten_plot = {}
     num = errors = 0
     mode = 'Linear'
@@ -192,9 +208,9 @@ def atten(material=None):
         formula = request.form.get('formula')
         matname = request.form.get('matname')
         density = request.form.get('density')
-        energy1 = request.form.get('energy1')
-        energy2 = request.form.get('energy2')
-        estep = request.form.get('step')
+        e1 = request.form.get('e1')
+        e2 = request.form.get('e2')
+        de = request.form.get('de')
         mode = request.form.get('mode')
         thickness = request.form.get('thickness')
 
@@ -210,8 +226,7 @@ def atten(material=None):
         if len(message) == 0:
             use_log = mode.lower() == 'log'
             # make plot
-            en_array = np.arange(float(energy1), float(energy2)+float(estep), float(estep))
-
+            en_array = energy_array(e1, e2, de)
             num = en_array.size
             mu_array = xraydb.material_mu(formula, en_array, density=float(density))
             t = float(thickness)
@@ -234,9 +249,9 @@ def atten(material=None):
         request.form = {'mats': 'silicon',
                         'formula': materials_['silicon'].formula,
                         'density': materials_['silicon'].density,
-                        'energy1':  1000,
-                        'energy2': 51000,
-                        'step': "50",
+                        'e1':  1000,
+                        'e2': 51000,
+                        'de': "50",
                         'thickness': 1.00,
                         'mode': 'Linear'}
 
@@ -258,9 +273,9 @@ def reflectivity(material=None):
         angle1 = request.form.get('angle1', '0')
         material1 = request.form.get('mats1', 'silicon')
 
-        energy1 = request.form.get('energy1', '1000')
-        energy2 = request.form.get('energy2', '50000')
-        estep  = request.form.get('step', '100')
+        e1 = request.form.get('e1', '1000')
+        e2 = request.form.get('e2', '50000')
+        de  = request.form.get('de', '100')
         mode = request.form.get('mode', 'Linear')
         roughness = request.form.get('roughness')
         polarization = request.form.get('polarization')
@@ -275,8 +290,7 @@ def reflectivity(material=None):
 
         if len(message) == 0:
             has_data = True
-            en_array = np.arange(float(energy1), float(energy2)+float(estep),
-                                 float(estep))
+            en_array = energy_array(e1, e2, de)
             use_log = mode.lower() == 'log'
 
             ref_array = xraydb.mirror_reflectivity(formula1, 0.001*float(angle1),
@@ -305,9 +319,9 @@ def reflectivity(material=None):
                         'formula2': '',
                         'density2': '',
                         'angle2': 2.5,
-                        'energy1': 1000,
-                        'energy2': 50000,
-                        'step': '50',
+                        'e1': 1000,
+                        'e2': 50000,
+                        'de': '50',
                         'polarization': 's',
                         'roughness': '0',
                         'mode': 'Linear'}
@@ -332,19 +346,18 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
         de = request.form.get('de', de)
 
     if elem not in (None, 'None', ''):
-        energy = np.arange(float(e1), float(e2)+float(de), float(de))
-
-        mu_total = xraydb.mu_elam(elem, energy, kind='total')
-        mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
-        mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
-        mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
+        en_array = energy_array(e1, e2, de)
+        mu_total = xraydb.mu_elam(elem, en_array, kind='total')
+        mu_photo = xraydb.mu_elam(elem, en_array, kind='photo')
+        mu_incoh = xraydb.mu_elam(elem, en_array, kind='incoh')
+        mu_coher = xraydb.mu_elam(elem, en_array, kind='coh')
         yrange = [-0.25+min(-1.8,
                             np.log10(mu_photo.min()+1.e-5),
                             np.log10(mu_incoh.min()+1.e-5),
                             np.log10(mu_coher.min()+1.e-5)),
                   0.75+np.log10(mu_total.max()+1.e-5)]
 
-        mu_plot = make_plot(energy, mu_total, 'Mass Attenuation for %s' %
+        mu_plot = make_plot(en_array, mu_total, 'Mass Attenuation for %s' %
                             elem, elem, ytitle='mu/rho (cm^2/gr)',
                             xtitle='Energy (eV)', xlog_scale=False,
                             ylog_scale=True, yrange=yrange,
@@ -354,20 +367,20 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             y4=mu_coher, y4label='Coherent')
 
         try:
-            f1 = xraydb.f1_chantler(elem, energy)
+            f1 = xraydb.f1_chantler(elem, en_array)
         except:
-            f1 = xraydb.f1_chantler(elem, energy, smoothing=1)
+            f1 = xraydb.f1_chantler(elem, en_array, smoothing=1)
 
-        f2 = xraydb.f2_chantler(elem, energy)
-        f1f2_plot = make_plot(energy, f1, 'Resonant Scattering factors for %s' % elem,
+        f2 = xraydb.f2_chantler(elem, en_array)
+        f1f2_plot = make_plot(en_array, f1, 'Resonant Scattering factors for %s' % elem,
                               elem, ytitle='f1, f2 (electrons/atom)',
                               xtitle='Energy (eV)',
                               xlog_scale=False, ylog_scale=False, y2=f2,
                               y1label='f1', y2label='f2')
 
-    return render_template('scattering.html', elem=elem, e1=e1, e2=e2,
+    return render_template('scattering.html', elem=elem, e1=e1, e2=e2, de=de,
                            f1f2_plot=f1f2_plot, mu_plot=mu_plot,
-                           de=de, materials_dict=materials_dict)
+                           materials_dict=materials_dict)
 
 
 @app.route('/ionchamber/', methods=['GET', 'POST'])
@@ -511,15 +524,13 @@ def make_asciifile(header, array_names, arrays):
 
 @app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<fname>')
 def scatteringdata(elem, e1, e2, de, fname):
-
-    energy = np.arange(float(e1), float(e2)+float(de), float(de))
-
-    mu_total = xraydb.mu_elam(elem, energy, kind='total')
-    mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
-    mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
-    mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
-    f1 = xraydb.f1_chantler(elem, energy)
-    f2 = xraydb.f2_chantler(elem, energy)
+    en_array = energy_array(e1, e2, de)
+    mu_total = xraydb.mu_elam(elem, en_array, kind='total')
+    mu_photo = xraydb.mu_elam(elem, en_array, kind='photo')
+    mu_incoh = xraydb.mu_elam(elem, en_array, kind='incoh')
+    mu_coher = xraydb.mu_elam(elem, en_array, kind='coh')
+    f1 = xraydb.f1_chantler(elem, en_array)
+    f2 = xraydb.f2_chantler(elem, en_array)
 
     header = (' X-ray Atomic Scattering Cross-Sections from xrayweb  %s ' % time.ctime(),
               ' Element : %s ' % elem,
@@ -541,15 +552,13 @@ def scatteringdata(elem, e1, e2, de, fname):
 
 @app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<fname>')
 def scatteringscript(elem, e1, e2, de, fname):
+    e1 = min(EN_MAX, max(EN_MIN, float(e1)))
+    e2 = min(EN_MAX, max(EN_MIN, float(e2)))
+    de = max(1, float(de))
     script = """#!/usr/bin/env python
 #
 # X-ray atomic scattering factors
-# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
-
-import numpy as np
-import matplotlib.pyplot as plt
-import xraydb
+{script_common:s}
 
 # inputs from web form
 elem    = '{elem:s}'
@@ -582,7 +591,7 @@ plt.yscale('log')
 plt.title('Mass Attenuation for {elem:s}')
 plt.show()
 
-""".format(elem=elem, e1=float(e1), e2=float(e2), de=float(de))
+""".format(elem=elem, e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
 
 
@@ -613,16 +622,8 @@ def darwindata(xtal, hkl, m, energy, fname):
 
 @app.route('/darwinscript/<xtal>/<hkl>/<m>/<energy>/<fname>')
 def darwinscript(xtal, hkl, m, energy, fname):
-    script = """#!/usr/bin/env python
-#
+    script = """{header:s}
 # X-ray monochromator Darwin Width calculations
-# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
-
-import numpy as np
-import matplotlib.pyplot as plt
-import xraydb
-
 # inputs from web form
 xtal    = '{xtal:s}'
 h, k, l = ({h:s}, {k:s}, {l:s})
@@ -646,14 +647,17 @@ plt.xlabel('Angle (microrad)')
 plt.ylabel('reflectivity')
 plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
 plt.show()
+""".format(header=PY_TOP, xtal=xtal, hkl=hkl,
+           h=hkl[0], k=hkl[1], l=hkl[2], m=m, energy=energy)
 
-""".format(xtal=xtal, hkl=hkl, h=hkl[0], k=hkl[1], l=hkl[2], m=m, energy=energy)
+
+
     return Response(script, mimetype='text/plain')
 
 
-@app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<estep>/<fname>')
-def attendata(formula, rho, t, e1, e2, estep, fname):
-    en_array = np.arange(float(e1), float(e2)+float(estep), float(estep))
+@app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<de>/<fname>')
+def attendata(formula, rho, t, e1, e2, de, fname):
+    en_array = energy_array(e1, e2, de)
     rho = float(rho)
     mu_array = xraydb.material_mu(formula, en_array, density=rho)
     t = float(t)
@@ -677,24 +681,19 @@ def attendata(formula, rho, t, e1, e2, estep, fname):
 
     return Response(txt, mimetype='text/plain')
 
-@app.route('/attenscript/<formula>/<rho>/<t>/<e1>/<e2>/<estep>/<fname>')
-def attenscript(formula, rho, t, e1, e2, estep, fname):
+@app.route('/attenscript/<formula>/<rho>/<t>/<e1>/<e2>/<de>/<fname>')
+def attenscript(formula, rho, t, e1, e2, de, fname):
     """attenuation data as python code"""
-    script = """#!/usr/bin/env python
-#
+    e1 = min(EN_MAX, max(EN_MIN, float(e1)))
+    e2 = min(EN_MAX, max(EN_MIN, float(e2)))
+    de = max(1, float(de))
+    script = """{header:s}
 # X-ray attenuation calculations
-# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
-
-import numpy as np
-import matplotlib.pyplot as plt
-import xraydb
-
 # inputs from web form
 formula = '{formula:s}'  # material chemical formula
 density = {density:.8g}  # material density in gr/cm^3
 thickness = {thick:.6f}  # material thickness, in mm
-energy = np.arange({e1:.0f}, {e2:.0f}+{estep:.0f}, {estep:.0f})
+energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
 
 mu_array = xraydb.material_mu(formula, energy, density=density)
 atten_length = 10.0 / mu_array
@@ -714,16 +713,17 @@ plt.xlabel('Energy (eV)')
 plt.ylabel('tranmitted/attenuated fraction')
 plt.title('attenuation for %s' % formula)
 plt.show()
-""".format(formula=formula, density=float(rho), thick=float(t),
-           e1=float(e1), e2=float(e2), estep=float(estep))
+""".format(header=PY_TOP, formula=formula,
+           density=float(rho), thick=float(t),
+           e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
 
 
 
-@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>/<fname>')
-def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep, fname):
+@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
+def reflectdata(formula, rho, angle, rough, polar, e1, e2, de, fname):
     """mirror reflectivity data as file"""
-    en_array = np.arange(float(e1), float(e2)+float(estep), float(estep))
+    en_array = energy_array(e1, e2, de)
     angle = float(angle)
     rho   = float(rho)
     rough = float(rough)
@@ -748,27 +748,21 @@ def reflectdata(formula, rho, angle, rough, polar, e1, e2, estep, fname):
     return Response(txt, mimetype='text/plain')
 
 
-@app.route('/reflectscript/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<estep>/<fname>')
-def reflectscript(formula, rho, angle, rough, polar, e1, e2, estep, fname):
+@app.route('/reflectscript/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
+def reflectscript(formula, rho, angle, rough, polar, e1, e2, de, fname):
     """mirror reflectivity data as python code"""
-
-    script = """#!/usr/bin/env python
-#
+    e1 = min(EN_MAX, max(EN_MIN, float(e1)))
+    e2 = min(EN_MAX, max(EN_MIN, float(e2)))
+    de = max(1, float(de))
+    script = """{header:s}
 # mirror reflectivity calculations
-# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
-#
-import numpy as np
-import matplotlib.pyplot as plt
-import xraydb
-
 # inputs from web form
 formula = '{formula:s}'  # mirror chemical formula
 density = {density:.4f}  # mirror density in gr/cm^3
 angle   = {angle:.4f}  # mirror angle in mrad
 rough   = {rough:.4f}  # mirror roughness in Angstroms
 polar   = '{polar:s}'  # mirror polarization ('s' for vert deflecting with horiz-polarized source)
-energy = np.arange({e1:.0f}, {e2:.0f}+{estep:.0f}, {estep:.0f})
+energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
 
 
 reflectivity = xraydb.mirror_reflectivity(formula, 0.001*angle, energy, density,
@@ -788,25 +782,17 @@ plt.xlabel('Energy (eV)')
 plt.ylabel('Critical Angle (mrad)')
 plt.title('Critical Angle for %s' % formula)
 plt.show()
-""".format(formula=formula, density=float(rho),  angle=float(angle),
-           rough=float(rough), polar=polar, e1=float(e1),
-           e2=float(e2), estep=float(estep))
+""".format(header=PY_TOP, formula=formula, density=float(rho),
+           angle=float(angle), rough=float(rough), polar=polar,
+           e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
 
 @app.route('/fluxscript/<mat1>/<mat2>/<frac1>/<thick>/<pressure>/<energy>/<voltage>/<amp_val>/<amp_units>/<fname>')
 def fluxscript(mat1, mat2, frac1, thick, pressure, energy,
                voltage, amp_val, amp_units, fname):
     """ion chamber flux script"""
-    script = """#!/usr/bin/env python
-#
+    script = """{header:s}
 # X-ray ion chamber flux calculation
-# this requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
-
-import numpy as np
-import matplotlib.pyplot as plt
-import xraydb
-
 # inputs from web form
 mat1 = '{mat1:s}'
 mat2 = '{mat2:s}'
@@ -832,10 +818,7 @@ print('Incident to Detector: %.7g' % flux.incident)
 print('Absorbed for Photo Current: %.7g ' % flux.photo)
 print('Transmitted out of Detector: %.7g ' % flux.transmitted)
 
-
-
-""".format(mat1=mat1, mat2=mat2, frac1=frac1, thick=thick, pressure=pressure,
-           voltage=voltage, energy=energy, amp_val=amp_val,
+""".format(header=PY_TOP, mat1=mat1, mat2=mat2, frac1=frac1, thick=thick,
+           pressure=pressure, voltage=voltage, energy=energy, amp_val=amp_val,
            amp_units=amp_units.replace('_', '/'))
-
     return Response(script, mimetype='text/plain')
