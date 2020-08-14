@@ -7,7 +7,7 @@
     {% include "periodic_table.html" %}	
 
     {% if elem %}
-    <br>   <hr> <br>
+    <br>  <hr> <br>
 
     <table style='vertical-align: top;' cellspacing=10 border=0>
       <tr><td rowspan=40 align=top>
@@ -16,7 +16,15 @@
             <tr> <th > &nbsp;Property &nbsp;</th>     <th > &nbsp; Value&nbsp;</th>
             <tr class='odd'><td> &nbsp; Atomic  Number: </td>  <td> &nbsp;  {{atomic.n}}</td></tr>
             <tr class='even'> <td> &nbsp; Atomic  Mass:  </td>  <td> &nbsp;  {{atomic.mass}}</td></tr>
-            <tr class='odd'> <td> &nbsp; Density (gm / cm^3): </td>  <td> &nbsp;  {{atomic.density}}</td></tr>
+            <tr class='odd'> <td> &nbsp; Density (gm / cm^3): </td>  <td>
+		&nbsp;  {{atomic.density}}</td>
+	    </tr>
+	    <tr></tr>
+	    <tr><td colspan=2 align=center>
+		<a href="{{url_for('elementscript',  elem=elem, 
+			 fname='xrayweb_element.py')}}"> python script </a>
+   	    </td></tr>
+	    
           </table>
 	</td>
 	<td rowspan=40 align=top>

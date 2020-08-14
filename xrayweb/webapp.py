@@ -6,7 +6,8 @@ from collections import OrderedDict
 import numpy as np
 
 from flask import (Flask, redirect, url_for, render_template,
-                   request, session, Response)
+                   request, session, Response,
+                   send_from_directory)
 
 import xraydb
 
@@ -164,6 +165,10 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     return json.dumps({'data': data, 'layout': layout, 'config':
                        plot_config})
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(app.static_folder, 'ixas_logo.ico',
+                               mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
 def index():
@@ -520,7 +525,6 @@ def make_asciifile(header, array_names, arrays):
     return '\n'.join(buff)
 
 
-
 @app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<fname>')
 def scatteringdata(elem, e1, e2, de, fname):
     en_array = energy_array(e1, e2, de)
@@ -645,9 +649,31 @@ plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
 plt.show()
 """.format(header=PY_TOP, xtal=xtal, hkl=hkl,
            h=hkl[0], k=hkl[1], l=hkl[2], m=m, energy=energy)
+    return Response(script, mimetype='text/plain')
 
 
+@app.route('/elementscript/<elem>/<fname>')
+def elementscript(elem, fname):
+    script = """{header:s}
+# X-ray propertie
+elem  = '{elem:s}'
+print('# Atomic Symbol: %s ' % elem)
+print('# Atomic Number: %d ' % xraydb.atomic_number(elem))
+print('# Atomic Moss:   %.4f ' % xraydb.atomic_mass(elem))
 
+print('# X-ray Edges:')
+print('#  Edge    Energy   FlourescenceYield  Edge Jump')
+for key, val in xraydb.xray_edges(elem).items():
+     print(' %5s  %9.1f      %8.5f       %8.5f' % (key, val.energy,
+                                                    val.fyield, val.jump_ratio))
+
+print('# X-ray Lines:')
+print('#  Line       Levels    Energy  Intensity')
+for key, val in xraydb.xray_lines(elem).items():
+     print(' %7s %11s %9.1f   %8.5f' % (key, '%s-%s' % (val.initial_level,
+                                                        val.final_level),
+                                        val.energy, val.intensity))
+""".format(header=PY_TOP, elem=elem)
     return Response(script, mimetype='text/plain')
 
 
