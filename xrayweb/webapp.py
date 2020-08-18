@@ -91,9 +91,30 @@ def nformat(val, length=11):
     fmt = '{0: %i.%i%s}' % (length, prec, form)
     return fmt.format(val)[:length]
 
+
+def tick_format(x):
+    xmin, xmax = x.min(), x.max()
+    if abs(xmax-xmin) > 1000:
+        xformat = '.0f'
+    elif abs(xmax-xmin) > 100:
+        xformat = '.1f'
+    elif abs(xmax-xmin) > 10:
+        xformat = '.2f'
+    elif abs(xmax-xmin) > 1:
+        xformat = '.3f'
+    elif abs(xmax-xmin) > 0.1:
+        xformat = '.4f'
+    elif abs(xmax-xmin) > 0.01:
+        xformat = '.5f'
+    else:
+        xformat = '.6g'
+    return xformat
+
+
 def make_plot(x, y, material_name, formula_name, ytitle='mu',
               xtitle='Energy (eV)', y1label='data',
               xlog_scale=False, ylog_scale=False, yrange=None,
+              xformat=None, yformat=None,
               y2=None, y2label='data2',
               y3=None, y3label='data3',
               y4=None, y4label='data4',
@@ -125,6 +146,12 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
     if title in ('', 'None', None):
         title = ''
 
+
+    if xformat is None:
+        xformat = tick_format(x)
+    if yformat is None:
+        yformat = tick_format(y)
+
     xtype = 'linear'
     if xlog_scale:
         xtype = 'log'
@@ -147,12 +174,12 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
               'showlegend': len(data) > 1,
               'xaxis': {'title': {'text': xtitle},
                         'type': xtype,
-                        'tickformat': '.0f'},
+                        'tickformat': xformat},
               'yaxis': {'title': {'text': ytitle},
                         'zeroline': False,
                         'type': ytype,
                         'range': yrange,
-                        'tickformat': '.2g'}}
+                        'tickformat': yformat}}
 
     if yrange is not None:
         layout['yaxis']['range'] = yrange
@@ -301,10 +328,12 @@ def reflectivity(material=None):
                                                    en_array, density)
             title = "%s, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
+                                 yformat='.3f', 
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
             title = "%s Reflectivity, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
+                                 yformat='.3f',                                  
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
             _del, _bet, _ = xraydb.xray_delta_beta(formula1, density, en_array)
@@ -365,6 +394,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             elem, elem, ytitle='mu/rho (cm^2/gr)',
                             xtitle='Energy (eV)', xlog_scale=False,
                             ylog_scale=True, yrange=yrange,
+                            yformat='.2f',                             
                             y1label='Total',
                             y2=mu_photo, y2label='Photo-electric',
                             y3=mu_incoh, y3label='Incoherent',
@@ -480,11 +510,13 @@ def darwinwidth():
         title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polarization, energy)
         dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity,  title, xtal,
                                 y1label='1 bounce',
+                                yformat='.2f',
                                 y2=out.intensity**2,  y2label='2 bounces',
                                 ytitle='reflectivity', xtitle='Angle (microrad)')
 
         denergy_plot = make_plot(out.denergy, out.intensity,  title, xtal,
                                 y1label='1 bounce',
+                                yformat='.2f',
                                 y2=out.intensity**2,  y2label='2 bounces',                                 
                                 ytitle='reflectivity', xtitle='Energy (eV)')
 
