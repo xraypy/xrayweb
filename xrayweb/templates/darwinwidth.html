@@ -31,18 +31,11 @@
             {% endfor %}
           </select>
 	 </td>
-	 <td> Harmonic Order: </td>
+	 <td> Polarization: </td>
 	 <td>
-          <select name="harmonic" id="harmonic" style="width: 80px;">
-            <option value='1' {% if request.form['harmonic'] == '1' %} selected {% endif %}> 1</option>
-            <option value='2' {% if request.form['harmonic'] == '2' %} selected {% endif %}> 2</option>
-            <option value='3' {% if request.form['harmonic'] == '3' %} selected {% endif %}> 3</option>
-            <option value='4' {% if request.form['harmonic'] == '4' %} selected {% endif %}> 4</option>
-            <option value='5' {% if request.form['harmonic'] == '5' %} selected {% endif %}> 5</option>
-            <option value='6' {% if request.form['harmonic'] == '6' %} selected {% endif %}> 6</option>
-            <option value='7' {% if request.form['harmonic'] == '7' %} selected {% endif %}> 7</option>
-            <option value='8' {% if request.form['harmonic'] == '8' %} selected {% endif %}> 8</option>
-            <option value='9' {% if request.form['harmonic'] == '9' %} selected {% endif %}> 9</option>
+          <select name="polarization" id="polarization">
+            <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
+            <option value="p" {% if request.form['polarization'] == "p" %} selected {% endif %}>p</option>
           </select>
 	 </td>
 	 </tr>
@@ -59,15 +52,15 @@
 	   <a href="{{url_for('darwindata',
 		    xtal=request.form['xtal'],
 		    hkl=request.form['hkl'],
-		    m=request.form['harmonic'],
 		    energy=request.form['energy'],
+		    polar=request.form['polarization'],
 		    fname='xrayweb_darwin.txt')}}">  data file</a>
 	   &nbsp; &nbsp;
 	   <a href="{{url_for('darwinscript',
 		    xtal=request.form['xtal'],
 		    hkl=request.form['hkl'],
-		    m=request.form['harmonic'],
 		    energy=request.form['energy'],
+		    polar=request.form['polarization'],
 		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
 	   {% endif %} </td>
 	 <td colspan=4>
@@ -82,12 +75,12 @@
 	       <td> &nbsp; {{theta_deg}}</td><td> &nbsp; degrees</td>
 	     </tr>
 	     <tr class='even'>
-	       <td> &nbsp; Angular width FWHM: </td>
-	       <td> &nbsp; {{theta_fwhm}}</td><td> &nbsp; microrad</td>
+	       <td> &nbsp; Angular Darwin Width: </td>
+	       <td> &nbsp; {{theta_width}}</td><td> &nbsp; microrad</td>
 	     </tr>
 	     <tr class='odd'>
-	       <td> &nbsp; Energy width FWHM: </td>
-	       <td> &nbsp; {{energy_fwhm}}</td><td> &nbsp; eV</td>
+	       <td> &nbsp; Energy Darwin Width: </td>
+	       <td> &nbsp; {{energy_width}}</td><td> &nbsp; eV</td>
 	     </tr>
 	   </table>
 	 </td>

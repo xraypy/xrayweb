@@ -466,31 +466,36 @@ def darwinwidth():
                 '953', '955', '971', '973', '975', '977',
                 '991', '993', '995', '997', '999')
     dtheta_plot = denergy_plot = None
-    theta_deg = theta_fwhm = energy_fwhm = ''
+    theta_deg = theta_fwhm = energy_fwhm = theta_width = energy_width = ''
     if request.method == 'POST':
         xtal = request.form.get('xtal', 'Si')
         hkl = request.form.get('hkl', '111')
-        harmonic= request.form.get('harmonic', '1')
+        polarization = request.form.get('polarization', 's')
         energy = request.form.get('energy', '10000')
 
         hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
-        m = int(harmonic)
         energy = float(energy)
-        out = xraydb.darwin_width(energy, xtal, hkl_tuple, m=m)
+        out = xraydb.darwin_width(energy, xtal, hkl_tuple, polarization=polarization, m=1)
 
-        title='%s(%s), order=%d, E=%.1f eV' % (xtal, hkl, m, energy)
+        title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polarization, energy)
         dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity,  title, xtal,
+                                y1label='1 bounce',
+                                y2=out.intensity**2,  y2label='2 bounces',
                                 ytitle='reflectivity', xtitle='Angle (microrad)')
 
         denergy_plot = make_plot(out.denergy, out.intensity,  title, xtal,
+                                y1label='1 bounce',
+                                y2=out.intensity**2,  y2label='2 bounces',                                 
                                 ytitle='reflectivity', xtitle='Energy (eV)')
 
         theta_deg = "%.5f" % (out.theta * 180 / np.pi)
+        theta_width = "%.5f" % (out.theta_width * 1.e6)
+        energy_width = "%.5f" % out.energy_width
         theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
-        energy_fwhm = "%.5f" % out.energy_fwhm
+        energy_fwhm = "%.5f" % out.energy_fwhm        
     else:
         request.form = {'xtal': 'Si', 'hkl':'111',
-                        'harmonic':'1', 'energy':'10000'}
+                        'polarization':'s', 'energy':'10000'}
 
     return render_template('darwinwidth.html',
                            dtheta_plot=dtheta_plot,
@@ -498,6 +503,8 @@ def darwinwidth():
                            theta_deg=theta_deg,
                            theta_fwhm=theta_fwhm,
                            energy_fwhm=energy_fwhm,
+                           theta_width=theta_width,
+                           energy_width=energy_width,
                            xtal_list=xtal_list,
                            hkl_list=hkl_list,
                            materials_dict=materials_dict)
@@ -595,19 +602,21 @@ plt.show()
     return Response(script, mimetype='text/plain')
 
 
-@app.route('/darwindata/<xtal>/<hkl>/<m>/<energy>/<fname>')
-def darwindata(xtal, hkl, m, energy, fname):
+@app.route('/darwindata/<xtal>/<hkl>/<energy>/<polar>/<fname>')
+def darwindata(xtal, hkl, energy, polar, fname):
     hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
-    out = xraydb.darwin_width(float(energy), xtal, hkl_tuple, m=int(m))
+    out = xraydb.darwin_width(float(energy), xtal, hkl_tuple, polarization=polar)
 
     header = (' X-ray Monochromator Darwin Width from xrayweb  %s ' % time.ctime(),
-              ' Monochromator.xtal       : %s ' % xtal,
-              ' Monochromator.hkl        : %s ' % hkl,
-              ' Monochromator.harmonic   : %s ' % m,
-              ' Monochromator.theta      : %.5f (deg) ' % (out.theta*180/np.pi),
-              ' Monochromator.theta_fwhm : %.5f (microrad) ' % (out.theta_fwhm*1e6),
-              ' Monochromator.energy_fwhm: %.5f (eV) ' % out.energy_fwhm,
-              ' Xray.Energy              : %s (eV)' % energy,
+              ' Monochromator.xtal        : %s ' % xtal,
+              ' Monochromator.hkl         : %s ' % hkl,
+              ' Monochromator.polarization: \'%s\' ' % polar,
+              ' Monochromator.theta       : %.5f (deg) ' % (out.theta*180/np.pi),
+              ' Monochromator.theta_width : %.5f (microrad) ' % (out.theta_width*1e6),
+              ' Monochromator.energy_width: %.5f (eV) ' % out.energy_width,
+              ' Monochromator.theta_fwhm  : %.5f (microrad) ' % (out.theta_fwhm*1e6),
+              ' Monochromator.energy_fwhm : %.5f (eV) ' % out.energy_fwhm,
+              ' Xray.Energy               : %s (eV)' % energy,
               ' Column.1: dtheta (microrad)' ,
               ' Column.2: denergy (eV)',
               ' Column.3: zeta (delta_lambda / lambda)',
@@ -620,35 +629,35 @@ def darwindata(xtal, hkl, m, energy, fname):
 
     return Response(txt, mimetype='text/plain')
 
-@app.route('/darwinscript/<xtal>/<hkl>/<m>/<energy>/<fname>')
-def darwinscript(xtal, hkl, m, energy, fname):
+@app.route('/darwinscript/<xtal>/<hkl>/<energy>/<polar>/<fname>')
+def darwinscript(xtal, hkl, energy, polar,  fname):
     script = """{header:s}
 # X-ray monochromator Darwin Width calculations
 # inputs from web form
 xtal    = '{xtal:s}'
 h, k, l = ({h:s}, {k:s}, {l:s})
-harmonic = {m:s}
+polarization = '{polar:s}'
 energy = {energy:s}
 
-dw = xraydb.darwin_width(energy, xtal, (h, k, l), m=harmonic)
+dw = xraydb.darwin_width(energy, xtal, (h, k, l), polarization=polarization)
 
 print('Mono Angle: %.5f deg' % (dw.theta*180/np.pi))
-print('Angular width FWHM: %.5f microrad' % (dw.theta_fwhm*1.e6))
-print('Energy width FWHM: %.5f eV' % (dw.energy_fwhm))
+print('Angular width : %.5f microrad' % (dw.theta_width*1.e6))
+print('Energy width  : %.5f eV' % (dw.energy_width))
 
 plt.plot(dw.denergy, dw.intensity)
 plt.xlabel('Energy (eV)')
 plt.ylabel('reflectivity')
-plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
+plt.title('{xtal:s} ({hkl:s}), "{polar:s}" polar, E={energy:s} eV')
 plt.show()
 
 plt.plot(dw.dtheta*1e6, dw.intensity)
 plt.xlabel('Angle (microrad)')
 plt.ylabel('reflectivity')
-plt.title('{xtal:s} ({hkl:s}), order={m:s}, E={energy:s} eV')
+plt.title('{xtal:s} ({hkl:s}), "{polar:s}" polar, E={energy:s} eV')
 plt.show()
 """.format(header=PY_TOP, xtal=xtal, hkl=hkl,
-           h=hkl[0], k=hkl[1], l=hkl[2], m=m, energy=energy)
+           h=hkl[0], k=hkl[1], l=hkl[2], polar=polar, energy=energy)
     return Response(script, mimetype='text/plain')
 
 
