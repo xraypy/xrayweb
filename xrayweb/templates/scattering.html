@@ -162,14 +162,11 @@
 	  </tr>
 	    <tr><td>  <input type="submit" value="Submit"></td></tr>
 	    <tr><td>
-		{% if f1f2_plot %}
+		{% if mu_plot %}
 		<a href="{{url_for('scatteringdata',
 			 elem=elem, e1=e1, e2=e2, de=de,
 			 fname='xrayweb_scatter.txt')}}">data file</a>
-		{% endif %}
-	      </td>
-	      <td>
-		{% if f1f2_plot %}
+	      </td>  <td>
 		<a href="{{url_for('scatteringscript',
 			 elem=elem, e1=e1, e2=e2, de=de,
 			 fname='xrayweb_scatter.py')}}">python script</a>
@@ -186,25 +183,31 @@
 
   <p>
 
-  {% if f1f2_plot %}
+  {% if mu_plot %}
    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
    <table cellpadding=2 border=0 style='vertical-align: top; '>
      <tr style='vertical-align: top; '>
        <td>
-         <div id="f1f2_plot">
-           <script  type="text/javascript">
-             var graph = {{f1f2_plot | safe}};
-             Plotly.plot('f1f2_plot',   graph.data,   graph.layout || {},  config=graph.config);
-           </script>
-         </div>
-       </td> <td>
          <div id="mu_plot">
            <script  type="text/javascript">
              var graph = {{mu_plot | safe}};
              Plotly.plot('mu_plot',   graph.data,   graph.layout || {},  config=graph.config);
            </script>
          </div>
-	 </td></tr></table>
+       </td> <td>
+	 {% if f1f2_plot %}
+         <div id="f1f2_plot">
+           <script  type="text/javascript">
+             var graph = {{f1f2_plot | safe}};
+             Plotly.plot('f1f2_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
+	 {% else %}
+	 <div width=500 height=400>
+	   f1, f2 are not availabe for Z > 92
+	 </div>
+	 {% endif %}
+       </td></tr></table>
     {% endif %}
 
 

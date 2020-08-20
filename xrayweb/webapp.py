@@ -371,7 +371,7 @@ def reflectivity(material=None):
 @app.route('/scattering/<elem>',  methods=['GET', 'POST'])
 @app.route('/scattering/<elem>/<e1>/<e2>/<de>',  methods=['GET', 'POST'])
 def scattering(elem=None, e1='1000', e2='50000', de='50'):
-    f1f2_plot = mu_plot = None
+    f1f2_plot = mu_plot = {}
     if len(request.form) != 0:
         elem = request.form.get('elem', 'None')
         e1 = request.form.get('e1', e1)
@@ -379,6 +379,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
         de = request.form.get('de', de)
 
     if elem not in (None, 'None', ''):
+        atz = xraydb.atomic_number(elem)
         en_array = energy_array(e1, e2, de)
         mu_total = xraydb.mu_elam(elem, en_array, kind='total')
         mu_photo = xraydb.mu_elam(elem, en_array, kind='photo')
@@ -399,19 +400,18 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             y2=mu_photo, y2label='Photo-electric',
                             y3=mu_incoh, y3label='Incoherent',
                             y4=mu_coher, y4label='Coherent')
+        if atz < 93:
+            try:
+                f1 = xraydb.f1_chantler(elem, en_array)
+            except:
+                f1 = xraydb.f1_chantler(elem, en_array, smoothing=1)
 
-        try:
-            f1 = xraydb.f1_chantler(elem, en_array)
-        except:
-            f1 = xraydb.f1_chantler(elem, en_array, smoothing=1)
-
-        f2 = xraydb.f2_chantler(elem, en_array)
-        f1f2_plot = make_plot(en_array, f1, 'Resonant Scattering factors for %s' % elem,
-                              elem, ytitle='f1, f2 (electrons/atom)',
-                              xtitle='Energy (eV)',
-                              xlog_scale=False, ylog_scale=False, y2=f2,
-                              y1label='f1', y2label='f2')
-
+            f2 = xraydb.f2_chantler(elem, en_array)
+            f1f2_plot = make_plot(en_array, f1, 'Resonant Scattering factors for %s' % elem,
+                                  elem, ytitle='f1, f2 (electrons/atom)',
+                                  xtitle='Energy (eV)',
+                                  xlog_scale=False, ylog_scale=False, y2=f2,
+                                  y1label='f1', y2label='f2')
     return render_template('scattering.html', elem=elem, e1=e1, e2=e2, de=int(de),
                            f1f2_plot=f1f2_plot, mu_plot=mu_plot,
                            materials_dict=materials_dict)
@@ -571,25 +571,30 @@ def scatteringdata(elem, e1, e2, de, fname):
     mu_photo = xraydb.mu_elam(elem, en_array, kind='photo')
     mu_incoh = xraydb.mu_elam(elem, en_array, kind='incoh')
     mu_coher = xraydb.mu_elam(elem, en_array, kind='coh')
-    f1 = xraydb.f1_chantler(elem, en_array)
-    f2 = xraydb.f2_chantler(elem, en_array)
 
-    header = (' X-ray Atomic Scattering Cross-Sections from xrayweb  %s ' % time.ctime(),
+    header = [' X-ray Atomic Scattering Cross-Sections from xrayweb  %s ' % time.ctime(),
               ' Element : %s ' % elem,
               ' Column.1: Energy (eV)',
               ' Column.2: mu_total (cm^2/gr)',
               ' Column.3: mu_photo (cm^2/gr)  # Photo-electric',
               ' Column.4: mu_coher (cm^2/gr)  # Rayleigh',
-              ' Column.5: mu_incoh (cm^2/gr)  # Compton',
-              ' Column.6: f1 (electrons/atom) # real resonant',
-              ' Column.7: f2 (electrons/atom) # imag resonant')
+              ' Column.5: mu_incoh (cm^2/gr)  # Compton']
 
-    arr_names = ('energy       ', 'mu_total     ',
+    arr_names = ['energy       ', 'mu_total     ',
                  'mu_photo     ', 'mu_coher     ',
-                 'mu_incoh     ', 'f1           ', 'f2           ')
+                 'mu_incoh     ']
 
-    txt = make_asciifile(header, arr_names,
-                         (en_array, mu_total, mu_photo, mu_coher, mu_incoh, f1, f2))
+    arrays = [en_array, mu_total, mu_photo, mu_coher, mu_incoh]
+    
+    atz = xraydb.atomic_number(elem)
+    if atz < 93:
+        header.extend([' Column.6: f1 (electrons/atom) # real resonant',
+                       ' Column.7: f2 (electrons/atom) # imag resonant'])
+        
+        arr_names.extend([ 'f1           ', 'f2           '])
+        arrays.extend([xraydb.f1_chantler(elem, en_array), xraydb.f2_chantler(elem, en_array)])
+
+    txt = make_asciifile(header, arr_names, arrays)
     return Response(txt, mimetype='text/plain')
 
 @app.route('/scatteringscript/<elem>/<e1>/<e2>/<de>/<fname>')
@@ -608,17 +613,6 @@ mu_photo = xraydb.mu_elam(elem, energy, kind='photo')
 mu_incoh = xraydb.mu_elam(elem, energy, kind='incoh')
 mu_coher = xraydb.mu_elam(elem, energy, kind='coh')
 
-f1 = xraydb.f1_chantler(elem, energy)
-f2 = xraydb.f2_chantler(elem, energy)
-
-plt.plot(energy, f1, label='f1')
-plt.plot(energy, f2, label='f2')
-plt.xlabel('Energy (eV)')
-plt.ylabel('f1, f2 (electrons/atom)')
-plt.title('Resonant Scattering factors for {elem:s}')
-plt.legend(True)
-plt.show()
-
 plt.plot(energy, mu_total, label='Total')
 plt.plot(energy, mu_photo, label='Photo-electric')
 plt.plot(energy, mu_incoh, label='Incoherent')
@@ -629,6 +623,21 @@ plt.legend()
 plt.yscale('log')
 plt.title('Mass Attenuation for {elem:s}')
 plt.show()
+
+atz = xraydb.atomic_number(elem)
+if atz < 93:
+    f1 = xraydb.f1_chantler(elem, energy)
+    f2 = xraydb.f2_chantler(elem, energy)
+    plt.plot(energy, f1, label='f1')
+    plt.plot(energy, f2, label='f2')
+    plt.xlabel('Energy (eV)')
+    plt.ylabel('f1, f2 (electrons/atom)')
+    plt.title('Resonant Scattering factors for {elem:s}')
+    plt.legend(True)
+    plt.show()
+else:
+    print('f1 and f2 are not available for Z<93')
+    
 
 """.format(header=PY_TOP, elem=elem, e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
