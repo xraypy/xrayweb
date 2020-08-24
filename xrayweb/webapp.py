@@ -4,6 +4,7 @@ import time
 import json
 from collections import OrderedDict
 import numpy as np
+import scipy.constants as consts
 
 from flask import (Flask, redirect, url_for, render_template,
                    request, session, Response,
@@ -27,6 +28,36 @@ mirror_mat = ('silicon', 'quartz', 'zerodur', 'ule glass',
 
 materials_dict = json.dumps(materials_)
 
+lattice_constants = {'Si': 5.4309, 'Ge': 5.6578, 'C': 3.567}
+PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
+
+# list of allowed reflections for diamond structure: duplicates removed
+hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0',
+            '4 2 2', '4 4 0', '4 4 4', '5 3 1', '5 3 3', '5 5 1',
+            '5 5 3', '5 5 5', '6 2 0', '6 4 2', '6 6 0', '6 6 4',
+            '7 3 3', '7 5 3', '7 5 5', '7 7 3', '7 7 5', '7 7 7',
+            '8 0 0', '8 4 0', '8 4 4', '8 6 2', '8 6 6', '8 8 0',
+            '8 8 4', '8 8 8', '9 3 1', '9 5 3', '9 5 5', '9 7 3',
+            '9 7 5', '9 7 7', '9 9 1', '9 9 3', '9 9 5', '9 9 7',
+            '9 9 9', '10 4 2', '10 6 4', '10 8 2',  '10 10 0',
+            '10 10 4', '10 10 8', '11 7 5', '11 7 7', '11 9 1', 
+            '11 9 5', '11 9 7', '11 9 9', '11 11 5', '11 11 7',
+            '11 11 9', '11 11 11')
+
+emission_energies = {}
+analyzer_lines = ('Ka1', 'Ka2', 'Ka3', 'Kb1', 'Kb3', 'Kb5', 'La1', 'La2', 'Lb1', 'Lb3')
+for z in range(1, 96):
+    atsym = xraydb.atomic_symbol(z)
+    xlines = xraydb.xray_lines(z)
+    for line in analyzer_lines:
+        key = '%s_%s' % (atsym, line)
+        en = xlines.get(line, None)
+        if en is None:
+            emission_energies[key] = '0'
+        else:
+            emission_energies[key] = '%.0f' % (en.energy)
+
+emission_energies_json = json.dumps(emission_energies)
 
 PY_TOP = """#!/usr/bin/env python
 # this script requires Python3, numpy, matplotlib, and xraydb modules. Use:
@@ -41,8 +72,18 @@ EN_MAX = 725000
 def energy_array(e1, e2, de):
     e1x = min(EN_MAX, max(EN_MIN, float(e1)))
     e2x = min(EN_MAX, max(EN_MIN, float(e2)))
+    if e2x < e1x:
+        e2x = e2x + e1x
     dex = max(1, float(de))
     return np.arange(e1x, e2x+dex, dex)
+
+def th_diffracted(energy, hkl, a):
+    hkl = np.array(hkl)
+    omega = np.sqrt((hkl*hkl).sum()) * PLANCK_HC / (2 * a * energy)
+    if abs(omega) > 1:
+        omega = -0
+    return (180/np.pi)*np.arcsin(omega)
+
 
 def nformat(val, length=11):
     """Format a number with '%g'-like format.
@@ -191,6 +232,19 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
 
     return json.dumps({'data': data, 'layout': layout, 'config':
                        plot_config})
+
+def make_asciifile(header, array_names, arrays):
+    buff = ['#XDI/1.1']
+    buff.extend(['# %s' % l.strip() for l in header])
+    buff.append("#---------------------")
+    buff.append("# %s" % ' '.join(array_names))
+    for i in range(len(arrays[0])):
+        row = [a[i] for a in arrays]
+        l = [nformat(x, length=12) for x in row]
+        buff.append('  '.join(l))
+    buff.append('')
+    return '\n'.join(buff)
+
 
 @app.route('/favicon.ico')
 def favicon():
@@ -422,7 +476,7 @@ def ionchamber(elem=None):
     message = []
 
     incident_flux = transmitted_flux = photo_flux = ''
-    mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe') # 'Si (diode)', 'Ge (diode)')
+    mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
     if request.method == 'POST':
@@ -444,16 +498,11 @@ def ionchamber(elem=None):
 
         if 'diode' in mat1:
             mat1 = mat1.replace(' (diode)', '')
-            if mat1.startswith('Si'):
-                wfun = 3.68 # Si effective ionization potential
-            else:
-                wfun = 2.97 # Ge effective ionization potential
-
+            mat2 = 'None'
+        if mat2 in (None, 'None', ''):
+            mat = {mat1: 1.0}
         else:
-            if mat2 in (None, 'None', ''):
-                mat = {mat1: 1.0}
-            else:
-                mat = {mat1: float(frac1), mat2: 1-float(frac1)}
+            mat = {mat1: float(frac1), mat2: 1-float(frac1)}
 
         flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                         length=thick*pressure,
@@ -484,30 +533,36 @@ def ionchamber(elem=None):
 
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
-def darwinwidth():
+@app.route('/darwinwidth/<xtal>/<hkl>/<energy>/<polar>/')
+def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
-    hkl_list = ('111', '220', '311', '331', '333', '400',
-                '422', '440', '444', '511', '531', '533',
-                '551', '553', '555', '620', '642', '660',
-                '664', '711', '731', '733', '751', '753',
-                '755', '771', '773', '775', '777', '800',
-                '822', '840', '844', '862', '866', '880',
-                '884', '888', '911', '931', '933', '951',
-                '953', '955', '971', '973', '975', '977',
-                '991', '993', '995', '997', '999')
+    
     dtheta_plot = denergy_plot = None
     theta_deg = theta_fwhm = energy_fwhm = theta_width = energy_width = ''
+        
     if request.method == 'POST':
         xtal = request.form.get('xtal', 'Si')
-        hkl = request.form.get('hkl', '111')
-        polarization = request.form.get('polarization', 's')
+        hkl = request.form.get('hkl', '1 1 1')
+        polar = request.form.get('polarization', 's')
         energy = request.form.get('energy', '10000')
+        do_calc = True
+    elif xtal in xtal_list and hkl is not None:
+        hkl = hkl.replace('_', ' ')       
+        request.form = {'xtal': xtal, 'hkl':hkl,
+                        'polarization':polar, 'energy':energy}
+        do_calc = True        
+    else:
+        do_calc = False
+        request.form = {'xtal': 'Si', 'hkl':'1 1 1',
+                        'polarization':'s', 'energy':'10000'}
 
-        hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
+    if do_calc:
+        hkl_tuple = tuple([int(a) for a in hkl.split()])
         energy = float(energy)
-        out = xraydb.darwin_width(energy, xtal, hkl_tuple, polarization=polarization, m=1)
+        out = xraydb.darwin_width(energy, xtal, hkl_tuple,
+                                  polarization=polar, m=1)
 
-        title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polarization, energy)
+        title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
         dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity,  title, xtal,
                                 y1label='1 bounce',
                                 yformat='.2f',
@@ -524,10 +579,7 @@ def darwinwidth():
         theta_width = "%.5f" % (out.theta_width * 1.e6)
         energy_width = "%.5f" % out.energy_width
         theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
-        energy_fwhm = "%.5f" % out.energy_fwhm        
-    else:
-        request.form = {'xtal': 'Si', 'hkl':'111',
-                        'polarization':'s', 'energy':'10000'}
+        energy_fwhm = "%.5f" % out.energy_fwhm
 
     return render_template('darwinwidth.html',
                            dtheta_plot=dtheta_plot,
@@ -541,27 +593,46 @@ def darwinwidth():
                            hkl_list=hkl_list,
                            materials_dict=materials_dict)
 
+@app.route('/analyzers/', methods=['GET', 'POST'])
+@app.route('/analyzers/<elem>',  methods=['GET', 'POST'])
+def analyzers(elem=None):
+    elem = line = theta1 = theta2= None
+    energy = 10000
+    analyzer_results = None
+    
+    if len(request.form) != 0:
+        elem   = request.form.get('elem', '')
+        line   = request.form.get('line', 'Ka1')
+        energy = float(request.form.get('energy', '10000'))
+        theta_min = float(request.form.get('theta1', '60'))
+        theta_max = float(request.form.get('theta2', '90'))
 
-def random_string(n):
-    """  random_string(n)
-    generates a random string of length n, that will match:
-       [a-z][a-z0-9](n-1)
-    """
-    seed(time.time())
-    s = [printable[randrange(0,36)] for i in range(n-1)]
-    s.insert(0, printable[randrange(10,36)])
-    return ''.join(s)
+              
+    if request.method == 'POST':
+        analyzer_results = []
+        for xtal in ('Si', 'Ge'):
+            a = lattice_constants[xtal]
+            for hkl in hkl_list:
+                hkl_tuple = tuple([int(ref) for ref in hkl.split()])
+                hkl_link = '_'.join([ref for ref in hkl.split()])
+                thbragg = th_diffracted(float(energy), hkl_tuple, a)
+                if thbragg < theta_max and thbragg > theta_min:
+                    dw = xraydb.darwin_width(energy, crystal=xtal, hkl=hkl_tuple)
+                    analyzer_results.append((xtal, hkl, hkl_link,
+                                             "%8.4f" % thbragg,
+                                             "%8.4f" % (dw.theta_width*1e6),
+                                             "%8.4f" % dw.energy_width))
 
-def make_asciifile(header, array_names, arrays):
-    buff = ['# %s' % l for l in header]
-    buff.append("#---------------------")
-    buff.append("# %s" % ' '.join(array_names))
-    for i in range(len(arrays[0])):
-        row = [a[i] for a in arrays]
-        l = [nformat(x, length=12) for x in row]
-        buff.append('  '.join(l))
-    buff.append('')
-    return '\n'.join(buff)
+    else:
+        request.form = {'theta1': '60', 'theta2':'90',
+                        'energy': '10000', 'elem': '', 'line':'Ka1'}
+
+    return render_template('analyzers.html',
+                           analyzer_results=analyzer_results,
+                           emission_energies=emission_energies_json,
+                           analyzer_lines=analyzer_lines,
+                           materials_dict=materials_dict)
+
 
 
 @app.route('/scatteringdata/<elem>/<e1>/<e2>/<de>/<fname>')
@@ -605,7 +676,7 @@ def scatteringscript(elem, e1, e2, de, fname):
     script = """{header:s}
 # X-ray atomic scattering factors
 # inputs from web form
-elem    = '{elem:s}'
+elem   = '{elem:s}'
 energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
 
 mu_total = xraydb.mu_elam(elem, energy, kind='total')
@@ -636,7 +707,7 @@ if atz < 93:
     plt.legend(True)
     plt.show()
 else:
-    print('f1 and f2 are not available for Z<93')
+    print('f1 and f2 are only available for Z<93')
     
 
 """.format(header=PY_TOP, elem=elem, e1=e1, e2=e2, de=de)
@@ -645,8 +716,10 @@ else:
 
 @app.route('/darwindata/<xtal>/<hkl>/<energy>/<polar>/<fname>')
 def darwindata(xtal, hkl, energy, polar, fname):
-    hkl_tuple = (int(hkl[0]), int(hkl[1]), int(hkl[2]))
-    out = xraydb.darwin_width(float(energy), xtal, hkl_tuple, polarization=polar)
+    hkl = hkl.replace('_', ' ')
+    hkl_tuple = tuple([int(a) for a in hkl.split()])
+    out = xraydb.darwin_width(float(energy), xtal, hkl_tuple,
+                              polarization=polar)
 
     header = (' X-ray Monochromator Darwin Width from xrayweb  %s ' % time.ctime(),
               ' Monochromator.xtal        : %s ' % xtal,
@@ -672,6 +745,8 @@ def darwindata(xtal, hkl, energy, polar, fname):
 
 @app.route('/darwinscript/<xtal>/<hkl>/<energy>/<polar>/<fname>')
 def darwinscript(xtal, hkl, energy, polar,  fname):
+    hkl = hkl.replace('_', ' ')
+    hklval = [a for a in hkl.split()]
     script = """{header:s}
 # X-ray monochromator Darwin Width calculations
 # inputs from web form
@@ -698,7 +773,7 @@ plt.ylabel('reflectivity')
 plt.title('{xtal:s} ({hkl:s}), "{polar:s}" polar, E={energy:s} eV')
 plt.show()
 """.format(header=PY_TOP, xtal=xtal, hkl=hkl,
-           h=hkl[0], k=hkl[1], l=hkl[2], polar=polar, energy=energy)
+           h=hklval[0], k=hklval[1], l=hklval[2], polar=polar, energy=energy)
     return Response(script, mimetype='text/plain')
 
 
@@ -863,6 +938,9 @@ plt.show()
 def fluxscript(mat1, mat2, frac1, thick, pressure, energy,
                voltage, amp_val, amp_units, fname):
     """ion chamber flux script"""
+    if 'diode' in mat1:
+        mat1 = mat1.replace(' (diode)', '')
+        mat2 = 'None'    
     script = """{header:s}
 # X-ray ion chamber flux calculation
 # inputs from web form
@@ -877,9 +955,9 @@ amp_val = {amp_val:s}
 amp_units = '{amp_units:s}'
 
 if mat2 in (None, 'None', ''):
-    mat = dict(mat1=1.0)
+    mat = {{mat1: 1.0}}
 else:
-    mat = dict(mat1=float(frac1), mat2=1-float(frac1))
+    mat = {{mat1: float(frac1), mat2: 1-float(frac1)}}
 
 flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                 length=thick*pressure,
@@ -894,3 +972,61 @@ print('Transmitted out of Detector: %.7g ' % flux.transmitted)
            pressure=pressure, voltage=voltage, energy=energy, amp_val=amp_val,
            amp_units=amp_units.replace('_', '/'))
     return Response(script, mimetype='text/plain')
+
+@app.route('/analyzerscript/<energy>/<theta1>/<theta2>/<fname>')
+def analyzerscript(energy, theta1, theta2, fname):
+    """analyzer script"""
+    script = """{header:s}
+
+# import scipy.constants as consts
+# PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
+PLANCK_HC = 12398.419843320
+
+# list of allowed reflections for diamond structure: duplicates removed
+hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0',
+            '4 2 2', '4 4 0', '4 4 4', '5 3 1', '5 3 3', '5 5 1',
+            '5 5 3', '5 5 5', '6 2 0', '6 4 2', '6 6 0', '6 6 4',
+            '7 3 3', '7 5 3', '7 5 5', '7 7 3', '7 7 5', '7 7 7',
+            '8 0 0', '8 4 0', '8 4 4', '8 6 2', '8 6 6', '8 8 0',
+            '8 8 4', '8 8 8', '9 3 1', '9 5 3', '9 5 5', '9 7 3',
+            '9 7 5', '9 7 7', '9 9 1', '9 9 3', '9 9 5', '9 9 7',
+            '9 9 9', '10 4 2', '10 6 4', '10 8 2',  '10 10 0',
+            '10 10 4', '10 10 8', '11 7 5', '11 7 7', '11 9 1', 
+            '11 9 5', '11 9 7', '11 9 9', '11 11 5', '11 11 7',
+            '11 11 9', '11 11 11')
+
+lattice_constants = {{'Si': 5.4309, 'Ge': 5.6578}}
+
+
+def theta_bragg(energy, hkl, a):
+    '''Bragg diffraction angle for energy in eV, lattice constant in Ang
+    returns 0 if invalid refletion
+    '''
+    hkl = np.array(hkl)
+    omega = np.sqrt((hkl*hkl).sum()) * PLANCK_HC / (2 * a * energy)
+    if abs(omega) > 1:
+        omega = -0
+    return (180/np.pi)*np.arcsin(omega)
+
+
+fmt = '    %s (%s)          %7.3f        %7.3f            %7.3f '
+legend = '#Cystal/Reflection  BraggAngle(deg)  DarwinWith (urad)  DarwinWidth (eV)'
+
+def show_analyzers(energy, theta_min=60, theta_max=90):
+    '''print table of candidate analyzers for energy and angle range'''
+    print(legend)
+    for xtal in ('Si', 'Ge'):
+        a = lattice_constants[xtal]
+        for hkl in hkl_list:
+            hkl_tuple = tuple([int(ref) for ref in hkl.split()])
+            thbragg = theta_bragg(energy, hkl_tuple, a)
+            if thbragg < theta_max and thbragg > theta_min:
+                dw = xraydb.darwin_width(energy, crystal=xtal, hkl=hkl_tuple)
+                print(fmt % (xtal, hkl, thbragg,
+                             dw.theta_width*1e6, dw.energy_width))
+
+show_analyzers({energy:s}, theta_min={theta1:s}, theta_max= {theta2:s})
+
+""".format(header=PY_TOP, energy=energy, theta1=theta1, theta2=theta2)
+    return Response(script, mimetype='text/plain')
+    

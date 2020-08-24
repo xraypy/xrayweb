@@ -1,0 +1,238 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<p><div class=subtitle>X-ray Analyzer Crystals for Energies and Selected Emission Lines </div></p>
+
+<script type=text/javascript>
+  var temp = {{emission_energies | tojson}};
+  var emission_energies = JSON.parse(temp);
+
+  function set_analyzer_energy() {
+      var line = document.getElementById('emission_line').value;
+      var elem = document.getElementById('elem').value;
+      document.getElementById('energy').value = emission_energies[elem + '_' +  line];
+  }
+
+  function set_element(elem) {
+      document.getElementById('elem').value = elem;
+      var line = document.getElementById('emission_line').value;
+      document.getElementById('energy').value = emission_energies[elem + '_' +  line];
+  }
+  
+</script>
+    
+<div class=body>
+    {% if error %}
+        <p>{{error}}</p>
+    {% endif %}
+
+    <form action="{{url_for('analyzers')}}" method="POST">
+
+    <table cellspacing=0 cellpadding=0>
+      <tr>
+	<td rowspan=9>
+	  <table class="ptable" cellspacing=0 cellpadding=0>
+	    <tr>
+	      <td class=elem  width=30> <a onclick="set_element('H')"> H </a> </td>
+	      <td colspan=16></td>
+	      <td class=elem width=30>  <a onclick="set_element('He')">He </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('Li')"> Li</a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Be')">Be </a></td>
+	      <td colspan=10></td>
+	      <td class=elem width=30>  <a onclick="set_element('B')"> B </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('C')">C </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('N')">N </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('O')">O </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('F')">F </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ne')">Ne </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('Na')">Na </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Mg')">Mg </a></td>
+	      <td colspan=10></td>
+	      <td class=elem width=30>  <a onclick="set_element('Al')">Al </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Si')">Si </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('P')">P </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('S')">S </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cl')">Cl </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ar')">Ar </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('K')">K </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ca')">Ca </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Sc')">Sc </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ti')">Ti </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('V')">V  </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cr')">Cr </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Mn')">Mn </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Fe')">Fe </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Co')">Co </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ni')">Ni </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cu')">Cu </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Zn')">Zn </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ga')">Ga </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ge')">Ge </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('As')">As </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Se')">Se </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Br')">Br </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Kr')">Kr </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('Rb')">Rb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Sr')">Sr </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Y')">Y </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Zr')">Zr </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Nb')">Nb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Mo')">Mo </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Tc')">Tc </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ru')">Ru </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Rh')">Rh </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pd')">Pd </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ag')">Ag </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cd')">Cd </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('In')">In </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Sn')">Sn </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Sb')">Sb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Te')">Te </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('I')">I </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Xe')">Xe </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('Cs')">Cs </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ba')">Ba </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('La')">La </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Hf')">Hf </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ta')">Ta </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('W')">W </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Re')">Re </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Os')">Os </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ir')">Ir </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pt')">Pt </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Au')">Au </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Hg')">Hg </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Tl')">Tl </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pb')">Pb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Bi')">Bi </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Po')">Po </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('At')">At </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Rn')">Rn </a></td>
+	    </tr><tr>
+	      <td class=elem width=30>  <a onclick="set_element('Fr')">Fr </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ra')">Ra </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ac')">Ac </a></td>
+	    </tr><tr>
+	      <td colspan=3></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ce')">Ce </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pr')">Pr </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Nd')">Nd </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pm')">Pm </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Sm')">Sm </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Eu')">Eu </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Gd')">Gd </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Tb')">Tb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Dy')">Dy </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Ho')">Ho </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Er')">Er </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Tm')">Tm </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Yb')">Yb </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Lu')">Lu </a></td>
+	    </tr><tr>
+	      <td colspan=3></td>
+	      <td class=elem width=30>  <a onclick="set_element('Th')">Th </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pa')">Pa </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('U')">U </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Np')">Np </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Pu')">Pu </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Am')">Am </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cm')">Cm </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Bk')">Bk </a></td>
+	      <td class=elem width=30>  <a onclick="set_element('Cf')">Cf </a></td>
+	    </tr>
+	  </table>
+
+	</td>
+	<td>  &nbsp; &nbsp;  </td> <td>
+
+	  <table>
+	    <tr><td colspan=2> Select Analyzers for Energy :
+
+	    </td></tr>
+	    
+	    <tr>
+	      <td> <label for="emission_line">Emission Line:</label></td>
+	      <td>
+		<select name="emission_line" id="emission_line"
+			style="width: 80px;" onchange="set_analyzer_energy()">
+		  {% for val in analyzer_lines %}
+		  <option value="{{val}}"  {% if request.form['emission_line'] == val %}
+			  selected {% endif %}> {{val}}</option>
+		  {% endfor %}
+		</select>  for 
+		<input style="width: 40px;" type="text"  id="elem"    name="elem" readonly   value={{request.form['elem']}}>
+	      </td>
+      	    </tr>
+	    <tr>
+	      <td> <label for="energy">Energy Range (eV):</label></td>
+	      <td> <input style="width: 80px;" type="number" id="energy" name="energy"
+			  min="0" max="725000"  value="{{request.form['energy']}}">
+	      </td>
+	    </tr>
+	    
+	    <tr>
+	      <td> <label for="theta1">Angular Range (degrees):</label></td>
+	      <td> <input style="width: 80px;" type="number" id="theta1" name="theta1"
+			  min="0" max="90"  value="{{request.form['theta1']}}">
+		<label for="theta2">:</label>
+		<input style="width: 80px;" type="number" id="theta2" name="theta2"
+		       min="0" max="90" value="{{request.form['theta2']}}"></td>
+	    </tr>
+	    
+	    <tr><td>  <input type="submit" value="Submit"></td></tr>
+	    <tr><td>
+
+		{% if analyzer_results %}
+
+		   <a href="{{url_for('analyzerscript',
+			    energy=request.form['energy'],
+			    theta1=request.form['theta1'],
+			    theta2=request.form['theta2'],
+			    fname='xrayweb_analyzers.py')}}"> python script </a>
+		{% endif %}
+	</table>
+
+	</td>
+      </tr>
+    </table>
+
+  </form>
+
+    {% if analyzer_results %}
+    <p></p>
+    
+
+    <table style='vertical-align: top;' cellspacing=5 cellpadding=2 border=0>
+      <caption><b>Analyzers for {{request.form['energy']}} eV </b></caption>
+      <tr>
+        <th > &nbsp; Crystal &nbsp;</th>
+        <th > &nbsp; Reflection) &nbsp;</th>
+        <th >  &nbsp; Bragg Angle &nbsp;</th>
+        <th >  &nbsp; Darwin Width (microrad) &nbsp;</th>
+        <th >  &nbsp; Darwin Width (eV) &nbsp;</th>
+	<th >  &nbsp; Show Darwin Width &nbsp;</th>
+      </tr>
+            
+      {% for xtal, hkl, hkllink, tbragg, dwang, dwen in analyzer_results %}
+      <tr class={{ loop.cycle('odd', 'even') }}>
+        <td> &nbsp; &nbsp; {{xtal}} </td>
+        <td> &nbsp; {{hkl}} </td>
+        <td> &nbsp; {{tbragg}} </td>
+        <td> &nbsp; {{dwang}} </td>
+        <td> &nbsp; {{dwen}} </td>
+	<td> &nbsp;
+	  <a href="{{url_for('darwinwidth')}}{{xtal}}/{{hkllink}}/{{request.form['energy']}}/s/">link</a>
+	</td>
+	
+      </tr>
+      {% endfor %}
+    </table>
+
+    {% endif %}
+
+{% endblock %}
