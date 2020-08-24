@@ -51,14 +51,14 @@
 	 <td colspan=2> {% if dtheta_plot %}
 	   <a href="{{url_for('darwindata',
 		    xtal=request.form['xtal'],
-		    hkl=request.form['hkl'],
+		    hkl=request.form['hkl'].replace(' ', '_'),
 		    energy=request.form['energy'],
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwin.txt')}}">  data file</a>
 	   &nbsp; &nbsp;
 	   <a href="{{url_for('darwinscript',
 		    xtal=request.form['xtal'],
-		    hkl=request.form['hkl'],
+		    hkl=request.form['hkl'].replace(' ', '_'),
 		    energy=request.form['energy'],
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
