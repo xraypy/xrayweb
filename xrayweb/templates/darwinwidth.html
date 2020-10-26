@@ -35,7 +35,8 @@
 	 <td>
           <select name="polarization" id="polarization">
             <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
-            <option value="p" {% if request.form['polarization'] == "p" %} selected {% endif %}>p</option>
+            <option value="p" {% if request.form['polarization'] == "p" %}  selected {% endif %}>p</option>
+            <option value="unpolarized" {% if request.form['polarization'].startswith("u")  %} selected {% endif %}>unpolarized</option>
           </select>
 	 </td>
 	 </tr>
