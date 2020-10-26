@@ -32,17 +32,19 @@ lattice_constants = {'Si': 5.4309, 'Ge': 5.6578, 'C': 3.567}
 PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
 
 # list of allowed reflections for diamond structure: duplicates removed
-hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0',
-            '4 2 2', '4 4 0', '4 4 4', '5 3 1', '5 3 3', '5 5 1',
-            '5 5 3', '5 5 5', '6 2 0', '6 4 2', '6 6 0', '6 6 4',
-            '7 3 3', '7 5 3', '7 5 5', '7 7 3', '7 7 5', '7 7 7',
-            '8 0 0', '8 4 0', '8 4 4', '8 6 2', '8 6 6', '8 8 0',
-            '8 8 4', '8 8 8', '9 3 1', '9 5 3', '9 5 5', '9 7 3',
-            '9 7 5', '9 7 7', '9 9 1', '9 9 3', '9 9 5', '9 9 7',
-            '9 9 9', '10 4 2', '10 6 4', '10 8 2',  '10 10 0',
-            '10 10 4', '10 10 8', '11 7 5', '11 7 7', '11 9 1', 
-            '11 9 5', '11 9 7', '11 9 9', '11 11 5', '11 11 7',
-            '11 11 9', '11 11 11')
+hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0', '4 2 2',
+            '4 4 0', '4 4 4', '5 1 1', '5 3 1', '5 3 3', '5 5 1', '5 5 3',
+            '5 5 5', '6 2 0', '6 4 2', '6 6 0', '6 6 4', '7 1 1', '7 3 1',
+            '7 3 3', '7 5 1', '7 5 3', '7 5 5', '7 7 1', '7 7 3', '7 7 5',
+            '7 7 7', '8 0 0', '8 2 2', '8 4 0', '8 4 4', '8 6 2', '8 6 6',
+            '8 8 0', '8 8 4', '8 8 8', '9 1 1', '9 3 1', '9 5 1', '9 5 3',
+            '9 5 5', '9 7 1', '9 7 3', '9 7 5', '9 7 7', '9 9 1', '9 9 3',
+            '9 9 5', '9 9 7', '9 9 9', '10 2 0', '10 4 2', '10 6 0',
+            '10 6 4', '10 8 2', '10 10 0', '10 10 4', '10 10 8',
+            '11 1 1', '11 3 1', '11 3 3', '11 5 1', '11 5 3', '11 5 5',
+            '11 7 1', '11 7 3', '11 7 5', '11 7 7',
+            '11 9 1', '11 9 3', '11 9 5', '11 9 7', '11 9 9',
+            '11 11 1', '11 11 3', '11 11 5', '11 11 7', '11 11 9', '11 11 11')
 
 emission_energies = {}
 analyzer_lines = ('Ka1', 'Ka2', 'Ka3', 'Kb1', 'Kb3', 'Kb5', 'La1', 'La2', 'Lb1', 'Lb3')
@@ -134,7 +136,10 @@ def nformat(val, length=11):
 
 
 def tick_format(x):
-    xmin, xmax = x.min(), x.max()
+    try:
+        xmin, xmax = x.min(), x.max()
+    except:
+        return '.6g'
     if abs(xmax-xmin) > 1000:
         xformat = '.0f'
     elif abs(xmax-xmin) > 100:
@@ -561,25 +566,34 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
         energy = float(energy)
         out = xraydb.darwin_width(energy, xtal, hkl_tuple,
                                   polarization=polar, m=1)
-
-        title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
-        dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity,  title, xtal,
-                                y1label='1 bounce',
-                                yformat='.2f',
-                                y2=out.intensity**2,  y2label='2 bounces',
-                                ytitle='reflectivity', xtitle='Angle (microrad)')
-
-        denergy_plot = make_plot(out.denergy, out.intensity,  title, xtal,
-                                y1label='1 bounce',
-                                yformat='.2f',
-                                y2=out.intensity**2,  y2label='2 bounces',                                 
-                                ytitle='reflectivity', xtitle='Energy (eV)')
-
-        theta_deg = "%.5f" % (out.theta * 180 / np.pi)
-        theta_width = "%.5f" % (out.theta_width * 1.e6)
-        energy_width = "%.5f" % out.energy_width
-        theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
-        energy_fwhm = "%.5f" % out.energy_fwhm
+        if np.isnan(out.theta):
+            theta_deg = "not allowed"
+            theta_width = "-"
+            energy_width = "-"
+            theta_fwhm = "-"
+            energy_fwhm = "-"
+        
+        else:
+            title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
+            dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
+                                    xtal, y1label='1 bounce',
+                                    yformat='.2f', y2=out.intensity**2,
+                                    y2label='2 bounces',
+                                    ytitle='reflectivity',
+                                    xtitle='Angle(microrad)')
+            
+            denergy_plot = make_plot(out.denergy, out.intensity, title,
+                                     xtal, y1label='1 bounce',
+                                     yformat='.2f', y2=out.intensity**2,
+                                     y2label='2 bounces',
+                                     ytitle='reflectivity',
+                                     xtitle='Energy (eV)')
+            
+            theta_deg = "%.5f" % (out.theta * 180 / np.pi)
+            theta_width = "%.5f" % (out.theta_width * 1.e6)
+            energy_width = "%.5f" % out.energy_width
+            theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
+            energy_fwhm = "%.5f" % out.energy_fwhm
 
     return render_template('darwinwidth.html',
                            dtheta_plot=dtheta_plot,
@@ -617,7 +631,8 @@ def analyzers(elem=None):
                 hkl_link = '_'.join([ref for ref in hkl.split()])
                 thbragg = th_diffracted(float(energy), hkl_tuple, a)
                 if thbragg < theta_max and thbragg > theta_min:
-                    dw = xraydb.darwin_width(energy, crystal=xtal, hkl=hkl_tuple)
+                    dw = xraydb.darwin_width(energy, crystal=xtal,
+                                             hkl=hkl_tuple, polarization='u')
                     analyzer_results.append((xtal, hkl, hkl_link,
                                              "%8.4f" % thbragg,
                                              "%8.4f" % (dw.theta_width*1e6),
@@ -1021,7 +1036,8 @@ def show_analyzers(energy, theta_min=60, theta_max=90):
             hkl_tuple = tuple([int(ref) for ref in hkl.split()])
             thbragg = theta_bragg(energy, hkl_tuple, a)
             if thbragg < theta_max and thbragg > theta_min:
-                dw = xraydb.darwin_width(energy, crystal=xtal, hkl=hkl_tuple)
+                dw = xraydb.darwin_width(energy, crystal=xtal,
+                                         hkl=hkl_tuple, polarization='u')
                 print(fmt % (xtal, hkl, thbragg,
                              dw.theta_width*1e6, dw.energy_width))
 
