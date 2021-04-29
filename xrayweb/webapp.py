@@ -502,7 +502,7 @@ def ionchamber(elem=None):
         mat1 = request.form.get('mat1', 'None')
         mat2 = request.form.get('mat2', 'None')
         frac1 = request.form.get('frac1', '1')
-        thick = request.form.get('thick', '1')
+        thick = request.form.get('thick', '10')
         pressure = request.form.get('pressure', '1')
         energy = request.form.get('energy', '10000')
         voltage = request.form.get('voltage', '1')
@@ -535,7 +535,7 @@ def ionchamber(elem=None):
         request.form = {'mat1': 'N2',
                         'mat2': 'None',
                         'frac1': 1.0,
-                        'thick': 100.0,
+                        'thick': 10.0,
                         'pressure': 1,
                         'energy':  10000,
                         'voltage': 1.000,
