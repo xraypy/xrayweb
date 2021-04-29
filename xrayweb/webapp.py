@@ -288,24 +288,24 @@ def about():
                            materials_dict=materials_dict)
 
 @app.route('/atten/', methods=['GET', 'POST'])
-@app.route('/atten/<material>', methods=['GET', 'POST'])
-def atten(material=None):
+@app.route('/atten/<material>/<density>', methods=['GET', 'POST'])
+@app.route('/atten/<material>/<density>/<t>/<e1>/<e2>/<de>', methods=['GET', 'POST'])
+def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
     message = []
     mu_plot = atten_plot = {}
     num = errors = 0
     mode = 'Linear'
     datalink = None
-    de = 50
+    do_plot = True
     if request.method == 'POST':
         formula = request.form.get('formula')
         matname = request.form.get('matname')
-        density = request.form.get('density')
-        e1 = request.form.get('e1')
-        e2 = request.form.get('e2')
-        de = request.form.get('de')
         mode = request.form.get('mode')
-        thickness = request.form.get('thickness')
-
+        density = float(request.form.get('density'))
+        e1 = float(request.form.get('e1'))
+        e2 = float(request.form.get('e2'))
+        de = float(request.form.get('de'))
+        t = float(request.form.get('thickness'))
         #input validation
         if not xraydb.validate_formula(formula):
             message.append("cannot interpret chemical formula")
@@ -315,39 +315,53 @@ def atten(material=None):
         except:
             message.append('Density must be a positive number.')
 
-        if len(message) == 0:
-            use_log = mode.lower() == 'log'
-            # make plot
-            en_array = energy_array(e1, e2, de)
-            num = en_array.size
-            mu_array = xraydb.material_mu(formula, en_array, density=float(density))
-            t = float(thickness)
-            trans = np.exp(-0.1*t*mu_array)
-            atten = 1 - trans
-
-            mu_plot = make_plot(en_array, 10/mu_array, material, formula,
-                                ylog_scale=use_log, ytitle='1/e length (mm)')
-            atten_plot = make_plot(en_array, trans,
-                                   material, "%.3f mm %s" % (t, formula),
-                                   ylog_scale=use_log,
-                                   y2=atten,
-                                   ytitle='transmitted/attenuated fraction',
-                                   y1label='transmitted',
-                                   y2label='attenuated')
     else:
-        request.form = {'mats': 'silicon',
-                        'formula': materials_['silicon'].formula,
-                        'density': materials_['silicon'].density,
-                        'e1':  1000,
-                        'e2': 51000,
-                        'de': de,
-                        'thickness': 1.00,
-                        'mode': 'Linear'}
+        e1 = float(e1)
+        e2 = float(e2)
+        de = float(de)
+        t  = float(t)
+        if material in materials_:
+            mats = material
+            formula = materials_['material'].formula
+            density = materials_['material'].density
+
+        elif material is not None and density is not None:
+            formula = material
+            density = float(density)
+            mats = None
+        else:
+            do_plot = False
+            mats = 'silicon'
+            formula = materials_['silicon'].formula
+            density = materials_['silicon'].density
+
+        request.form = {'mats': mats, 'formula': formula,
+                        'density': density,
+                        'e1': e1, 'e2': e2, 'de': de,
+                        'thickness': t, 'mode': 'Linear'}
+
+    if do_plot and formula is not None:
+        # make plot
+        en_array = energy_array(e1, e2, de)
+        num = en_array.size
+        mu_array = xraydb.material_mu(formula, en_array, density=float(density))
+        trans = np.exp(-0.1*t*mu_array)
+        atten = 1 - trans
+        use_log = mode.lower() == 'log'
+        mu_plot = make_plot(en_array, 10/mu_array, material, formula,
+                            ylog_scale=use_log, ytitle='1/e length (mm)')
+        atten_plot = make_plot(en_array, trans,
+                               material, "%.3f mm %s" % (t, formula),
+                               ylog_scale=use_log,
+                               y2=atten,
+                               ytitle='transmitted/attenuated fraction',
+                               y1label='transmitted',
+                               y2label='attenuated')
 
     return render_template('attenuation.html', message=message, errors=len(message),
                            datalink=datalink, mu_plot=mu_plot, de=int(de),
                            atten_plot=atten_plot, matlist=matlist,
-                           materials_dict=materials_dict, input=input)
+                           materials_dict=materials_dict) # , input=input)
 
 
 
@@ -387,12 +401,12 @@ def reflectivity(material=None):
                                                    en_array, density)
             title = "%s, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
-                                 yformat='.3f', 
+                                 yformat='.3f',
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
             title = "%s Reflectivity, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
-                                 yformat='.3f',                                  
+                                 yformat='.3f',
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
             _del, _bet, _ = xraydb.xray_delta_beta(formula1, density, en_array)
@@ -454,7 +468,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             elem, elem, ytitle='mu/rho (cm^2/gr)',
                             xtitle='Energy (eV)', xlog_scale=False,
                             ylog_scale=True, yrange=yrange,
-                            yformat='.2f',                             
+                            yformat='.2f',
                             y1label='Total',
                             y2=mu_photo, y2label='Photo-electric',
                             y3=mu_incoh, y3label='Incoherent',
@@ -541,10 +555,10 @@ def ionchamber(elem=None):
 @app.route('/darwinwidth/<xtal>/<hkl>/<energy>/<polar>/')
 def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
-    
+
     dtheta_plot = denergy_plot = None
     theta_deg = theta_fwhm = energy_fwhm = theta_width = energy_width = ''
-        
+
     if request.method == 'POST':
         xtal = request.form.get('xtal', 'Si')
         hkl = request.form.get('hkl', '1 1 1')
@@ -552,10 +566,10 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
         energy = request.form.get('energy', '10000')
         do_calc = True
     elif xtal in xtal_list and hkl is not None:
-        hkl = hkl.replace('_', ' ')       
+        hkl = hkl.replace('_', ' ')
         request.form = {'xtal': xtal, 'hkl':hkl,
                         'polarization':polar, 'energy':energy}
-        do_calc = True        
+        do_calc = True
     else:
         do_calc = False
         request.form = {'xtal': 'Si', 'hkl':'1 1 1',
@@ -572,7 +586,7 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
             energy_width = "-"
             theta_fwhm = "-"
             energy_fwhm = "-"
-        
+
         else:
             title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
             dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
@@ -581,14 +595,14 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
                                     y2label='2 bounces',
                                     ytitle='reflectivity',
                                     xtitle='Angle(microrad)')
-            
+
             denergy_plot = make_plot(out.denergy, out.intensity, title,
                                      xtal, y1label='1 bounce',
                                      yformat='.2f', y2=out.intensity**2,
                                      y2label='2 bounces',
                                      ytitle='reflectivity',
                                      xtitle='Energy (eV)')
-            
+
             theta_deg = "%.5f" % (out.theta * 180 / np.pi)
             theta_width = "%.5f" % (out.theta_width * 1.e6)
             energy_width = "%.5f" % out.energy_width
@@ -613,7 +627,7 @@ def analyzers(elem=None):
     elem = line = theta1 = theta2= None
     energy = 10000
     analyzer_results = None
-    
+
     if len(request.form) != 0:
         elem   = request.form.get('elem', '')
         line   = request.form.get('line', 'Ka1')
@@ -621,7 +635,7 @@ def analyzers(elem=None):
         theta_min = float(request.form.get('theta1', '60'))
         theta_max = float(request.form.get('theta2', '90'))
 
-              
+
     if request.method == 'POST':
         analyzer_results = []
         for xtal in ('Si', 'Ge'):
@@ -671,12 +685,12 @@ def scatteringdata(elem, e1, e2, de, fname):
                  'mu_incoh     ']
 
     arrays = [en_array, mu_total, mu_photo, mu_coher, mu_incoh]
-    
+
     atz = xraydb.atomic_number(elem)
     if atz < 93:
         header.extend([' Column.6: f1 (electrons/atom) # real resonant',
                        ' Column.7: f2 (electrons/atom) # imag resonant'])
-        
+
         arr_names.extend([ 'f1           ', 'f2           '])
         arrays.extend([xraydb.f1_chantler(elem, en_array), xraydb.f2_chantler(elem, en_array)])
 
@@ -723,7 +737,7 @@ if atz < 93:
     plt.show()
 else:
     print('f1 and f2 are only available for Z<93')
-    
+
 
 """.format(header=PY_TOP, elem=elem, e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
@@ -955,7 +969,7 @@ def fluxscript(mat1, mat2, frac1, thick, pressure, energy,
     """ion chamber flux script"""
     if 'diode' in mat1:
         mat1 = mat1.replace(' (diode)', '')
-        mat2 = 'None'    
+        mat2 = 'None'
     script = """{header:s}
 # X-ray ion chamber flux calculation
 # inputs from web form
@@ -1006,7 +1020,7 @@ hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0',
             '8 8 4', '8 8 8', '9 3 1', '9 5 3', '9 5 5', '9 7 3',
             '9 7 5', '9 7 7', '9 9 1', '9 9 3', '9 9 5', '9 9 7',
             '9 9 9', '10 4 2', '10 6 4', '10 8 2',  '10 10 0',
-            '10 10 4', '10 10 8', '11 7 5', '11 7 7', '11 9 1', 
+            '10 10 4', '10 10 8', '11 7 5', '11 7 7', '11 9 1',
             '11 9 5', '11 9 7', '11 9 9', '11 11 5', '11 11 7',
             '11 11 9', '11 11 11')
 
@@ -1045,4 +1059,3 @@ show_analyzers({energy:s}, theta_min={theta1:s}, theta_max= {theta2:s})
 
 """.format(header=PY_TOP, energy=energy, theta1=theta1, theta2=theta2)
     return Response(script, mimetype='text/plain')
-    
