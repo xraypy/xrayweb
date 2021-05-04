@@ -28,7 +28,7 @@
 
 	<td> Fraction of Primary Gas: </td>
 	<td> <input style="width: 80px;" type="number" id="frac1" name="frac1"
-		    min="0" max="1" step="any" value="{{ request.form['frac1'] }}"> </td>
+		    min="0" max="1" step="0.01" value="{{ request.form['frac1'] }}"> </td>
 
 	<td> Secondary Gas: </td>
 	<td>
@@ -42,11 +42,11 @@
       <tr>
         <td> Length/Thickness (cm): </td>
 	<td> <input style="width: 80px;" type="number" id="thick" name="thick"
-		    min="0" step="any"  value="{{ request.form['thick'] }}">
+		    min="0" minlength=1 step="any"  value="{{ request.form['thick'] }}">
 	</td>
 	<td> Gas Pressure (atm): </td>
 	<td> <input style="width: 80px;" type="number" id="pressure" name="pressure"
-		    min="0"  step="any"  value="{{ request.form['pressure'] }}">
+		    min="0.001"  minlength=1 step="any"  value="{{ request.form['pressure'] }}">
 	</td>
       </tr>
 
@@ -114,16 +114,27 @@
 	    <tr style='vertical-align: top; '>
 	      <th > &nbsp; Location &nbsp;</th>
 	      <th > &nbsp; Flux (Hz)  &nbsp;</th>
+	      <th align='right'> &nbsp; % of Incident Flux  &nbsp;</th>
 	    </tr>
 	    <tr class='odd'>
-	      <td> &nbsp; Absorbed for Photo Current:  </td>
-	      <td> &nbsp;  {{photo_flux}}</td></tr>
-	    <tr class='even'>
 	      <td> &nbsp; Incident to Detector: </td>
-	      <td> &nbsp;  {{incident_flux}}</td></tr>
-	    <tr class='odd'>
+	      <td> &nbsp;  {{incident_flux}}</td>
+	      <td align='right'> &nbsp;  100.0000 </td>
+	    </tr>
+	    <tr class='even'>
 	      <td> &nbsp; Transmitted through Detector: </td>
-	      <td> &nbsp;  {{transmitted_flux}}</td>
+	      <td> &nbsp; {{transmitted_flux}}</td>
+	      <td align='right'> &nbsp; {{transmitted_percent}} </td>
+	    </tr>
+	    <tr class='odd'>
+	      <td> &nbsp; Flux Absorbed by Photo-Electric Effect:  </td>
+	      <td> &nbsp; {{photo_flux}}</td>
+	      <td align='right'> &nbsp; {{photo_percent}} </td>
+	    </tr>
+	    <tr class='odd'>
+	      <td> &nbsp; Flux Scattered by Compton Effect:  </td>
+	      <td> &nbsp; {{compton_flux}}</td>
+	      <td align='right'> &nbsp; {{compton_percent}} </td>
 	    </tr>
 	  </table>
 	<td>
