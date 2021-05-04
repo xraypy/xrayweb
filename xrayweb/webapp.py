@@ -494,7 +494,8 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
 def ionchamber(elem=None):
     message = []
 
-    incident_flux = transmitted_flux = photo_flux = ''
+    incident_flux = transmitted_flux = photo_flux = compton_flux = '-'
+    compton_percent = transmitted_percent = photo_percent = '-'
     mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
@@ -510,7 +511,10 @@ def ionchamber(elem=None):
         amp_units = request.form.get('amp_units', 'uA/V')
 
         amp_val = float(amp_val)
-        pressure  = float(pressure)
+        try:
+            pressure  = float(pressure)
+        except ValueError:
+            pressure = 1
         energy  = float(energy)
         voltage = float(voltage)
         thick   = float(thick)
@@ -528,9 +532,15 @@ def ionchamber(elem=None):
                                         sensitivity=amp_val,
                                         sensitivity_units=amp_units)
 
-        incident_flux = "%.7g" % flux.incident
-        transmitted_flux = "%.7g" % flux.transmitted
-        photo_flux = "%.7g" % flux.photo
+        incident_flux = f"{flux.incident:.7g}"
+        transmitted_flux =f"{flux.transmitted:.7g}"
+        photo_flux = f"{flux.photo:.7g}"
+        compton_flux = f"{flux.incoherent:.7g}"
+
+        transmitted_percent =f"{100*flux.transmitted/flux.incident:8.4f}"
+        photo_percent = f"{100*flux.photo/flux.incident:8.4f}"
+        compton_percent= f"{100*flux.incoherent/flux.incident:8.4f}"
+
     else:
         request.form = {'mat1': 'N2',
                         'mat2': 'None',
@@ -546,6 +556,10 @@ def ionchamber(elem=None):
                            incident_flux=incident_flux,
                            transmitted_flux=transmitted_flux,
                            photo_flux=photo_flux,
+                           compton_flux=compton_flux,
+                           transmitted_percent=transmitted_percent,
+                           photo_percent=photo_percent,
+                           compton_percent=compton_percent,
                            mat1list=mat1list,
                            mat2list=mat2list,
                            materials_dict=materials_dict)
@@ -964,8 +978,8 @@ plt.show()
     return Response(script, mimetype='text/plain')
 
 @app.route('/fluxscript/<mat1>/<mat2>/<frac1>/<thick>/<pressure>/<energy>/<voltage>/<amp_val>/<amp_units>/<fname>')
-def fluxscript(mat1, mat2, frac1, thick, pressure, energy,
-               voltage, amp_val, amp_units, fname):
+def fluxscript(mat1, mat2='', frac1='1', thick='10', pressure='1', energy='10000',
+               voltage='1', amp_val='1', amp_units='nA_V', fname='xrayweb_flux.py'):
     """ion chamber flux script"""
     if 'diode' in mat1:
         mat1 = mat1.replace(' (diode)', '')
@@ -993,9 +1007,10 @@ flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                 sensitivity=amp_val,
                                 sensitivity_units=amp_units)
 
-print('Incident to Detector: %.7g' % flux.incident)
-print('Absorbed for Photo Current: %.7g ' % flux.photo)
-print('Transmitted out of Detector: %.7g ' % flux.transmitted)
+print(f'Incident to Detector: {{flux.incidet:.7g}}')
+print(f'Transmitted out of Detector: {{flux.transmitted:.7g}}')
+print(f'Absorbed for Photo Current: {{flux.photo:.7g}}')
+print(f'Scattered by Compton Effect: {{flux.incoherent:.7g}}')
 
 """.format(header=PY_TOP, mat1=mat1, mat2=mat2, frac1=frac1, thick=thick,
            pressure=pressure, voltage=voltage, energy=energy, amp_val=amp_val,
