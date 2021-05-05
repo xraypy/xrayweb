@@ -1,7 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <title>X-ray Data</title>
+    <title>X-ray Data for the Elements</title>
+
     <link rel=stylesheet type=text/css  href="{{ url_for('static', filename='style.css') }}">
     <script type=text/javascript>
       var temp = {{materials_dict | tojson}};
@@ -40,6 +41,7 @@
 <div class=topbar>
   <table cellpadding=1 width=100%>
     <tr><td width=35% padding=5 align=left>
+        <a href="https://xrayabsorption.org/">IXAS</a>
 	<a href="{{url_for('element')}}"> X-ray Data for the Elements </a>
       </td>
   </table>
