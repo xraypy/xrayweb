@@ -494,8 +494,9 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
 def ionchamber(elem=None):
     message = []
 
-    incident_flux = transmitted_flux = photo_flux = compton_flux = '-'
-    compton_percent = transmitted_percent = photo_percent = '-'
+    incident_flux = transmitted_flux = photo_flux = compton_flux = rayleigh_flux = '-'
+    transmitted_percent = photo_percent =  compton_percent = rayleigh_percent = '-'
+
     mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
@@ -531,15 +532,18 @@ def ionchamber(elem=None):
                                         length=thick*pressure,
                                         sensitivity=amp_val,
                                         sensitivity_units=amp_units)
+        flux_rayleigh = flux.incident-(flux.transmitted+flux.photo+flux.incoherent)
 
         incident_flux = f"{flux.incident:.7g}"
         transmitted_flux =f"{flux.transmitted:.7g}"
         photo_flux = f"{flux.photo:.7g}"
         compton_flux = f"{flux.incoherent:.7g}"
+        rayleigh_flux = f"{flux_rayleigh:.7g}"        
 
         transmitted_percent =f"{100*flux.transmitted/flux.incident:8.4f}"
         photo_percent = f"{100*flux.photo/flux.incident:8.4f}"
         compton_percent= f"{100*flux.incoherent/flux.incident:8.4f}"
+        rayleigh_percent= f"{100*flux_rayleigh/flux.incident:8.4f}"
 
     else:
         request.form = {'mat1': 'N2',
@@ -557,9 +561,11 @@ def ionchamber(elem=None):
                            transmitted_flux=transmitted_flux,
                            photo_flux=photo_flux,
                            compton_flux=compton_flux,
+                           rayleigh_flux=rayleigh_flux,
                            transmitted_percent=transmitted_percent,
                            photo_percent=photo_percent,
                            compton_percent=compton_percent,
+                           rayleigh_percent=rayleigh_percent,
                            mat1list=mat1list,
                            mat2list=mat2list,
                            materials_dict=materials_dict)
