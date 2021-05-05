@@ -499,8 +499,8 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
 def ionchamber(elem=None):
     message = []
 
-    incident_flux = transmitted_flux = photo_flux = compton_flux = rayleigh_flux = '-'
-    transmitted_percent = photo_percent =  compton_percent = rayleigh_percent = '-'
+    incident_flux = transmitted_flux = photo_flux = compton_flux = rayleigh_flux = ''
+    transmitted_percent = photo_percent =  compton_percent = rayleigh_percent = ''
 
     mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
@@ -1039,9 +1039,9 @@ def analyzerscript(energy, theta1, theta2, fname):
     """analyzer script"""
     script = """{header:s}
 
-# import scipy.constants as consts
-# PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
-PLANCK_HC = 12398.419843320
+# PLANCK_HC = 12398.419843320
+import scipy.constants as consts
+PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
 
 # list of allowed reflections for diamond structure: duplicates removed
 hkl_list = ('1 1 1', '2 2 0', '3 1 1', '3 3 1', '3 3 3', '4 0 0',
