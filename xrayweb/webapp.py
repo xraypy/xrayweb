@@ -1039,7 +1039,7 @@ def analyzerscript(energy, theta1, theta2, fname):
     """analyzer script"""
     script = """{header:s}
 
-# PLANCK_HC = 12398.419843320
+# PLANCK_HC = 12398.419843320  # eV*Angstroms
 import scipy.constants as consts
 PLANCK_HC = 1.e10 * consts.Planck * consts.c / consts.e
 
