@@ -11,6 +11,7 @@ from flask import (Flask, redirect, url_for, render_template,
                    send_from_directory)
 
 import xraydb
+from xraydb.xraydb import XrayEdge, XrayLine
 
 top, _ =  os.path.split(os.path.abspath(__file__))
 
@@ -274,11 +275,15 @@ def element(elem=None):
         _lines= xraydb.xray_lines(elem)
         lines = OrderedDict()
         for k in sorted(_lines.keys()):
-            lines[k] = _lines[k]
-
+            en, inten, init, final = _lines[k] # XrayLine
+            lines[k] = XrayLine(energy=f'{en:.1f}', intensity=f'{inten:.5f}',
+                                initial_level=init, final_level=final)
         edges = OrderedDict()
         for k in sorted(_edges.keys()):
-            edges[k] = _edges[k]
+            en, fy, jump = _edges[k] # XrayEdge
+            edges[k] = XrayEdge(energy=f'{en:.1f}', fyield=f'{fy:.5f}',
+                                jump_ratio=f'{jump:.3f}')
+
     return render_template('elements.html', edges=edges, elem=elem,
                            atomic=atomic, lines=lines, materials_dict=materials_dict)
 
@@ -538,7 +543,13 @@ def ionchamber(elem=None):
         transmitted_flux =f"{flux.transmitted:.7g}"
         photo_flux = f"{flux.photo:.7g}"
         compton_flux = f"{flux.incoherent:.7g}"
-        rayleigh_flux = f"{flux_rayleigh:.7g}"        
+        rayleigh_flux = f"{flux_rayleigh:.7g}"
+
+        incident_flux = nformat(flux.incident)
+        transmitted_flux =nformat(flux.transmitted)
+        photo_flux = nformat(flux.photo)
+        compton_flux = nformat(flux.incoherent)
+        rayleigh_flux = nformat(flux_rayleigh)
 
         transmitted_percent =f"{100*flux.transmitted/flux.incident:8.4f}"
         photo_percent = f"{100*flux.photo/flux.incident:8.4f}"
