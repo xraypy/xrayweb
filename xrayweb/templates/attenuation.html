@@ -78,39 +78,43 @@
        </tr>
 
 
-       <tr><td>  <input type="submit" value="Submit"></td></tr>
-	</table>
+     <tr><td>  <input type="submit" value="Submit"></td>
+       <td> <a href="https://xraypy.github.io/XrayDB/examples.html#x-ray-attenuation-by-elements"> documentation </a></td>
+
+       {% if mu_plot %}
+       <td>
+	 <a href="{{url_for('attendata',
+		  formula=request.form['formula'],
+		  rho=request.form['density'],
+		  t=request.form['thickness'],
+		  e1=request.form['e1'],
+		  e2=request.form['e2'],
+		  de=request.form['de'],
+		  fname='xrayweb_atten.txt')}}">  data file</a>
+       </td>
+       <td>
+	 <a href="{{url_for('attenscript',
+		  formula=request.form['formula'],
+		  rho=request.form['density'],
+		  t=request.form['thickness'],
+		  e1=request.form['e1'],
+		  e2=request.form['e2'],
+		  de=request.form['de'],
+		  fname='xrayweb_atten.py')}}"> python script </a>
+       </td>
+       <td>
+	 <a href="{{url_for('atten')}}{{request.form['formula']}}/{{request.form['density']}}/{{request.form['thickness']}}/{{request.form['e1']}}/{{request.form['e2']}}/{{request.form['de']}}">
+	   permalink </a>
+       </td>
+       {% endif %}
+     </tr>
+
+
+   </table>
 
   </form>
-  <p>
 
-  {% if mu_plot %}
-
-   <a href="{{url_for('attendata',
-	   formula=request.form['formula'],
-	   rho=request.form['density'],
-	   t=request.form['thickness'],
-	   e1=request.form['e1'],
-	   e2=request.form['e2'],
-	   de=request.form['de'],
-	   fname='xrayweb_atten.txt')}}">  data file</a>
-
-   &nbsp; &nbsp;
-
-   <a href="{{url_for('attenscript',
-	   formula=request.form['formula'],
-	   rho=request.form['density'],
-	   t=request.form['thickness'],
-	   e1=request.form['e1'],
-	   e2=request.form['e2'],
-	   de=request.form['de'],
-	   fname='xrayweb_atten.py')}}"> python script </a>
-
-   &nbsp; &nbsp;
-
-   <a href="{{url_for('atten')}}{{request.form['formula']}}/{{request.form['density']}}/{{request.form['thickness']}}/{{request.form['e1']}}/{{request.form['e2']}}/{{request.form['de']}}">
-      permalink </a>
-
+    {% if mu_plot %}
    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
    <table cellpadding=2 border=0 style='vertical-align: top; '>
      <tr style='vertical-align: top; '>

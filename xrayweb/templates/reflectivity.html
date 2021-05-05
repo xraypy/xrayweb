@@ -95,39 +95,43 @@
 
 
 
-       <tr><td>  <input type="submit" value="Submit"></td></tr>
+       <tr><td>  <input type="submit" value="Submit"></td>
+	 <td> <a href="https://xraypy.github.io/XrayDB/examples.html#x-ray-mirror-reflectivities">documentation</a></td>
+
+	 {% if has_data %}
+	 <td>
+	   <a href="{{url_for('reflectdata',
+		    formula=request.form['formula1'],
+		    rho=request.form['density1'],
+		    angle=request.form['angle1'],
+		    rough=request.form['roughness'],
+		    polar=request.form['polarization'],
+		    e1=request.form['e1'],
+		    e2=request.form['e2'],
+		    de=request.form['de'],
+		    fname='xrayweb_reflect.txt')}}">  data file</a>
+	 </td> <td>
+
+	   <a href="{{url_for('reflectscript',
+		    formula=request.form['formula1'],
+		    rho=request.form['density1'],
+		    angle=request.form['angle1'],
+		    rough=request.form['roughness'],
+		    polar=request.form['polarization'],
+		    e1=request.form['e1'],
+		    e2=request.form['e2'],
+		    de=request.form['de'],
+		    fname='xrayweb_reflect.py')}}"> python script </a>
+	   </td>
+
+        {% endif %}
+       </tr>
      </table>
 
     </form>
-    <p>
-    </p>
+
 
     {% if has_data %}
-    <a href="{{url_for('reflectdata',
-		 formula=request.form['formula1'],
-		 rho=request.form['density1'],
-		 angle=request.form['angle1'],
-		 rough=request.form['roughness'],
-		 polar=request.form['polarization'],
-		 e1=request.form['e1'],
-		 e2=request.form['e2'],
-		 de=request.form['de'],
-		 fname='xrayweb_reflect.txt')}}">  data file</a>
-
-    &nbsp; &nbsp;
-
-    <a href="{{url_for('reflectscript',
-		 formula=request.form['formula1'],
-		 rho=request.form['density1'],
-		 angle=request.form['angle1'],
-		 rough=request.form['roughness'],
-		 polar=request.form['polarization'],
-		 e1=request.form['e1'],
-		 e2=request.form['e2'],
-		 de=request.form['de'],
-		 fname='xrayweb_reflect.py')}}"> python script </a>
-
-
     <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
 
    <table cellpadding=2 border=0 style='vertical-align: top; '>

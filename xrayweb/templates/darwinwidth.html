@@ -46,25 +46,33 @@
 		     min="0" step="any" value="{{ request.form['energy'] }}"> </td>
        </tr>
        <tr><td><input type="submit"
-		      value="Calculate"></td><td colspan=5><hr></td></tr>
+		      value="Calculate"></td>
 
-       <tr>
-	 <td colspan=2> {% if dtheta_plot %}
+	 <td> <a href='https://xraypy.github.io/XrayDB/examples.html#darwin-widths-of-monochromator-crystals'>documentation</a></td>
+	 {% if dtheta_plot %}
+	 <td>
 	   <a href="{{url_for('darwindata',
 		    xtal=request.form['xtal'],
 		    hkl=request.form['hkl'].replace(' ', '_'),
 		    energy=request.form['energy'],
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwin.txt')}}">  data file</a>
-	   &nbsp; &nbsp;
+	 </td><td>
 	   <a href="{{url_for('darwinscript',
 		    xtal=request.form['xtal'],
 		    hkl=request.form['hkl'].replace(' ', '_'),
 		    energy=request.form['energy'],
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
-	   {% endif %} </td>
+	 </td>
+	 {% endif %}
+
+       </tr>
+
+       <tr>
+	 <td colspan=2></td>
 	 <td colspan=4>
+	 {% if dtheta_plot %}
 	   <table cellpadding=2 border=0 style='vertical-align: top; '>
 	     <tr style='vertical-align: top; '>
 	       <th > &nbsp; Reflection Property &nbsp;</th>
@@ -84,6 +92,8 @@
 	       <td> &nbsp; {{energy_width}}</td><td> &nbsp; eV</td>
 	     </tr>
 	   </table>
+	 {% endif %}
+
 	 </td>
        </tr>
       </table>

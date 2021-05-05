@@ -89,26 +89,30 @@
 	<td> <input style="width: 80px;" type="number" id="voltage" name="voltage"
 		    min="0"  step="any"  value="{{ request.form['voltage'] }}"></td>
       </tr>
-      <tr><td><input type="submit" value="Calculate"></td><td colspan=5><hr></td></tr>
+      <tr><td><input type="submit" value="Calculate"></td>
+	<td> <a href="https://xraypy.github.io/XrayDB/examples.html#x-ray-flux-calculations-for-ionization-chambers-and-photodiodes">
+	    documentation </a></td>
 
+	{% if incident_flux %}
+	<td> <a href="{{url_for('fluxscript',
+		      mat1=request.form['mat1'],
+		      mat2=request.form['mat2'],
+		      frac1=request.form['frac1'],
+		      thick=request.form['thick'],
+		      pressure=request.form['pressure'],
+		      energy=request.form['energy'],
+		      voltage=request.form['voltage'],
+		      amp_val=request.form['amp_val'],
+		      amp_units=request.form['amp_units'].replace('/', '_'),
+		      fname='xrayweb_flux.py')}}"> python script </a>
+	  </td>
+	{% endif %}
+      </tr>
       <tr>
 	<td>
-	{% if incident_flux %}
-	<a href="{{url_for('fluxscript',
-		 mat1=request.form['mat1'],
-		 mat2=request.form['mat2'],
-		 frac1=request.form['frac1'],
-		 thick=request.form['thick'],
-		 pressure=request.form['pressure'],
-		 energy=request.form['energy'],
-		 voltage=request.form['voltage'],
-		 amp_val=request.form['amp_val'],
-		 amp_units=request.form['amp_units'].replace('/', '_'),
-		 fname='xrayweb_flux.py')}}"> python script </a>
-
-	{% endif %}
 	</td>
 
+	{% if incident_flux %}
 	<td colspan=4>
 	  <table cellpadding=2 border=0 style='vertical-align: top; '>
 	    <tr style='vertical-align: top; '>
@@ -143,7 +147,7 @@
 	    </tr>
 	  </table>
 	<td>
-
+	 {% endif %}
     </table>
 
 </form>
