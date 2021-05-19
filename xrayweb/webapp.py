@@ -1091,3 +1091,9 @@ show_analyzers({energy:s}, theta_min={theta1:s}, theta_max= {theta2:s})
 
 """.format(header=PY_TOP, energy=energy, theta1=theta1, theta2=theta2)
     return Response(script, mimetype='text/plain')
+
+
+@app.route('/transmission_sample/', methods=['GET', 'POST'])
+@app.route('/transmission_sample/<sample>/<energy>/<absorp_total>/<area>/<density>/')
+def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, density=None):
+    return render_template('transmission_sample.html', materials_dict=materials_dict)

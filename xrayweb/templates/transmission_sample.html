@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<p><div class=subtitle>XAFS Transmission-Mode Sample Analysis</div></p>
+
+<div class=body>
+
+    {% if errors %}
+    {% for e in range(errors) %}
+    <p>{{message[e]}}</p>
+    {% endfor %}
+    {% endif %}
+
+    <form action="{{url_for('transmission_sample')}}" method="post">
+        <table cellpadding=2 border=0>
+            <tr><td><b>Transmission Sample</b></td></tr>
+        </table>
+
+    </form>
+
+</div>
+{% endblock %}
