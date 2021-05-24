@@ -1094,6 +1094,18 @@ show_analyzers({energy:s}, theta_min={theta1:s}, theta_max= {theta2:s})
 
 
 @app.route('/transmission_sample/', methods=['GET', 'POST'])
-@app.route('/transmission_sample/<sample>/<energy>/<absorp_total>/<area>/<density>/')
+@app.route('/transmission_sample/<sample>/<energy>/<absorp_total>/<area>/<density>/', methods=['GET', 'POST'])
 def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, density=None):
-    return render_template('transmission_sample.html', materials_dict=materials_dict)
+    if request.method == 'POST':
+        sample = request.form.get('sample')
+        energy = float(request.form.get('energy'))
+        absorp_total = float(request.form.get('absorp_total'))
+        area = float(request.form.get('area'))
+        density = float(request.form.get('density'))
+
+    result = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total, area=area, density=density)
+    import pandas as pd
+    df = pd.DataFrame([result])
+    result = df.to_html()
+    return render_template('transmission_sample.html', materials_dict=materials_dict,
+                           result=result)
