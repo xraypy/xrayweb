@@ -403,7 +403,9 @@ def reflectivity(material=None):
             use_log = mode.lower() == 'log'
 
             ref_array = xraydb.mirror_reflectivity(formula1, 0.001*float(angle1),
-                                                   en_array, density)
+                                                   en_array, density,
+                                                   roughness=float(roughness),
+                                                   polarization=polarization)
             title = "%s, %s mrad" % (formula1, angle1)
             ref_plot = make_plot(en_array, ref_array, title, formula1,
                                  yformat='.3f',
