@@ -16,35 +16,67 @@
         <table cellpadding=2 border=0>
 
             <tr>
-                <td><label for="sample">Sample Formula:</label></td>
-                <td>
-                    <input style="width: 180px;" type="text" id="sample" 
-                    name="sample" value="{{ request.form['sample'] }}">
-                </td>
                 <td><label for="energy">Energy (eV):</label></td>
                 <td>
                     <input style="width: 180px;" type="text" id="energy" 
-                    name="energy" value="{{ request.form['energy'] }}">
+                    name="energy" value="{{ request.form['energy'] if request.form['energy'] else 7112 }}">
                 </td>
                 <td><label for="absorp_total">Absorption Total:</label></td>
                 <td>
                     <input style="width: 180px;" type="text" id="absorp_total" 
-                    name="absorp_total" value="{{ request.form['absorp_total'] }}">
+                    name="absorp_total" value="{{ request.form['absorp_total'] if request.form['absorp_total'] else 2.6 }}">
                 </td>
             </tr>
             <tr>
                 <td><label for="area">Area (cm^2):</label></td>
                 <td>
                     <input style="width: 180px;" type="text" id="area" 
-                    name="area" value="{{ request.form['area'] }}">
+                    name="area" value="{{ request.form['area'] if request.form['area'] else 1 }}">
                 </td>
                 <td><label for="density">Density (g/cm^3):</label></td>
                 <td>
                     <input style="width: 180px;" type="text" id="density" 
-                    name="density" value="{{ request.form['density'] }}">
+                    name="density" value="{{ request.form['density'] if request.form['density'] else None }}">
                 </td>
             </tr>
+            <tr><td><br></td></tr>
             <tr>
+                <td><label for="frac_type">Fraction Type:</label></td>
+                <td>
+                    <select name='frac_type' id='frac_type'>
+                        <option value="mass" {% if request.form['frac_type'] == 'mass'%}selected{% endif %}>Mass-Fraction</option>
+                        <option value="molar" {% if request.form['frac_type'] == 'molar'%}selected{% endif %}>Mole-Fraction</option>
+                    </select>
+                </td>
+            </tr>
+            <tr><td><br></td></tr>
+            <tr>
+                <td style="width: 400px" colspan="3">Specify the components of the sample below. Components can be single elements (e.g. Fe) or compounds (e.g. SiO2).
+                    The fraction will either be mass-fraction or mole-fraction depending on the dropdown above. <br><br>
+                    If mass-fraction is being used, one element can have a value of `-1` indicating that the remainder of the mass will be that component.</td>
+            </tr>
+            <tr>
+                <th></th>
+                <th>Component</th>
+                <th>Fraction</th>
+            </tr>
+            {% for i in range(1, 11) %}
+            <tr>
+                <td><label for="component{{i}}-name">Component-{{i}}:</label></td>
+                <td>
+                    <input style="width: 180px;" type="text" id="component{{i}}-name"
+                    name="component{{i}}-name" value="{{ request.form['component{}-name'.format(i)] }}">
+                </td>
+                <td>
+                    <input style="width: 180px;" type="text" id="component{{i}}-frac"
+                    name="component{{i}}-frac" value="{{ request.form['component{}-frac'.format(i)] }}">
+                </td>
+            </tr>
+            {% endfor %}
+            <tr><td><br></td></tr>
+            <tr>
+                <td></td>
+                <td></td>
                 <td><input type="submit" value="Submit"></td>
             </tr>
 
