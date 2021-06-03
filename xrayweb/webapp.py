@@ -3,6 +3,7 @@ import os
 import time
 import json
 from collections import OrderedDict
+from typing import Type
 import numpy as np
 import scipy.constants as consts
 
@@ -1093,3 +1094,35 @@ show_analyzers({energy:s}, theta_min={theta1:s}, theta_max= {theta2:s})
 
 """.format(header=PY_TOP, energy=energy, theta1=theta1, theta2=theta2)
     return Response(script, mimetype='text/plain')
+
+
+@app.route('/transmission_sample/', methods=['GET', 'POST'])
+@app.route('/transmission_sample/<sample>/<energy>/<absorp_total>/<area>/<density>/', methods=['GET', 'POST'])
+def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, density=None):
+    result = None
+
+    if request.method == 'POST':
+        sample = {}
+        for i in range(1, 11):
+            name = request.form.get(f'component{i}-name')
+            if name:
+                try:
+                    val = float(request.form.get(f'component{i}-frac'))
+                except ValueError:
+                    val = -1
+                sample[name] = val
+        energy = float(request.form.get('energy'))
+        absorp_total = float(request.form.get('absorp_total'))
+        area = float(request.form.get('area'))
+        if request.form.get('density'):
+            if request.form.get('density') == 'None':
+                density = None
+            else:
+                density = float(request.form.get('density'))
+        frac_type = request.form.get('frac_type')
+        result = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
+        import pandas as pd
+        df = pd.DataFrame([result])
+        result = df.T.to_html(header=False)
+    return render_template('transmission_sample.html', materials_dict=materials_dict,
+                           result=result)
