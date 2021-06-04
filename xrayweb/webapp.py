@@ -1114,15 +1114,26 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         energy = float(request.form.get('energy'))
         absorp_total = float(request.form.get('absorp_total'))
         area = float(request.form.get('area'))
-        if request.form.get('density'):
-            if request.form.get('density') == 'None':
-                density = None
-            else:
-                density = float(request.form.get('density'))
+        density = float(request.form.get('density', '1'))
+
         frac_type = request.form.get('frac_type')
-        result = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
-        import pandas as pd
-        df = pd.DataFrame([result])
-        result = df.T.to_html(header=False)
+        s = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total,
+                                       area=area, density=density, frac_type=frac_type)
+
+        result = {}
+        result['Energy (eV)'] = f'{s.energy_eV:.2f}'
+        result['Density (gr/cm^3)'] = f'{s.density:.2f}'
+        result['Area (cm^2)'] = f'{s.area_cm2:.2f}'
+        result['Total Absorption'] = f'{s.absorp_total:.2f}'
+        result['Thickness (\u03bCm)'] = f'{s.thickness_mm*1000.0:.2f}'
+        result['Absorption length (\u03bCm)'] = f'{s.absorption_length_um:.2f}'
+        result['Total Mass (mg)'] = f'{s.mass_total_mg:.2f}'
+
+        mass_fracs = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_fractions.items()]
+        result['Mass Fractions'] = ', '.join(mass_fracs)
+        
+        masses = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_components_mg.items()]
+        result['Element Masses (mg)'] = ', '.join(masses)
+
     return render_template('transmission_sample.html', materials_dict=materials_dict,
                            result=result)

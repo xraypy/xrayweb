@@ -11,6 +11,7 @@
     {% endfor %}
     {% endif %}
 
+ <table><tr><td>
     <form action="{{url_for('transmission_sample')}}" method="post">
 
         <table cellpadding=2 border=0>
@@ -36,7 +37,7 @@
                 <td><label for="density">Density (g/cm^3):</label></td>
                 <td>
                     <input style="width: 180px;" type="text" id="density" 
-                    name="density" value="{{ request.form['density'] if request.form['density'] else None }}">
+                    name="density" value="{{ request.form['density'] if request.form['density'] else 1 }}">
                 </td>
             </tr>
             <tr><td><br></td></tr>
@@ -84,10 +85,26 @@
         </table>
 
     </form>
-
+</td> <td>  &nbsp;&nbsp;</td><td>
+  
     {% if result %}
-        {{result | safe}}
+    <table style='vertical-align: top;' cellspacing=5 cellpadding=2  border=0>
+      <caption><b>Transmission Sample Results </b></caption>      
+      <tr>
+        <th > &nbsp; Quantity &nbsp;</th>
+        <th > &nbsp; Value &nbsp;</th>
+      </tr>
+
+      {% for name, value in result.items() %}
+      <tr class={{ loop.cycle('odd', 'even') }}>
+        <td> &nbsp; &nbsp; {{name}} </td>
+        <td> &nbsp; {{value}} </td>
+      </tr>
+      {% endfor %}
+    </table>
     {% endif %}
+   </td></tr>
+   </table>
 
 </div>
 {% endblock %}
