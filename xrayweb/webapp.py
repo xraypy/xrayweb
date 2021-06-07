@@ -1114,7 +1114,11 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         energy = float(request.form.get('energy'))
         absorp_total = float(request.form.get('absorp_total'))
         area = float(request.form.get('area'))
-        density = float(request.form.get('density', '1'))
+        density = request.form.get('density', '')
+        if not density:
+            density = None
+        else:
+            density = float(density)
 
         frac_type = request.form.get('frac_type')
         s = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total,
@@ -1122,11 +1126,11 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
 
         result = {}
         result['Energy (eV)'] = f'{s.energy_eV:.2f}'
-        result['Density (gr/cm^3)'] = f'{s.density:.2f}'
+        result['Density (gr/cm^3)'] = 'None' if not density else f'{s.density:.2f}'
         result['Area (cm^2)'] = f'{s.area_cm2:.2f}'
         result['Total Absorption'] = f'{s.absorp_total:.2f}'
-        result['Thickness (\u03bCm)'] = f'{s.thickness_mm*1000.0:.2f}'
-        result['Absorption length (\u03bCm)'] = f'{s.absorption_length_um:.2f}'
+        result['Thickness (\u03bCm)'] = 'None' if not s.thickness_mm else f'{s.thickness_mm*1000.0:.2f}'
+        result['Absorption length (\u03bCm)'] = 'None' if not s.absorption_length_um else f'{s.absorption_length_um:.2f}'
         result['Total Mass (mg)'] = f'{s.mass_total_mg:.2f}'
 
         mass_fracs = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_fractions.items()]
