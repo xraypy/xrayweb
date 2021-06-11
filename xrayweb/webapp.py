@@ -1140,5 +1140,31 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         steps = [f'{el:s}:{step:.3f}' for el, step in s.absorbance_steps.items()]
         result['Absorbance steps'] = ', '.join(steps)
 
-    return render_template('transmission_sample.html', materials_dict=materials_dict,
-                           result=result)
+        if not request.form.get('getpythonscript'):
+            return render_template('transmission_sample.html', materials_dict=materials_dict,
+                                result=result)
+        else:
+            if not density:
+                density = 'None'
+            script = """{header:s}
+
+# XAFS transmission mode sample calculation
+# inputs from web form
+sample = {sample}
+energy = {energy}
+absorp_total = {absorp_total}
+area = {area}
+density = {density}
+frac_type = '{frac_type:s}'
+
+samp = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total,
+                                       area=area, density=density, frac_type=frac_type)
+
+print(samp)
+""".format(header=PY_TOP, sample=sample, energy=energy, 
+absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
+            return Response(script, mimetype='text/plain')
+
+    else:
+        return render_template('transmission_sample.html', materials_dict=materials_dict,
+                                result=result)

@@ -77,10 +77,12 @@
             <tr><td><br></td></tr>
             <tr>
                 <td></td>
-                <td></td>
+                <td>
+                    <input type="checkbox" id="getpythonscript" name="getpythonscript" {{ "checked" if request.form['getpythonscript'] }}>
+                    <label for="getpythonscript">get python script</label>
+                </td>
                 <td><input type="submit" value="Submit"></td>
             </tr>
-
 
         </table>
 
