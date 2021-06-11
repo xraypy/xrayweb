@@ -1137,5 +1137,8 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         masses = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_components_mg.items()]
         result['Element Masses (mg)'] = ', '.join(masses)
 
+        steps = [f'{el:s}:{step:.3f}' for el, step in s.absorbance_steps.items()]
+        result['Absorbance steps'] = ', '.join(steps)
+
     return render_template('transmission_sample.html', materials_dict=materials_dict,
                            result=result)
