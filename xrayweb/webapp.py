@@ -1114,7 +1114,9 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         energy = float(request.form.get('energy'))
         absorp_total = float(request.form.get('absorp_total'))
         area = float(request.form.get('area'))
-        density = float(request.form.get('density', '1'))
+        density = request.form.get('density', None)
+        if density:
+            density = float(density)
 
         frac_type = request.form.get('frac_type')
         s = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total,
@@ -1122,11 +1124,11 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
 
         result = {}
         result['Energy (eV)'] = f'{s.energy_eV:.2f}'
-        result['Density (gr/cm^3)'] = f'{s.density:.2f}'
+        result['Density (gr/cm^3)'] = 'None' if not density else f'{s.density:.2f}'
         result['Area (cm^2)'] = f'{s.area_cm2:.2f}'
         result['Total Absorption'] = f'{s.absorp_total:.2f}'
-        result['Thickness (\u03bCm)'] = f'{s.thickness_mm*1000.0:.2f}'
-        result['Absorption length (\u03bCm)'] = f'{s.absorption_length_um:.2f}'
+        result['Thickness (\u03bCm)'] = 'Requires Density' if not s.thickness_mm else f'{s.thickness_mm*1000.0:.2f}'
+        result['Absorption length (\u03bCm)'] = 'Requires Density' if not s.absorption_length_um else f'{s.absorption_length_um:.2f}'
         result['Total Mass (mg)'] = f'{s.mass_total_mg:.2f}'
 
         mass_fracs = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_fractions.items()]
@@ -1135,5 +1137,34 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
         masses = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_components_mg.items()]
         result['Element Masses (mg)'] = ', '.join(masses)
 
-    return render_template('transmission_sample.html', materials_dict=materials_dict,
-                           result=result)
+        steps = [f'{el:s}:{step:.3f}' for el, step in s.absorbance_steps.items()]
+        result['Absorbance steps'] = ', '.join(steps)
+
+        if not request.form.get('getpythonscript'):
+            return render_template('transmission_sample.html', materials_dict=materials_dict,
+                                result=result)
+        else:
+            if not density:
+                density = 'None'
+            script = """{header:s}
+
+# XAFS transmission mode sample calculation
+# inputs from web form
+sample = {sample}
+energy = {energy}
+absorp_total = {absorp_total}
+area = {area}
+density = {density}
+frac_type = '{frac_type:s}'
+
+samp = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=absorp_total,
+                                       area=area, density=density, frac_type=frac_type)
+
+print(samp)
+""".format(header=PY_TOP, sample=sample, energy=energy, 
+absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
+            return Response(script, mimetype='text/plain')
+
+    else:
+        return render_template('transmission_sample.html', materials_dict=materials_dict,
+                                result=result)
