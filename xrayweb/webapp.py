@@ -65,8 +65,8 @@ for z in range(1, 96):
 emission_energies_json = json.dumps(emission_energies)
 
 PY_TOP = """#!/usr/bin/env python
-# this script requires Python3, numpy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb
+# this script requires Python3, numpy, scipy, matplotlib, and xraydb modules. Use:
+#        pip install xraydb scipy matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import xraydb
@@ -590,7 +590,7 @@ def ionchamber(elem=None):
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
 @app.route('/darwinwidth/<xtal>/<hkl>/<energy>/<polar>/')
-def darwinwidth(xtal=None, hkl='1 1 1', energy='9800', polar='s'):
+def darwinwidth(xtal=None, hkl='1 1 1', energy='10000', polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
 
     dtheta_plot = denergy_plot = None
@@ -659,20 +659,22 @@ def darwinwidth(xtal=None, hkl='1 1 1', energy='9800', polar='s'):
 
 @app.route('/analyzers/', methods=['GET', 'POST'])
 @app.route('/analyzers/<elem>',  methods=['GET', 'POST'])
-def analyzers(elem=None):
-    elem = line = theta1 = theta2= None
-    energy = 10000
+@app.route('/analyzers/<elem>/<energy>/<theta1>/<theta2>',  methods=['GET', 'POST'])
+def analyzers(elem='', energy='10000', theta1='60', theta2='90'):
+    line = 'Ka1'
     analyzer_results = None
 
     if len(request.form) != 0:
         elem   = request.form.get('elem', '')
         line   = request.form.get('line', 'Ka1')
-        energy = float(request.form.get('energy', '10000'))
-        theta_min = float(request.form.get('theta1', '60'))
-        theta_max = float(request.form.get('theta2', '90'))
+        energy = request.form.get('energy', '10000')
+        theta1 = request.form.get('theta1', '60')
+        theta2 = request.form.get('theta2', '90')
+    else:
+        request.form = {'theta1': theta1, 'theta2':theta2,
+                        'energy': energy, 'elem': elem, 'line':'Ka1'}
 
-
-    if request.method == 'POST':
+    if elem != '':
         analyzer_results = []
         for xtal in ('Si', 'Ge'):
             a = lattice_constants[xtal]
@@ -680,18 +682,13 @@ def analyzers(elem=None):
                 hkl_tuple = tuple([int(ref) for ref in hkl.split()])
                 hkl_link = '_'.join([ref for ref in hkl.split()])
                 thbragg = th_diffracted(float(energy), hkl_tuple, a)
-                if thbragg < theta_max and thbragg > theta_min:
-                    dw = xraydb.darwin_width(energy, crystal=xtal,
+                if thbragg < float(theta2) and thbragg > float(theta1):
+                    dw = xraydb.darwin_width(float(energy), crystal=xtal,
                                              hkl=hkl_tuple, polarization='u')
                     analyzer_results.append((xtal, hkl, hkl_link,
                                              "%8.4f" % thbragg,
                                              "%8.4f" % (dw.theta_width*1e6),
                                              "%8.4f" % dw.energy_width))
-
-    else:
-        request.form = {'theta1': '60', 'theta2':'90',
-                        'energy': '10000', 'elem': '', 'line':'Ka1'}
-
     return render_template('analyzers.html',
                            analyzer_results=analyzer_results,
                            emission_energies=emission_energies_json,
