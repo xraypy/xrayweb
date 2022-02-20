@@ -2,7 +2,7 @@
 import os
 import time
 import json
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from typing import Type
 import numpy as np
 import scipy.constants as consts
@@ -12,8 +12,9 @@ from flask import (Flask, redirect, url_for, render_template,
                    send_from_directory)
 
 import xraydb
-from xraydb.xraydb import XrayEdge, XrayLine
+from xraydb.xraydb import XrayLine
 
+XrayEdge = namedtuple('XrayEdge', ('energy', 'fyield', 'jump_ratio', 'width'))
 top, _ =  os.path.split(os.path.abspath(__file__))
 
 app = Flask('xrayweb',
@@ -267,13 +268,14 @@ def index():
 @app.route('/element/')
 @app.route('/element/<elem>')
 def element(elem=None):
-    edges = atomic = lines = {}
+    edges = atomic = lines = widths = {}
     if elem is not None:
         atomic= {'n': xraydb.atomic_number(elem),
                  'mass': xraydb.atomic_mass(elem),
                  'density': xraydb.atomic_density(elem)}
         _edges= xraydb.xray_edges(elem)
         _lines= xraydb.xray_lines(elem)
+        widths= dict(xraydb.core_width(elem))
         lines = OrderedDict()
         for k in sorted(_lines.keys()):
             en, inten, init, final = _lines[k] # XrayLine
@@ -282,8 +284,9 @@ def element(elem=None):
         edges = OrderedDict()
         for k in sorted(_edges.keys()):
             en, fy, jump = _edges[k] # XrayEdge
+            wid = widths[k]
             edges[k] = XrayEdge(energy=f'{en:.1f}', fyield=f'{fy:.5f}',
-                                jump_ratio=f'{jump:.3f}')
+                                jump_ratio=f'{jump:.3f}', width=f'{wid:.3f}')
 
     return render_template('elements.html', edges=edges, elem=elem,
                            atomic=atomic, lines=lines, materials_dict=materials_dict)
@@ -587,7 +590,7 @@ def ionchamber(elem=None):
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
 @app.route('/darwinwidth/<xtal>/<hkl>/<energy>/<polar>/')
-def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
+def darwinwidth(xtal=None, hkl='1 1 1', energy='9800', polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
 
     dtheta_plot = denergy_plot = None
@@ -599,18 +602,16 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
         polar = request.form.get('polarization', 's')
         energy = request.form.get('energy', '10000')
         do_calc = True
-    elif xtal in xtal_list and hkl is not None:
-        hkl = hkl.replace('_', ' ')
-        request.form = {'xtal': xtal, 'hkl':hkl,
-                        'polarization':polar, 'energy':energy}
-        do_calc = True
     else:
-        do_calc = False
-        request.form = {'xtal': 'Si', 'hkl':'1 1 1',
-                        'polarization':'s', 'energy':'10000'}
+        do_calc = xtal in xtal_list
+        if not do_calc:
+            xtal = 'Si'
+        request.form = {'xtal': xtal, 'hkl': hkl.replace('_', ' '),
+                        'polarization':polar, 'energy':energy}
 
+    hkl = hkl.replace('_', ' ')
+    hkl_tuple = tuple([int(a) for a in hkl.split()])
     if do_calc:
-        hkl_tuple = tuple([int(a) for a in hkl.split()])
         energy = float(energy)
         out = xraydb.darwin_width(energy, xtal, hkl_tuple,
                                   polarization=polar, m=1)
@@ -653,6 +654,7 @@ def darwinwidth(xtal=None, hkl=None, energy=None, polar='s'):
                            energy_width=energy_width,
                            xtal_list=xtal_list,
                            hkl_list=hkl_list,
+                           hkl=hkl,
                            materials_dict=materials_dict)
 
 @app.route('/analyzers/', methods=['GET', 'POST'])
@@ -850,17 +852,19 @@ print('# Atomic Number: %d ' % xraydb.atomic_number(elem))
 print('# Atomic Moss:   %.4f ' % xraydb.atomic_mass(elem))
 
 print('# X-ray Edges:')
-print('#  Edge    Energy   FlourescenceYield  Edge Jump')
+print('#  Edge     Energy    Width  FlourYield  EdgeJump')
+e_fmt = '  %5s  %9.1f  %7.4f    %8.5f  %8.5f'
+l_fmt = '%7s  %9.1f   %8.5f  %11s'
+widths = dict(xraydb.core_width(elem))
 for key, val in xraydb.xray_edges(elem).items():
-     print(' %5s  %9.1f      %8.5f       %8.5f' % (key, val.energy,
-                                                    val.fyield, val.jump_ratio))
+     wid = widths.get(key, 0)
+     print(e_fmt % (key, val.energy, wid, val.fyield, val.jump_ratio))
 
 print('# X-ray Lines:')
-print('#  Line       Levels    Energy  Intensity')
+print('#  Line     Energy  Intensity       Levels')
 for key, val in xraydb.xray_lines(elem).items():
-     print(' %7s %11s %9.1f   %8.5f' % (key, '%s-%s' % (val.initial_level,
-                                                        val.final_level),
-                                        val.energy, val.intensity))
+     levels = '%s-%s' % (val.initial_level, val.final_level)
+     print(l_fmt % (key, val.energy, val.intensity, levels))
 """.format(header=PY_TOP, elem=elem)
     return Response(script, mimetype='text/plain')
 
@@ -1133,7 +1137,7 @@ def transmission_sample(sample=None, energy=None, absorp_total=None, area=None, 
 
         mass_fracs = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_fractions.items()]
         result['Mass Fractions'] = ', '.join(mass_fracs)
-        
+
         masses = [f'{el:s}:{mass:.3f}' for el, mass in s.mass_components_mg.items()]
         result['Element Masses (mg)'] = ', '.join(masses)
 
@@ -1161,7 +1165,7 @@ samp = xraydb.transmission_sample(sample=sample, energy=energy, absorp_total=abs
                                        area=area, density=density, frac_type=frac_type)
 
 print(samp)
-""".format(header=PY_TOP, sample=sample, energy=energy, 
+""".format(header=PY_TOP, sample=sample, energy=energy,
 absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
             return Response(script, mimetype='text/plain')
 

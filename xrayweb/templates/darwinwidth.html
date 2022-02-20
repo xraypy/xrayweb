@@ -5,7 +5,7 @@
 
 <div class=body>
     {% if error %}
-        <p>{{error}}</p>
+	<p>{{error}}</p>
     {% endif %}
 
     <form action="{{url_for('darwinwidth')}}" method="POST">
@@ -15,29 +15,29 @@
        <tr>
 	 <td> Monochromator Crystal: </td>
 	 <td>
-          <select name="xtal" id="xtal" style="width: 80px;">
-            {% for val in xtal_list %}
-            <option value="{{val}}"  {% if request.form['xtal'] == val %}
+	  <select name="xtal" id="xtal" style="width: 80px;">
+	    {% for val in xtal_list %}
+	    <option value="{{val}}"  {% if request.form['xtal'] == val %}
 		    selected {% endif %}> {{val}}</option>
-            {% endfor %}
-          </select>
+	    {% endfor %}
+	  </select>
 	 </td>
 	 <td> Reflection: </td>
 	 <td>
-          <select name="hkl" id="hkl" style="width: 80px;">
-            {% for val in hkl_list %}
-            <option value="{{val}}"  {% if request.form['hkl'] == val %}
+	  <select name="hkl" id="hkl" style="width: 80px;">
+	    {% for val in hkl_list %}
+	    <option value="{{val}}"  {% if request.form['hkl'] == val %}
 		    selected {% endif %}> {{val}}</option>
-            {% endfor %}
-          </select>
+	    {% endfor %}
+	  </select>
 	 </td>
 	 <td> Polarization: </td>
 	 <td>
-          <select name="polarization" id="polarization">
-            <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
-            <option value="p" {% if request.form['polarization'] == "p" %}  selected {% endif %}>p</option>
-            <option value="unpolarized" {% if request.form['polarization'].startswith("u")  %} selected {% endif %}>unpolarized</option>
-          </select>
+	  <select name="polarization" id="polarization">
+	    <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
+	    <option value="p" {% if request.form['polarization'] == "p" %}  selected {% endif %}>p</option>
+	    <option value="unpolarized" {% if request.form['polarization'].startswith("u")  %} selected {% endif %}>unpolarized</option>
+	  </select>
 	 </td>
 	 </tr>
        <tr>
@@ -65,6 +65,15 @@
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
 	 </td>
+
+	 <td>
+		  <td>
+	 <a href="{{url_for('darwinwidth')}}{{request.form['xtal']}}/{{request.form['hkl'].replace(' ', '_')}}/{{request.form['energy']}}/{{request.form['polarization']}}">
+	   permalink </a>
+       </td>
+
+	   </td>
+
 	 {% endif %}
 
        </tr>
@@ -106,17 +115,17 @@
   <tr style='vertical-align: top; '>
     <td>
       <div id="dtheta_plot">
-        <script  type="text/javascript">
-          var graph = {{dtheta_plot | safe}};
-          Plotly.plot('dtheta_plot',   graph.data,   graph.layout || {},  config=graph.config);
-        </script>
+	<script  type="text/javascript">
+	  var graph = {{dtheta_plot | safe}};
+	  Plotly.plot('dtheta_plot',   graph.data,   graph.layout || {},  config=graph.config);
+	</script>
       </div>
     </td> <td>
       <div id="denergy_plot">
-        <script  type="text/javascript">
-          var graph = {{denergy_plot | safe}};
-          Plotly.plot('denergy_plot',   graph.data,   graph.layout || {},  config=graph.config);
-        </script>
+	<script  type="text/javascript">
+	  var graph = {{denergy_plot | safe}};
+	  Plotly.plot('denergy_plot',   graph.data,   graph.layout || {},  config=graph.config);
+	</script>
       </div>
 </td></tr></table>
 

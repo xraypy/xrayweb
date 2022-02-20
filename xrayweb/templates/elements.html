@@ -11,59 +11,61 @@
 
     <table style='vertical-align: top;' cellspacing=10 border=0>
       <tr><td rowspan=40 align=top>
-          <table cellspacing=5 cellpadding=2>
-            <caption><b>Atomic Data for {{elem}}</b></caption>
-            <tr> <th > &nbsp;Property &nbsp;</th>     <th > &nbsp; Value&nbsp;</th>
-            <tr class='odd'><td> &nbsp; Atomic  Number: </td>  <td> &nbsp;  {{atomic.n}}</td></tr>
-            <tr class='even'> <td> &nbsp; Atomic  Mass:  </td>  <td> &nbsp;  {{atomic.mass}}</td></tr>
-            <tr class='odd'> <td> &nbsp; Density (gm / cm^3): </td>  <td>
+	  <table cellspacing=5 cellpadding=2>
+	    <caption><b>Atomic Data for {{elem}}</b></caption>
+	    <tr> <th > &nbsp;Property &nbsp;</th>     <th > &nbsp; Value&nbsp;</th>
+	    <tr class='odd'><td> &nbsp; Atomic  Number: </td>  <td> &nbsp;  {{atomic.n}}</td></tr>
+	    <tr class='even'> <td> &nbsp; Atomic  Mass:  </td>  <td> &nbsp;  {{atomic.mass}}</td></tr>
+	    <tr class='odd'> <td> &nbsp; Density (gm / cm^3): </td>  <td>
 		&nbsp;  {{atomic.density}}</td>
 	    </tr>
 	    <tr></tr>
 	    <tr><td colspan=2 align=center>
 		<a href="{{url_for('elementscript',  elem=elem,
 			 fname='xrayweb_element.py')}}"> python script </a>
-   	    </td></tr>
+	    </td></tr>
 
-          </table>
+	  </table>
 	</td>
 	<td rowspan=40 align=top>
-          <table cellspacing=5 cellpadding=2>
-            <caption><b>X-ray absorption edges for {{elem}} </b></caption>
-            <tr>
-              <th > &nbsp; Edge &nbsp;</th>
-              <th > &nbsp; Energy (eV) &nbsp;</th>
-              <th >  &nbsp; Fluorescence Yield</th>
-              <th >  &nbsp; Edge Jump</th>
-            </tr>
+	  <table cellspacing=5 cellpadding=2>
+	    <caption><b>X-ray absorption edges for {{elem}} </b></caption>
+	    <tr>
+	      <th > &nbsp; Edge &nbsp;</th>
+	      <th > &nbsp; Energy (eV) &nbsp;</th>
+	      <th >  &nbsp; Width (eV)</th>
+	      <th >  &nbsp; Fluorescence Yield</th>
+	      <th >  &nbsp; Edge Jump</th>
+	    </tr>
 
-            {% for name, data in edges.items() %}
-            <tr class={{ loop.cycle('odd', 'even') }}>
-              <td> &nbsp; &nbsp; {{name}} </td>
-              <td align='right'> &nbsp; {{data.energy}} </td>
-              <td align='right'> &nbsp; {{data.fyield}} </td>
-              <td align='right'> &nbsp; {{data.jump_ratio}} </td>
-            </tr>
-            {% endfor %}
-          </table>
+	    {% for name, data in edges.items() %}
+	    <tr class={{ loop.cycle('odd', 'even') }}>
+	      <td> &nbsp; &nbsp; {{name}} </td>
+	      <td align='right'> &nbsp; {{data.energy}} </td>
+	      <td align='right'> &nbsp; {{data.width}} </td>
+	      <td align='right'> &nbsp; {{data.fyield}} </td>
+	      <td align='right'> &nbsp; {{data.jump_ratio}} </td>
+	    </tr>
+	    {% endfor %}
+	  </table>
       </td><td rowspan=40 align=top>
-                  <table cellspacing=5 cellpadding=2>
-                        <caption><b>X-ray fluorescence lines for {{elem}}</b></caption>
-                        <tr>
-                        <th >   &nbsp; Line &nbsp;</th>
+		  <table cellspacing=5 cellpadding=2>
+			<caption><b>X-ray fluorescence lines for {{elem}}</b></caption>
+			<tr>
+			<th >   &nbsp; Line &nbsp;</th>
 			<th align='right'>  &nbsp; Energy (eV) &nbsp;</th>
-                        <th align='right'>  &nbsp; Intensity</th>
-                        </tr>
+			<th align='right'>  &nbsp; Intensity</th>
+			</tr>
 
-                        {% for name ,data in lines.items() %}
-                        <tr class={{ loop.cycle('odd', 'even') }}>
-                        <td> &nbsp; &nbsp; {{name}}      ({{data.initial_level}} - {{data.final_level}} )   </td>
-                        <td align='right'> &nbsp; {{data.energy}} </td>
-                        <td> &nbsp; {{data.intensity}} </td>
+			{% for name ,data in lines.items() %}
+			<tr class={{ loop.cycle('odd', 'even') }}>
+			<td> &nbsp; &nbsp; {{name}}      ({{data.initial_level}} - {{data.final_level}} )   </td>
+			<td align='right'> &nbsp; {{data.energy}} </td>
+			<td> &nbsp; {{data.intensity}} </td>
 
-                        </tr>
-                        {% endfor %}
-                  </table>
+			</tr>
+			{% endfor %}
+		  </table>
       </td></tr>
     </table>
     {% endif %}
