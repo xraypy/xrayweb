@@ -375,74 +375,69 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
 
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
-def reflectivity(material=None):
+@app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<mats>/<plotmode>', methods=['GET', 'POST'])
+def reflectivity(formula='Rh', density='12.41', angle='2', rough='10', polar='s', e1='1000', e2='51000', de='50', mats='rhodium', plotmode='linear'):
     message = []
     ref_plot = angc_plot = {}
     has_data = False
-    de = '50'
     if request.method == 'POST':
-        formula1 = request.form.get('formula1', 'None')
-        density1 = request.form.get('density1', '')
-        angle1 = request.form.get('angle1', '0')
-        material1 = request.form.get('mats1', 'silicon')
-
+        formula = request.form.get('formula', 'None')
+        density = request.form.get('density', '12.41')
+        angle = request.form.get('angle', '2')
+        mats = request.form.get('mats', 'rhodium')
         e1 = request.form.get('e1', '1000')
-        e2 = request.form.get('e2', '50000')
+        e2 = request.form.get('e2', '51000')
         de  = request.form.get('de', '50')
-        mode = request.form.get('mode', 'Linear')
-        roughness = request.form.get('roughness')
-        polarization = request.form.get('polarization')
+        rough = request.form.get('rough', '10')
+        polar = request.form.get('polar', 's')
+        plotmode = request.form.get('plotmode', 'linear')
+        do_calc = True
+    else:
+        do_calc = formula != ''
+        if not do_calc:
+            formula = materials_['rhodiumn'].formula
+            density = materials_['rhodium'].density
 
-        if not xraydb.validate_formula(formula1):
+        request.form = {'mats': mats, 'formula': formula,
+                        'density': density, 'angle': angle,
+                        'e1': e1, 'e2': e2, 'de': de,
+                        'polar': polar,  'rough': rough,
+                        'plotmode': plotmode}
+
+    if do_calc:
+        if not xraydb.validate_formula(formula):
             message.append("cannot interpret chemical formula")
 
         try:
-            density = max(0, float(density1))
+            density = max(0.01, float(density))
         except:
             message.append('Density must be a positive number.')
 
         if len(message) == 0:
             has_data = True
             en_array = energy_array(e1, e2, de)
-            use_log = mode.lower() == 'log'
+            use_log = (plotmode.lower() == 'log')
 
-            ref_array = xraydb.mirror_reflectivity(formula1, 0.001*float(angle1),
+            ref_array = xraydb.mirror_reflectivity(formula, 0.001*float(angle),
                                                    en_array, density,
-                                                   roughness=float(roughness),
-                                                   polarization=polarization)
-            title = "%s, %s mrad" % (formula1, angle1)
-            ref_plot = make_plot(en_array, ref_array, title, formula1,
+                                                   roughness=float(rough),
+                                                   polarization=polar)
+            title = "%s, %s mrad" % (formula, angle)
+            ref_plot = make_plot(en_array, ref_array, title, formula,
                                  yformat='.3f',
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
-            title = "%s Reflectivity, %s mrad" % (formula1, angle1)
-            ref_plot = make_plot(en_array, ref_array, title, formula1,
+            title = "%s Reflectivity, %s mrad" % (formula, angle)
+            ref_plot = make_plot(en_array, ref_array, title, formula,
                                  yformat='.3f',
                                  ytitle='Reflectivity', ylog_scale=use_log)
 
-            _del, _bet, _ = xraydb.xray_delta_beta(formula1, density, en_array)
+            _del, _bet, _ = xraydb.xray_delta_beta(formula, density, en_array)
             ang_crit = 1000*np.arccos(1 - _del - 1j*_bet).real
 
-            title = "%s, Critical Angle" % (formula1)
-            angc_plot = make_plot(en_array, ang_crit, title, formula1,
+            title = "%s, Critical Angle" % (formula)
+            angc_plot = make_plot(en_array, ang_crit, title, formula,
                                   ytitle='Critical Angle (mrad)', ylog_scale=use_log)
-
-    else:
-        request.form = {'mats1': 'silicon',
-                        'formula1': materials_['silicon'].formula,
-                        'density1': materials_['silicon'].density,
-                        'angle1': 2.5,
-                        'mats2': 'None',
-                        'formula2': '',
-                        'density2': '',
-                        'angle2': 2.5,
-                        'e1': 1000,
-                        'e2': 50000,
-                        'de': de,
-                        'polarization': 's',
-                        'roughness': '0',
-                        'mode': 'Linear'}
-
 
     return render_template('reflectivity.html', message=message,
                            errors=len(message), ref_plot=ref_plot, angc_plot=angc_plot,
@@ -590,7 +585,7 @@ def ionchamber(elem=None):
 
 @app.route('/darwinwidth/', methods=['GET', 'POST'])
 @app.route('/darwinwidth/<xtal>/<hkl>/<energy>/<polar>/')
-def darwinwidth(xtal=None, hkl='1 1 1', energy='10000', polar='s'):
+def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
 
     dtheta_plot = denergy_plot = None
@@ -613,9 +608,10 @@ def darwinwidth(xtal=None, hkl='1 1 1', energy='10000', polar='s'):
     hkl_tuple = tuple([int(a) for a in hkl.split()])
     if do_calc:
         energy = float(energy)
-        out = xraydb.darwin_width(energy, xtal, hkl_tuple,
-                                  polarization=polar, m=1)
-        if np.isnan(out.theta):
+        h_, k_, l_ = hkl_tuple
+        lambd = lattice_constants[xtal] / np.sqrt(h_*h_ + k_*k_ + l_*l_)
+        energy_min = PLANCK_HC /(2*lambd)
+        if energy < energy_min:
             theta_deg = "not allowed"
             theta_width = "-"
             energy_width = "-"
@@ -623,6 +619,8 @@ def darwinwidth(xtal=None, hkl='1 1 1', energy='10000', polar='s'):
             energy_fwhm = "-"
 
         else:
+            out = xraydb.darwin_width(energy, xtal, hkl_tuple,
+                                      polarization=polar, m=1)
             title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
             dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
                                     xtal, y1label='1 bounce',
@@ -645,6 +643,7 @@ def darwinwidth(xtal=None, hkl='1 1 1', energy='10000', polar='s'):
             energy_fwhm = "%.5f" % out.energy_fwhm
 
     return render_template('darwinwidth.html',
+                           energy_min="%.2f" % energy_min,
                            dtheta_plot=dtheta_plot,
                            denergy_plot=denergy_plot,
                            theta_deg=theta_deg,
@@ -931,22 +930,22 @@ plt.show()
 
 
 
-@app.route('/reflectdata/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
-def reflectdata(formula, rho, angle, rough, polar, e1, e2, de, fname):
+@app.route('/reflectdata/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
+def reflectdata(formula, density, angle, rough, polar, e1, e2, de, fname):
     """mirror reflectivity data as file"""
     en_array = energy_array(e1, e2, de)
     angle = float(angle)
-    rho   = float(rho)
+    density  = float(density)
     rough = float(rough)
-    reflectivity = xraydb.mirror_reflectivity(formula, 0.001*angle, en_array, rho,
+    reflectivity = xraydb.mirror_reflectivity(formula, 0.001*angle, en_array, density,
                                               roughness=rough, polarization=polar)
 
-    _del, _bet, _ = xraydb.xray_delta_beta(formula, rho, en_array)
+    _del, _bet, _ = xraydb.xray_delta_beta(formula, density, en_array)
     ang_crit = 1000*(np.pi/2 - np.arcsin(1 - _del - 1j*_bet)).real
 
     header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
               ' Material.formula   : %s ' % formula,
-              ' Material.density   : %.4f gr/cm^3 ' % rho,
+              ' Material.density   : %.4f gr/cm^3 ' % density,
               ' Material.angle     : %.4f mrad ' % angle,
               ' Material.roughness : %.4f Ang ' % rough,
               ' Material.polarization: %s ' % polar,
@@ -959,8 +958,8 @@ def reflectdata(formula, rho, angle, rough, polar, e1, e2, de, fname):
     return Response(txt, mimetype='text/plain')
 
 
-@app.route('/reflectscript/<formula>/<rho>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
-def reflectscript(formula, rho, angle, rough, polar, e1, e2, de, fname):
+@app.route('/reflectscript/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<fname>')
+def reflectscript(formula, density, angle, rough, polar, e1, e2, de, fname):
     """mirror reflectivity data as python code"""
     e1 = min(EN_MAX, max(EN_MIN, float(e1)))
     e2 = min(EN_MAX, max(EN_MIN, float(e2)))
@@ -993,7 +992,7 @@ plt.xlabel('Energy (eV)')
 plt.ylabel('Critical Angle (mrad)')
 plt.title('Critical Angle for %s' % formula)
 plt.show()
-""".format(header=PY_TOP, formula=formula, density=float(rho),
+""".format(header=PY_TOP, formula=formula, density=float(density),
            angle=float(angle), rough=float(rough), polar=polar,
            e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
