@@ -65,11 +65,7 @@
 		    polar=request.form['polarization'],
 		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
 	 </td><td>
-	   <a href="{{url_for('darwinwidth',
-		    xtal=request.form['xtal'],
-		    hkl=request.form['hkl'].replace(' ', '_'),
-		    energy=request.form['energy'],
-		    polar=request.form['polarization'])}}">permalink</a>
+	   <a href="{{url_for('darwinwidth')}}/{{request.form['xtal']}}/{{request.form['hkl'].replace(' ', '_')}}/{{request.form['energy']}}/{{request.form['polarization']}}">permalink</a>
 	 </td>
 
 	 {% endif %}
