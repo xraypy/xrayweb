@@ -503,7 +503,7 @@ def ionchamber(elem=None):
     incident_flux = transmitted_flux = photo_flux = compton_flux = rayleigh_flux = ''
     transmitted_percent = photo_percent =  compton_percent = rayleigh_percent = ''
 
-    mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'Si (diode)', 'Ge (diode)')
+    mat1list = ('He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe', 'C (diode)', 'Si (diode)', 'Ge (diode)')
     mat2list = ('None', 'He', 'N2', 'Ne', 'Ar', 'Kr', 'Xe')
 
     if request.method == 'POST':
@@ -527,7 +527,7 @@ def ionchamber(elem=None):
         thick   = float(thick)
 
         if 'diode' in mat1:
-            mat1 = mat1.replace(' (diode)', '')
+            mat1 = mat1.replace('(diode)', '').strip()
             mat2 = 'None'
         if mat2 in (None, 'None', ''):
             mat = {mat1: 1.0}
@@ -1002,7 +1002,7 @@ def fluxscript(mat1, mat2='', frac1='1', thick='10', pressure='1', energy='10000
                voltage='1', amp_val='1', amp_units='nA_V', fname='xrayweb_flux.py'):
     """ion chamber flux script"""
     if 'diode' in mat1:
-        mat1 = mat1.replace(' (diode)', '')
+        mat1 = mat1.replace('(diode)', '').replace('%20', '').strip()
         mat2 = 'None'
     script = """{header:s}
 # X-ray ion chamber flux calculation
@@ -1027,7 +1027,7 @@ flux = xraydb.ionchamber_fluxes(mat, volts=voltage, energy=energy,
                                 sensitivity=amp_val,
                                 sensitivity_units=amp_units)
 
-print(f'Incident to Detector: {{flux.incidet:.7g}}')
+print(f'Incident to Detector: {{flux.incident:.7g}}')
 print(f'Transmitted out of Detector: {{flux.transmitted:.7g}}')
 print(f'Absorbed for Photo Current: {{flux.photo:.7g}}')
 print(f'Scattered by Compton Effect: {{flux.incoherent:.7g}}')
