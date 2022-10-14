@@ -13,6 +13,8 @@ from flask import (Flask, redirect, url_for, render_template,
 
 import xraydb
 from xraydb.xraydb import XrayLine
+from xraydb import chemparse
+
 
 XrayEdge = namedtuple('XrayEdge', ('energy', 'fyield', 'jump_ratio', 'width'))
 top, _ =  os.path.split(os.path.abspath(__file__))
@@ -317,7 +319,7 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
         t = float(request.form.get('thickness'))
         #input validation
         if not xraydb.validate_formula(formula):
-            message.append("cannot interpret chemical formula")
+            message.append(f"cannot interpret chemical formula '{formula}' : check case and validity")
 
         try:
             density = max(0, float(density))
@@ -353,19 +355,26 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
         # make plot
         en_array = energy_array(e1, e2, de)
         num = en_array.size
-        mu_array = xraydb.material_mu(formula, en_array, density=float(density))
-        trans = np.exp(-0.1*t*mu_array)
-        atten = 1 - trans
-        use_log = mode.lower() == 'log'
-        mu_plot = make_plot(en_array, 10/mu_array, material, formula,
-                            ylog_scale=use_log, ytitle='1/e length (mm)')
-        atten_plot = make_plot(en_array, trans,
-                               material, "%.3f mm %s" % (t, formula),
-                               ylog_scale=use_log,
-                               y2=atten,
-                               ytitle='transmitted/attenuated fraction',
-                               y1label='transmitted',
-                               y2label='attenuated')
+        try:
+            o = chemparse(formula)
+            parsed = True
+        except:
+            parsed = False
+        if parsed:
+            mu_array = xraydb.material_mu(formula, en_array, density=float(density))
+
+            trans = np.exp(-0.1*t*mu_array)
+            atten = 1 - trans
+            use_log = mode.lower() == 'log'
+            mu_plot = make_plot(en_array, 10/mu_array, material, formula,
+                                ylog_scale=use_log, ytitle='1/e length (mm)')
+            atten_plot = make_plot(en_array, trans,
+                                   material, "%.3f mm %s" % (t, formula),
+                                   ylog_scale=use_log,
+                                   y2=atten,
+                                   ytitle='transmitted/attenuated fraction',
+                                   y1label='transmitted',
+                                   y2label='attenuated')
 
     return render_template('attenuation.html', message=message, errors=len(message),
                            datalink=datalink, mu_plot=mu_plot, de=int(de),
@@ -869,25 +878,33 @@ for key, val in xraydb.xray_lines(elem).items():
 def attendata(formula, rho, t, e1, e2, de, fname):
     en_array = energy_array(e1, e2, de)
     rho = float(rho)
-    mu_array = xraydb.material_mu(formula, en_array, density=rho)
-    t = float(t)
-    trans = np.exp(-0.1*t*mu_array)
-    atten = 1 - trans
 
-    header = (' X-ray attenuation data from xrayweb  %s ' % time.ctime(),
-              ' Material.formula   : %s ' % formula,
-              ' Material.density   : %.3f gr/cm^3 ' % rho,
-              ' Material.thickness : %.3f mm ' % t,
-              ' Column.1: energy (eV)',
-              ' Column.2: attenuation_length (mm)' ,
-              ' Column.3: transmitted_fraction',
-              ' Column.4: attenuated_fraction')
+    try:
+        o = chemparse(formula)
+        parsed = True
+    except:
+        text = f"check case and validity of formula '{formula}'"
+        parsed = False
+    if parsed:
+        mu_array = xraydb.material_mu(formula, en_array, density=rho)
+        t = float(t)
+        trans = np.exp(-0.1*t*mu_array)
+        atten = 1 - trans
 
-    arr_names = ('energy       ', 'atten_length ',
-                 'trans_fract  ', 'atten_fract  ')
+        header = (' X-ray attenuation data from xrayweb  %s ' % time.ctime(),
+                  ' Material.formula   : %s ' % formula,
+                  ' Material.density   : %.3f gr/cm^3 ' % rho,
+                  ' Material.thickness : %.3f mm ' % t,
+                  ' Column.1: energy (eV)',
+                  ' Column.2: attenuation_length (mm)' ,
+                  ' Column.3: transmitted_fraction',
+                  ' Column.4: attenuated_fraction')
 
-    txt = make_asciifile(header, arr_names,
-                         (en_array, 10/mu_array, trans, atten))
+        arr_names = ('energy       ', 'atten_length ',
+                     'trans_fract  ', 'atten_fract  ')
+
+        txt = make_asciifile(header, arr_names,
+                             (en_array, 10/mu_array, trans, atten))
 
     return Response(txt, mimetype='text/plain')
 
