@@ -5,7 +5,7 @@
 
 <div class=body>
     {% if error %}
-	<p>{{error}}</p>
+        <p>{{error}}</p>
     {% endif %}
 
     <form action="{{url_for('darwinwidth')}}" method="POST">
@@ -13,115 +13,115 @@
       <table cellpadding=2 border=0>
 
        <tr>
-	 <td> Monochromator Crystal: </td>
-	 <td>
-	  <select name="xtal" id="xtal" style="width: 80px;">
-	    {% for val in xtal_list %}
-	    <option value="{{val}}"  {% if request.form['xtal'] == val %}
-		    selected {% endif %}> {{val}}</option>
-	    {% endfor %}
-	  </select>
-	 </td>
-	 <td> Reflection: </td>
-	 <td>
-	  <select name="hkl" id="hkl" style="width: 80px;">
-	    {% for val in hkl_list %}
-	    <option value="{{val}}"  {% if request.form['hkl'] == val %}
-		    selected {% endif %}> {{val}}</option>
-	    {% endfor %}
-	  </select>
-	 </td>
-	 <td> Polarization: </td>
-	 <td>
-	  <select name="polarization" id="polarization">
-	    <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
-	    <option value="p" {% if request.form['polarization'] == "p" %}  selected {% endif %}>p</option>
-	    <option value="unpolarized" {% if request.form['polarization'].startswith("u")  %} selected {% endif %}>unpolarized</option>
-	  </select>
-	 </td>
-	 </tr>
+         <td> Monochromator Crystal: </td>
+         <td>
+          <select name="xtal" id="xtal" style="width: 80px;">
+            {% for val in xtal_list %}
+            <option value="{{val}}"  {% if request.form['xtal'] == val %}
+                    selected {% endif %}> {{val}}</option>
+            {% endfor %}
+          </select>
+         </td>
+         <td> Reflection: </td>
+         <td>
+          <select name="hkl" id="hkl" style="width: 80px;">
+            {% for val in hkl_list %}
+            <option value="{{val}}"  {% if request.form['hkl'] == val %}
+                    selected {% endif %}> {{val}}</option>
+            {% endfor %}
+          </select>
+         </td>
+         <td> Polarization: </td>
+         <td>
+          <select name="polarization" id="polarization">
+            <option value="s" {% if request.form['polarization'] == "s" %} selected {% endif %}>s</option>
+            <option value="p" {% if request.form['polarization'] == "p" %}  selected {% endif %}>p</option>
+            <option value="unpolarized" {% if request.form['polarization'].startswith("u")  %} selected {% endif %}>unpolarized</option>
+          </select>
+         </td>
+         </tr>
        <tr>
-	 <td> X-ray Energy  (eV): </td>
-	 <td> <input style="width: 80px;" type="number" id="energy" name="energy"
-		     min="0" step="any" value="{{ request.form['energy'] }}"> </td>
+         <td> X-ray Energy  (eV): </td>
+         <td> <input style="width: 80px;" type="number" id="energy" name="energy"
+                     min="0" step="any" value="{{ request.form['energy'] }}"> </td>
        </tr>
        <tr><td><input type="submit"
-		      value="Calculate"></td>
+                      value="Calculate"></td>
 
-	 <td> <a href='https://xraypy.github.io/XrayDB/examples.html#darwin-widths-of-monochromator-crystals'>documentation</a></td>
-	 {% if dtheta_plot %}
-	 <td>
-	   <a href="{{url_for('darwindata',
-		    xtal=request.form['xtal'],
-		    hkl=request.form['hkl'].replace(' ', '_'),
-		    energy=request.form['energy'],
-		    polar=request.form['polarization'],
-		    fname='xrayweb_darwin.txt')}}">  data file</a>
-	 </td><td>
-	   <a href="{{url_for('darwinscript',
-		    xtal=request.form['xtal'],
-		    hkl=request.form['hkl'].replace(' ', '_'),
-		    energy=request.form['energy'],
-		    polar=request.form['polarization'],
-		    fname='xrayweb_darwinwidth.py')}}"> python script </a>
-	 </td><td>
-	   <a href="{{url_for('darwinwidth')}}/{{request.form['xtal']}}/{{request.form['hkl'].replace(' ', '_')}}/{{request.form['energy']}}/{{request.form['polarization']}}">permalink</a>
-	 </td>
+         <td> <a href='https://xraypy.github.io/XrayDB/examples.html#darwin-widths-of-monochromator-crystals'>documentation</a></td>
+         {% if dtheta_plot %}
+         <td>
+           <a href="{{url_for('darwindata',
+                    xtal=request.form['xtal'],
+                    hkl=request.form['hkl'].replace(' ', '_'),
+                    energy=request.form['energy'],
+                    polar=request.form['polarization'],
+                    fname='xrayweb_darwin.txt')}}">  data file</a>
+         </td><td>
+           <a href="{{url_for('darwinscript',
+                    xtal=request.form['xtal'],
+                    hkl=request.form['hkl'].replace(' ', '_'),
+                    energy=request.form['energy'],
+                    polar=request.form['polarization'],
+                    fname='xrayweb_darwinwidth.py')}}"> python script </a>
+         </td><td>
+           <a href="{{url_for('darwinwidth')}}/{{request.form['xtal']}}/{{request.form['hkl'].replace(' ', '_')}}/{{request.form['energy']}}/{{request.form['polarization']}}">permalink</a>
+         </td>
 
-	 {% endif %}
+         {% endif %}
 
        </tr>
 
        <tr>
-	 <td colspan=2></td>
-	 <td colspan=4>
-	 {% if dtheta_plot %}
-	   <table cellpadding=2 border=0 style='vertical-align: top; '>
-	     <tr style='vertical-align: top; '>
-	       <th > &nbsp; Reflection Property &nbsp;</th>
-	       <th > &nbsp; Value  &nbsp;</th>
-	       <th > &nbsp; Units  &nbsp;</th>
-	     </tr>
-	     <tr class='odd'>
-	       <td> &nbsp; Bragg Angle: </td>
-	       <td> &nbsp; {{theta_deg}}</td><td> &nbsp; degrees</td>
-	     </tr>
-	     <tr class='even'>
-	       <td> &nbsp; Angular Darwin Width: </td>
-	       <td> &nbsp; {{theta_width}}</td><td> &nbsp; microrad</td>
-	     </tr>
-	     <tr class='odd'>
-	       <td> &nbsp; Energy Darwin Width: </td>
-	       <td> &nbsp; {{energy_width}}</td><td> &nbsp; eV</td>
-	     </tr>
-	   </table>
-	   {% else %}
-	   Minimum Energy = {{energy_min}} eV
-	   {% endif %}
+         <td colspan=2></td>
+         <td colspan=4>
+         {% if dtheta_plot %}
+           <table cellpadding=2 border=0 style='vertical-align: top; '>
+             <tr style='vertical-align: top; '>
+               <th > &nbsp; Reflection Property &nbsp;</th>
+               <th > &nbsp; Value  &nbsp;</th>
+               <th > &nbsp; Units  &nbsp;</th>
+             </tr>
+             <tr class='odd'>
+               <td> &nbsp; Bragg Angle: </td>
+               <td> &nbsp; {{theta_deg}}</td><td> &nbsp; degrees</td>
+             </tr>
+             <tr class='even'>
+               <td> &nbsp; Angular Darwin Width: </td>
+               <td> &nbsp; {{theta_width}}</td><td> &nbsp; microrad</td>
+             </tr>
+             <tr class='odd'>
+               <td> &nbsp; Energy Darwin Width: </td>
+               <td> &nbsp; {{energy_width}}</td><td> &nbsp; eV</td>
+             </tr>
+           </table>
+           {% else %}
+           Minimum Energy = {{energy_min}} eV
+           {% endif %}
 
-	 </td>
+         </td>
        </tr>
       </table>
     </form>
 </div>
 
 {% if dtheta_plot %}
-<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+<script src="{{url_for('static', filename= 'plotly-2021.js') }}" ></script>
 <table cellpadding=2 border=0 style='vertical-align: top; '>
   <tr style='vertical-align: top; '>
     <td>
       <div id="dtheta_plot">
-	<script  type="text/javascript">
-	  var graph = {{dtheta_plot | safe}};
-	  Plotly.plot('dtheta_plot',   graph.data,   graph.layout || {},  config=graph.config);
-	</script>
+        <script  type="text/javascript">
+          var graph = {{dtheta_plot | safe}};
+          Plotly.plot('dtheta_plot',   graph.data,   graph.layout || {},  config=graph.config);
+        </script>
       </div>
     </td> <td>
       <div id="denergy_plot">
-	<script  type="text/javascript">
-	  var graph = {{denergy_plot | safe}};
-	  Plotly.plot('denergy_plot',   graph.data,   graph.layout || {},  config=graph.config);
-	</script>
+        <script  type="text/javascript">
+          var graph = {{denergy_plot | safe}};
+          Plotly.plot('denergy_plot',   graph.data,   graph.layout || {},  config=graph.config);
+        </script>
       </div>
 </td></tr></table>
 

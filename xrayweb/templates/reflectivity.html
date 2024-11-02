@@ -15,125 +15,125 @@
 
        <tr><td><b>Mirror Material</b></td><td colspan=5><hr></td></tr>
        <tr>
-	 <td><label for="formula">Chemical Formula:</label></td>
+         <td><label for="formula">Chemical Formula:</label></td>
 
-	 <td><input style="width: 180px;" type="text" id="formula"
-		    name="formula" value="{{ request.form['formula'] }}">
-	 </td>
-	 <td><label for="density">Density (g/cm^3):</label></td>
-	 <td><input style="width: 100px;" type="text" id="density"
-		    name="density" value="{{ request.form['density'] }}">
-	 </td>
-	 <td><label for="mats">Select known material:</label></td>
-	 <td>
-	   <select name="mats" id="mats" style="width: 150px;"
-		   onchange="displayinfo('mats', 'formula', 'density')">
-	     {% for mat in matlist %}
-	     <option value="{{mat}}"
-		     {% if request.form['mats'] == mat %} selected {% endif %}>
-	       {{mat}}</option>
-	     {% endfor %}
-	</select>
+         <td><input style="width: 180px;" type="text" id="formula"
+                    name="formula" value="{{ request.form['formula'] }}">
+         </td>
+         <td><label for="density">Density (g/cm^3):</label></td>
+         <td><input style="width: 100px;" type="text" id="density"
+                    name="density" value="{{ request.form['density'] }}">
+         </td>
+         <td><label for="mats">Select known material:</label></td>
+         <td>
+           <select name="mats" id="mats" style="width: 150px;"
+                   onchange="displayinfo('mats', 'formula', 'density')">
+             {% for mat in matlist %}
+             <option value="{{mat}}"
+                     {% if request.form['mats'] == mat %} selected {% endif %}>
+               {{mat}}</option>
+             {% endfor %}
+        </select>
        </td></tr>
 
        <tr><td> <label for="angle">Angle (milliradians):</label></td>
-	 <td><input style="width: 80px;" type="number" id="angle1" name="angle"
-		    min="0" step="0.1" value="{{ request.form['angle'] }}">
-	 </td>
-	<td>
-	  <label for="rough">Roughness (Å):</label>
-	  </td><td>
-	  <input type="number" style="width: 100px;" min="0" id="rough" name="rough"
-		 value="{{ request.form['rough'] }}">
-	</td>
+         <td><input style="width: 80px;" type="number" id="angle1" name="angle"
+                    min="0" step="0.1" value="{{ request.form['angle'] }}">
+         </td>
+        <td>
+          <label for="rough">Roughness (Å):</label>
+          </td><td>
+          <input type="number" style="width: 100px;" min="0" id="rough" name="rough"
+                 value="{{ request.form['rough'] }}">
+        </td>
 
-	<td>
-	  <label for="polarization">Polarization:</label>
-	  <select name="polar" id="polar">
-	    <option value="s" {% if request.form['polar'] == "s" %} selected {% endif %}>s</option>
-	    <option value="p" {% if request.form['polar'] == "p" %} selected {% endif %}>p</option>
-	  </select>
-	</td>
+        <td>
+          <label for="polarization">Polarization:</label>
+          <select name="polar" id="polar">
+            <option value="s" {% if request.form['polar'] == "s" %} selected {% endif %}>s</option>
+            <option value="p" {% if request.form['polar'] == "p" %} selected {% endif %}>p</option>
+          </select>
+        </td>
        </tr>
 
 
        <tr><td><b>X-ray Energy</b></td><td colspan=5><hr></td></tr>
        <tr>
-	 <td> <label for="e1">Energy Range (eV):</label></td>
-	 <td> <input style="width: 80px;" type="number" id="e1" name="e1"
-		     min="0" max="725000" step="{{de}}" value="{{ request.form['e1'] }}">
-	  <label for="e2">:</label>
-	  <input style="width: 80px;" type="number" id="e2" name="e2"
-		 min="0" max="725000" step="{{de}}" value="{{ request.form['e2'] }}"></td>
-	 <td> <label for="de"> Energy Step (eV):</label></td>
-	 <td>
-	   <select style="width: 100px;" name="de" id="de" onchange="update_step('e1', 'e2', 'de')">
-	     <option value="1" {% if de == 1 %} selected {% endif %}>1</option>
-	     <option value="2" {% if de == 2 %} selected {% endif %}>2</option>
-	     <option value="5" {% if de == 5 %} selected {% endif %}>5</option>
-	     <option value="10" {% if de == 10 %} selected {% endif %}>10</option>
-	     <option value="20" {% if de == 20 %} selected {% endif %}>20</option>
-	     <option value="50" {% if de == 50 %} selected {% endif %}>50</option>
-	     <option value="100" {% if de == 100 %} selected {% endif %}>100</option>
-	     <option value="200" {% if de == 200 %} selected {% endif %}>200</option>
-	     <option value="500" {% if de == 500 %} selected {% endif %}>500</option>
-	     <option value="1000" {% if de == 1000 %} selected {% endif %}>1000</option>
-	   </select>
-	 </td>
+         <td> <label for="e1">Energy Range (eV):</label></td>
+         <td> <input style="width: 80px;" type="number" id="e1" name="e1"
+                     min="0" max="725000" step="{{de}}" value="{{ request.form['e1'] }}">
+          <label for="e2">:</label>
+          <input style="width: 80px;" type="number" id="e2" name="e2"
+                 min="0" max="725000" step="{{de}}" value="{{ request.form['e2'] }}"></td>
+         <td> <label for="de"> Energy Step (eV):</label></td>
+         <td>
+           <select style="width: 100px;" name="de" id="de" onchange="update_step('e1', 'e2', 'de')">
+             <option value="1" {% if de == 1 %} selected {% endif %}>1</option>
+             <option value="2" {% if de == 2 %} selected {% endif %}>2</option>
+             <option value="5" {% if de == 5 %} selected {% endif %}>5</option>
+             <option value="10" {% if de == 10 %} selected {% endif %}>10</option>
+             <option value="20" {% if de == 20 %} selected {% endif %}>20</option>
+             <option value="50" {% if de == 50 %} selected {% endif %}>50</option>
+             <option value="100" {% if de == 100 %} selected {% endif %}>100</option>
+             <option value="200" {% if de == 200 %} selected {% endif %}>200</option>
+             <option value="500" {% if de == 500 %} selected {% endif %}>500</option>
+             <option value="1000" {% if de == 1000 %} selected {% endif %}>1000</option>
+           </select>
+         </td>
 
-	 <td> <label for="plotmode">Plot Mode:</label> </td>
-	 <td>
-	   <select style="width: 100px;" name="plotmode" id="plotmode">
-	     <option value="linear" {% if request.form['plotmode'] == "linear" %}
-		     selected {% endif %}>linear</option>
-	     <option value="log"    {% if request.form['plotmode'] == "log" %}
-		     selected {% endif %}>  log</option>
-	   </select>
-	 </td>
+         <td> <label for="plotmode">Plot Mode:</label> </td>
+         <td>
+           <select style="width: 100px;" name="plotmode" id="plotmode">
+             <option value="linear" {% if request.form['plotmode'] == "linear" %}
+                     selected {% endif %}>linear</option>
+             <option value="log"    {% if request.form['plotmode'] == "log" %}
+                     selected {% endif %}>  log</option>
+           </select>
+         </td>
 
        </tr>
 
        <tr><td>  <input type="submit" value="Submit"></td>
-	 <td> <a href="https://xraypy.github.io/XrayDB/examples.html#x-ray-mirror-reflectivities">documentation</a></td>
+         <td> <a href="https://xraypy.github.io/XrayDB/examples.html#x-ray-mirror-reflectivities">documentation</a></td>
 
-	 {% if has_data %}
-	 <td>
-	   <a href="{{url_for('reflectdata',
-		    formula=request.form['formula'],
-		    density=request.form['density'],
-		    angle=request.form['angle'],
-		    rough=request.form['rough'],
-		    polar=request.form['polar'],
-		    e1=request.form['e1'],
-		    e2=request.form['e2'],
-		    de=request.form['de'],
-		    fname='xrayweb_reflect.txt')}}">  data file</a>
-	 </td> <td>
+         {% if has_data %}
+         <td>
+           <a href="{{url_for('reflectdata',
+                    formula=request.form['formula'],
+                    density=request.form['density'],
+                    angle=request.form['angle'],
+                    rough=request.form['rough'],
+                    polar=request.form['polar'],
+                    e1=request.form['e1'],
+                    e2=request.form['e2'],
+                    de=request.form['de'],
+                    fname='xrayweb_reflect.txt')}}">  data file</a>
+         </td> <td>
 
-	   <a href="{{url_for('reflectscript',
-		    formula=request.form['formula'],
-		    density=request.form['density'],
-		    angle=request.form['angle'],
-		    rough=request.form['rough'],
-		    polar=request.form['polar'],
-		    e1=request.form['e1'],
-		    e2=request.form['e2'],
-		    de=request.form['de'],
-		    fname='xrayweb_reflect.py')}}"> python script </a>
-	   </td>	 <td>
-	 <a href="{{url_for('reflectivity',
-		    formula=request.form['formula'],
-		    density=request.form['density'],
-		    angle=request.form['angle'],
-		    rough=request.form['rough'],
-		    polar=request.form['polar'],
-		    e1=request.form['e1'],
-		    e2=request.form['e2'],
-		    de=request.form['de'],
-		    mats=request.form['mats'],
-		    plotmode=request.form['plotmode'])}}"> permalink </a>
+           <a href="{{url_for('reflectscript',
+                    formula=request.form['formula'],
+                    density=request.form['density'],
+                    angle=request.form['angle'],
+                    rough=request.form['rough'],
+                    polar=request.form['polar'],
+                    e1=request.form['e1'],
+                    e2=request.form['e2'],
+                    de=request.form['de'],
+                    fname='xrayweb_reflect.py')}}"> python script </a>
+           </td>         <td>
+         <a href="{{url_for('reflectivity',
+                    formula=request.form['formula'],
+                    density=request.form['density'],
+                    angle=request.form['angle'],
+                    rough=request.form['rough'],
+                    polar=request.form['polar'],
+                    e1=request.form['e1'],
+                    e2=request.form['e2'],
+                    de=request.form['de'],
+                    mats=request.form['mats'],
+                    plotmode=request.form['plotmode'])}}"> permalink </a>
        </td>
-	{% endif %}
+        {% endif %}
        </tr>
      </table>
 
@@ -141,25 +141,25 @@
 
 
     {% if has_data %}
-    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+   <script src="{{url_for('static', filename= 'plotly-2021.js') }}" ></script>
 
    <table cellpadding=2 border=0 style='vertical-align: top; '>
      <tr style='vertical-align: top; '>
 
        <td>
-	 <div id="ref_plot">
-	   <script  type="text/javascript">
-	     var graph = {{ref_plot | safe}};
-	     Plotly.plot('ref_plot',   graph.data,   graph.layout || {},  config=graph.config);
-	   </script>
-	 </div>
+         <div id="ref_plot">
+           <script  type="text/javascript">
+             var graph = {{ref_plot | safe}};
+             Plotly.plot('ref_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
        </td><td>
-	 <div id="angc_plot">
-	   <script  type="text/javascript">
-	     var graph = {{angc_plot | safe}};
-	     Plotly.plot('angc_plot',   graph.data,   graph.layout || {},  config=graph.config);
-	   </script>
-	 </div>
+         <div id="angc_plot">
+           <script  type="text/javascript">
+             var graph = {{angc_plot | safe}};
+             Plotly.plot('angc_plot',   graph.data,   graph.layout || {},  config=graph.config);
+           </script>
+         </div>
    </td></tr></table>
 
 
