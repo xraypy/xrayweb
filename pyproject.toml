@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+write_to = "xrayweb/version.py"
+version_scheme = "post-release"
+
+[tool.setuptools.packages.find]
+include = ["xrayweb"]
+
+[project]
+name = "xrayweb"
+dynamic = ["version"]
+requires-python = ">= 3.9"
+description = 'Web interface for X-ray Properties of the elements'
+readme = "README.md"
+authors = [
+     {name = "Alex Nicolellis"},
+     {name = "Matthew Newville", email = "newville@cars.uchicago.edu"},
+]
+
+dependencies = [
+    "xraydb",
+    "sqlalchemy>=2",
+    "numpy",
+    "flask",
+    "plotly",
+]
+
+license = {file = "LICENSE"}
+keywords = ["X-ray spectroscopy", "Physics"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    ]
+
+[project.urls]
+Homepage = " https://github.com/xraypy/xrayweb"
+Documentation = "https://github.com/xraypy/xrayweb"
+Tracker = "https://github.com/xraypy/xrayweb/issues"
+
+[project.optional-dependencies]
+dev = ["build", "twine"]
+all = ["xrayweb[dev]"]
