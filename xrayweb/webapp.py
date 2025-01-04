@@ -675,47 +675,48 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
                                      ytitle='reflectivity',
                                      xtitle='Energy (eV)')
 
-            theta_deg = f"{(out.theta * 180 / np.pi):,.6f}"
-            theta_urad = f"{(out.theta * 1e6):.3f}"
-            energy_ev  = f"{(energy):.3f}"
+            def format_angle(x):
+                deg = f"{(x*180/np.pi):.6f}"
+                urad = f"{(x*1e6):.3f}"
+                idot = deg.find('.')
+                deg = deg[:idot+4] + ' ' + deg[idot+4:]
+                return deg, urad
 
-            refrac_off_deg = f"{(out.theta_offset*180/np.pi):,.6f}"
-            refrac_off_urad = f"{(out.theta_offset*1e6):.3f}"
-            refrac_off_ev = -out.theta_offset*out.energy_width/out.theta_width
-            refrac_off_ev = f"{(refrac_off_ev):.3f}"
+            bragg_deg, bragg_urad = format_angle(out.theta)
 
-            theta_width_deg  = f"{(out.theta_width*180/np.pi):.6f}"
-            theta_width_urad = f"{(out.theta_width*1e6):.3f}"
+            bragg_ev  = f"{(energy):.3f}"
 
-            theta_fwhm_deg = f"{(out.theta_fwhm*180/np.pi):.6f}"
-            theta_fwhm_urad = f"{(out.theta_fwhm*1e6):.3f}"
+            offset_deg, offset_urad = format_angle(out.theta_offset)
 
-            rocking_fwhm_deg = f"{(out.rocking_theta_fwhm*180/np.pi):.6f}"
-            rocking_fwhm_urad = f"{(out.rocking_theta_fwhm*1e6):.3f}"
-            rocking_fwhm_ev = f"{(out.rocking_energy_fwhm):.3f}"
+            offset_ev = -out.theta_offset*out.energy_width/out.theta_width
+            offset_ev = f"{(offset_ev):.3f}"
 
-            energy_width = f"{(out.energy_width):.3f}"
+            darwin_deg, darwin_urad = format_angle(out.theta_width)
+            darwin_ev = f"{(out.energy_width):.3f}"
+
+            rocking_deg,  rocking_urad = format_angle(out.rocking_theta_fwhm)
+            rocking_ev = f"{(out.rocking_energy_fwhm):.3f}"
+
             energy_fwhm = f"{(out.energy_fwhm):.3f}"
 
         return render_template('darwinwidth.html',
                            energy_min="%.3f" % energy_min,
-                           energy_ev=energy_ev,
                            dtheta_plot=dtheta_plot,
                            denergy_plot=denergy_plot,
-                           theta_deg=theta_deg,
-                           theta_urad=theta_urad,
-                           theta_fwhm_deg=theta_fwhm_deg,
-                           theta_fwhm_urad=theta_fwhm_urad,
-                           theta_width_deg=theta_width_deg,
-                           theta_width_urad=theta_width_urad,
-                           energy_fwhm=energy_fwhm,
-                           energy_width=energy_width,
-                           rocking_fwhm_deg=rocking_fwhm_deg,
-                           rocking_fwhm_urad=rocking_fwhm_urad,
-                           rocking_fwhm_ev=rocking_fwhm_ev,
-                           refrac_off_deg=refrac_off_deg,
-                           refrac_off_urad=refrac_off_urad,
-                           refrac_off_ev=refrac_off_ev,
+                           bragg_ev=bragg_ev,
+                           bragg_deg=bragg_deg,
+                           bragg_urad=bragg_urad,
+
+                           darwin_deg=darwin_deg,
+                           darwin_urad=darwin_urad,
+                           darwin_ev=darwin_ev,
+
+                           rocking_deg=rocking_deg,
+                           rocking_urad=rocking_urad,
+                           rocking_ev=rocking_ev,
+                           offset_deg=offset_deg,
+                           offset_urad=offset_urad,
+                           offset_ev=offset_ev,
                            xtal_list=xtal_list,
                            hkl_list=hkl_list,
                            hkl=hkl,
