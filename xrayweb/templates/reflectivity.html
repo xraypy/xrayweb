@@ -13,7 +13,7 @@
 
      <table cellpadding=2 border=0>
 
-       <tr><td><b>Mirror Material</b></td><td colspan=5><hr></td></tr>
+       <tr><td><b>Mirror 1 Material</b></td><td colspan=5><hr></td></tr>
        <tr>
          <td><label for="formula">Chemical Formula:</label></td>
 
@@ -56,6 +56,49 @@
         </td>
        </tr>
 
+
+       <tr><td><b>Mirror 2 Material</b></td><td colspan=5><hr></td></tr>
+       <tr>
+         <td><label for="formula2">Chemical Formula:</label></td>
+
+         <td><input style="width: 180px;" type="text" id="formula2"
+                    name="formula2" value="{{ request.form['formula2'] }}">
+         </td>
+         <td><label for="density2">Density (g/cm^3):</label></td>
+         <td><input style="width: 100px;" type="text" id="density2"
+                    name="density2" value="{{ request.form['density2'] }}">
+         </td>
+         <td><label for="mats2">Select known material:</label></td>
+         <td>
+           <select name="mats2" id="mats2" style="width: 150px;"
+                   onchange="displayinfo('mats2', 'formula2', 'density2')">
+             {% for mat2 in matlist2 %}
+             <option value="{{mat2}}"
+                     {% if request.form['mats2'] == mat2 %} selected {% endif %}>
+               {{mat2}}</option>
+             {% endfor %}
+        </select>
+       </td></tr>
+
+       <tr><td> <label for="angle2a">Angle (milliradians):</label></td>
+         <td><input style="width: 80px;" type="number" id="angle2" name="angle2"
+                    min="0" step="0.1" value="{{ request.form['angle2'] }}">
+         </td>
+        <td>
+          <label for="rough2">Roughness (Å):</label>
+          </td><td>
+          <input type="number" style="width: 100px;" min="0" id="rough2" name="rough2"
+                 value="{{ request.form['rough2'] }}">
+        </td>
+
+        <td>
+          <label for="polarization">Polarization:</label>
+          <select name="polar2" id="polar">
+            <option value="s" {% if request.form['polar2'] == "s" %} selected {% endif %}>s</option>
+            <option value="p" {% if request.form['polar2'] == "p" %} selected {% endif %}>p</option>
+          </select>
+        </td>
+       </tr>
 
        <tr><td><b>X-ray Energy</b></td><td colspan=5><hr></td></tr>
        <tr>
@@ -127,10 +170,16 @@
                     angle=request.form['angle'],
                     rough=request.form['rough'],
                     polar=request.form['polar'],
+                    mats=request.form['mats'],
+                    formula2=request.form['formula2'],
+                    density2=request.form['density2'],
+                    angle2=request.form['angle2'],
+                    rough2=request.form['rough2'],
+                    polar2=request.form['polar2'],
+                    mats2=request.form['mats2'],
                     e1=request.form['e1'],
                     e2=request.form['e2'],
                     de=request.form['de'],
-                    mats=request.form['mats'],
                     plotmode=request.form['plotmode'])}}"> permalink </a>
        </td>
         {% endif %}

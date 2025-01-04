@@ -31,6 +31,11 @@ mirror_mat = ('silicon', 'quartz', 'zerodur', 'ule glass',
               'aluminum', 'chromium', 'nickel', 'rhodium', 'palladium',
               'iridium', 'platinum', 'gold')
 
+mirror2_mat = ('None', 'silicon', 'quartz', 'zerodur', 'ule glass',
+              'aluminum', 'chromium', 'nickel', 'rhodium', 'palladium',
+              'iridium', 'platinum', 'gold')
+
+
 materials_dict = json.dumps(materials_)
 
 lattice_constants = {'Si': 5.4309, 'Ge': 5.6578, 'C': 3.567}
@@ -385,8 +390,12 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<mats>/<plotmode>', methods=['GET', 'POST'])
+@app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<mats>/<formula2>/<density2>/<angle2>/<rough2>/<polar2>/<mats2>/<e1>/<e2>/<de>/<plotmode>', methods=['GET', 'POST'])
+
 def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
-                 polar='s', e1='1000', e2='51000', de='50', mats='rhodium', plotmode='linear'):
+                 polar='s', mats='rhodium',  formula2='', density2='0', angle2='2',
+                 rough2='10', polar2='s', mats2='None',
+                 e1='1000', e2='51000', de='50', plotmode='linear'):
     message = []
     ref_plot = angc_plot = {}
     has_data = False
@@ -395,11 +404,20 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
         density = request.form.get('density', '12.41')
         angle = request.form.get('angle', '2')
         mats = request.form.get('mats', 'rhodium')
+        rough = request.form.get('rough', '10')
+        polar = request.form.get('polar', 's')
+
+        formula2 = request.form.get('formula2', 'None')
+        density2 = request.form.get('density2', '0')
+        angle2 = request.form.get('angle2', '2')
+        mats2 = request.form.get('mats2', '')
+        rough2 = request.form.get('rough2', '10')
+        polar2 = request.form.get('polar2', 's')
+
         e1 = request.form.get('e1', '1000')
         e2 = request.form.get('e2', '51000')
         de  = request.form.get('de', '50')
-        rough = request.form.get('rough', '10')
-        polar = request.form.get('polar', 's')
+
         plotmode = request.form.get('plotmode', 'linear')
         do_calc = True
     else:
@@ -410,8 +428,11 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
 
         request.form = {'mats': mats, 'formula': formula,
                         'density': density, 'angle': angle,
-                        'e1': e1, 'e2': e2, 'de': de,
                         'polar': polar,  'rough': rough,
+                        'mats2': mats2, 'formula2': formula2,
+                        'density2': density2, 'angle2': angle2,
+                        'polar2': polar2,  'rough2': rough2,
+                        'e1': e1, 'e2': e2, 'de': de,
                         'plotmode': plotmode}
 
     if do_calc:
@@ -432,26 +453,55 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
                                                    en_array, density,
                                                    roughness=float(rough),
                                                    polarization=polar)
-            title = "%s, %s mrad" % (formula, angle)
-            ref_plot = make_plot(en_array, ref_array, title, formula,
-                                 yformat='.3f',
-                                 ytitle='Reflectivity', ylog_scale=use_log)
-
-            title = "%s Reflectivity, %s mrad" % (formula, angle)
-            ref_plot = make_plot(en_array, ref_array, title, formula,
-                                 yformat='.3f',
-                                 ytitle='Reflectivity', ylog_scale=use_log)
+            ref_title = f"Reflectivity: {formula}, {angle} mrad"
 
             _del, _bet, _ = xraydb.xray_delta_beta(formula, density, en_array)
             ang_crit = 1000*np.arccos(1 - _del - 1j*_bet).real
 
-            title = "%s, Critical Angle" % (formula)
-            angc_plot = make_plot(en_array, ang_crit, title, formula,
-                                  ytitle='Critical Angle (mrad)', ylog_scale=use_log)
+            ang_title = f"Critical Angle: {formula}"
+
+            has_2mirrors = False
+            if len(formula2) > 0:
+                try:
+                    density2 = max(0.01, float(density2))
+                except:
+                    density2 = 0.01
+                if density2 > 0.01:
+                    has_2mirrors = True
+
+            if has_2mirrors:
+                ref_title = f"Reflectivity: {formula}, {angle} mrad \n {formula2}, {angle2} mrad"
+                ang_title = f"Critical Angle: {formula} and {formula2}"
+
+                ref2_array = xraydb.mirror_reflectivity(formula2, 0.001*float(angle2),
+                                                   en_array, density2,
+                                                   roughness=float(rough2),
+                                                   polarization=polar2)
+
+                _del, _bet, _ = xraydb.xray_delta_beta(formula2, density2, en_array)
+                ang_crit2 = 1000*np.arccos(1 - _del - 1j*_bet).real
+
+
+                ref_plot = make_plot(en_array, ref_array, ref_title, formula,
+                                     yformat='.3f', y1label=formula,
+                                     y2=ref2_array, y2label=formula2,
+                                     ytitle='Reflectivity', ylog_scale=use_log)
+                angc_plot = make_plot(en_array, ang_crit, ang_title, formula,
+                                      y1label=formula, y2=ang_crit2, y2label=formula2,
+                                      ytitle='Critical Angle (mrad)', ylog_scale=use_log)
+
+
+            else:
+                ref_plot = make_plot(en_array, ref_array, ref_title, formula,
+                                     yformat='.3f',
+                                     ytitle='Reflectivity', ylog_scale=use_log)
+                angc_plot = make_plot(en_array, ang_crit, ang_title, formula,
+                                      ytitle='Critical Angle (mrad)', ylog_scale=use_log)
 
     return render_template('reflectivity.html', message=message,
                            errors=len(message), ref_plot=ref_plot, angc_plot=angc_plot,
                            has_data=has_data,
+                           matlist2=mirror2_mat,
                            matlist=mirror_mat, de=int(de),
                            materials_dict=materials_dict)
 
