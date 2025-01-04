@@ -68,7 +68,7 @@ emission_energies_json = json.dumps(emission_energies)
 
 PY_TOP = """#!/usr/bin/env python
 # this script requires Python3, numpy, scipy, matplotlib, and xraydb modules. Use:
-#        pip install xraydb scipy matplotlib
+#        pip install xraydb matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import xraydb
@@ -385,7 +385,8 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
 
 @app.route('/reflectivity/', methods=['GET', 'POST'])
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<mats>/<plotmode>', methods=['GET', 'POST'])
-def reflectivity(formula='Rh', density='12.41', angle='2', rough='10', polar='s', e1='1000', e2='51000', de='50', mats='rhodium', plotmode='linear'):
+def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
+                 polar='s', e1='1000', e2='51000', de='50', mats='rhodium', plotmode='linear'):
     message = []
     ref_plot = angc_plot = {}
     has_data = False
@@ -402,7 +403,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10', polar='s'
         plotmode = request.form.get('plotmode', 'linear')
         do_calc = True
     else:
-        do_calc = formula != ''
+        do_calc = (formula != '')
         if not do_calc:
             formula = materials_['rhodiumn'].formula
             density = materials_['rhodium'].density
@@ -626,6 +627,30 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
             energy_width = "-"
             theta_fwhm = "-"
             energy_fwhm = "-"
+            return render_template('darwinwidth.html',
+                           energy_min="%.3f" % energy_min,
+                                       theta_deg='not allowed',
+                           energy_ev='-',
+                           dtheta_plot='',
+                           denergy_plot='',
+                           theta_urad='',
+                           theta_fwhm_deg='',
+                           theta_fwhm_urad='',
+                           theta_width_deg='',
+                           theta_width_urad='',
+                           energy_fwhm='',
+                           energy_width='',
+                           rocking_fwhm_deg='',
+                           rocking_fwhm_urad='',
+                           rocking_fwhm_ev='',
+                           refrac_off_deg='',
+                           refrac_off_urad='',
+                           refrac_off_ev='',
+                           xtal_list=xtal_list,
+                           hkl_list=hkl_list,
+                           hkl=hkl,
+                           materials_dict=materials_dict)
+
 
         else:
             out = xraydb.darwin_width(energy, xtal, hkl_tuple,
@@ -633,8 +658,11 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
             title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
             dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
                                     xtal, y1label='1 bounce',
-                                    yformat='.2f', y2=out.intensity**2,
+                                    yformat='.2f',
+                                    y2=out.intensity**2,
                                     y2label='2 bounces',
+                                    y3=out.rocking_curve,
+                                    y3label='rocking curve',
                                     ytitle='reflectivity',
                                     xtitle='Angle(microrad)')
 
@@ -642,24 +670,52 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
                                      xtal, y1label='1 bounce',
                                      yformat='.2f', y2=out.intensity**2,
                                      y2label='2 bounces',
+                                     y3=out.rocking_curve,
+                                     y3label='rocking curve',
                                      ytitle='reflectivity',
                                      xtitle='Energy (eV)')
 
-            theta_deg = "%.5f" % (out.theta * 180 / np.pi)
-            theta_width = "%.5f" % (out.theta_width * 1.e6)
-            energy_width = "%.5f" % out.energy_width
-            theta_fwhm = "%.5f" % (out.theta_fwhm * 1.e6)
-            energy_fwhm = "%.5f" % out.energy_fwhm
+            theta_deg = f"{(out.theta * 180 / np.pi):,.6f}"
+            theta_urad = f"{(out.theta * 1e6):.3f}"
+            energy_ev  = f"{(energy):.3f}"
 
-    return render_template('darwinwidth.html',
-                           energy_min="%.2f" % energy_min,
+            refrac_off_deg = f"{(out.theta_offset*180/np.pi):,.6f}"
+            refrac_off_urad = f"{(out.theta_offset*1e6):.3f}"
+            refrac_off_ev = -out.theta_offset*out.energy_width/out.theta_width
+            refrac_off_ev = f"{(refrac_off_ev):.3f}"
+
+            theta_width_deg  = f"{(out.theta_width*180/np.pi):.6f}"
+            theta_width_urad = f"{(out.theta_width*1e6):.3f}"
+
+            theta_fwhm_deg = f"{(out.theta_fwhm*180/np.pi):.6f}"
+            theta_fwhm_urad = f"{(out.theta_fwhm*1e6):.3f}"
+
+            rocking_fwhm_deg = f"{(out.rocking_theta_fwhm*180/np.pi):.6f}"
+            rocking_fwhm_urad = f"{(out.rocking_theta_fwhm*1e6):.3f}"
+            rocking_fwhm_ev = f"{(out.rocking_energy_fwhm):.3f}"
+
+            energy_width = f"{(out.energy_width):.3f}"
+            energy_fwhm = f"{(out.energy_fwhm):.3f}"
+
+        return render_template('darwinwidth.html',
+                           energy_min="%.3f" % energy_min,
+                           energy_ev=energy_ev,
                            dtheta_plot=dtheta_plot,
                            denergy_plot=denergy_plot,
                            theta_deg=theta_deg,
-                           theta_fwhm=theta_fwhm,
+                           theta_urad=theta_urad,
+                           theta_fwhm_deg=theta_fwhm_deg,
+                           theta_fwhm_urad=theta_fwhm_urad,
+                           theta_width_deg=theta_width_deg,
+                           theta_width_urad=theta_width_urad,
                            energy_fwhm=energy_fwhm,
-                           theta_width=theta_width,
                            energy_width=energy_width,
+                           rocking_fwhm_deg=rocking_fwhm_deg,
+                           rocking_fwhm_urad=rocking_fwhm_urad,
+                           rocking_fwhm_ev=rocking_fwhm_ev,
+                           refrac_off_deg=refrac_off_deg,
+                           refrac_off_urad=refrac_off_urad,
+                           refrac_off_ev=refrac_off_ev,
                            xtal_list=xtal_list,
                            hkl_list=hkl_list,
                            hkl=hkl,
@@ -759,7 +815,7 @@ plt.plot(energy, mu_photo, label='Photo-electric')
 plt.plot(energy, mu_incoh, label='Incoherent')
 plt.plot(energy, mu_coher, label='Coherent')
 plt.xlabel('Energy (eV)')
-plt.ylabel(r'$\mu/\\rho \\rm\,(cm^2/gr)$')
+plt.ylabel(r'$\\mu/\\rho \\rm\\,(cm^2/gr)$')  # ;
 plt.legend()
 plt.yscale('log')
 plt.title('Mass Attenuation for {elem:s}')
@@ -795,21 +851,24 @@ def darwindata(xtal, hkl, energy, polar, fname):
               ' Monochromator.xtal        : %s ' % xtal,
               ' Monochromator.hkl         : %s ' % hkl,
               ' Monochromator.polarization: \'%s\' ' % polar,
-              ' Monochromator.theta       : %.5f (deg) ' % (out.theta*180/np.pi),
-              ' Monochromator.theta_width : %.5f (microrad) ' % (out.theta_width*1e6),
-              ' Monochromator.energy_width: %.5f (eV) ' % out.energy_width,
-              ' Monochromator.theta_fwhm  : %.5f (microrad) ' % (out.theta_fwhm*1e6),
-              ' Monochromator.energy_fwhm : %.5f (eV) ' % out.energy_fwhm,
+              ' Monochromator.theta       : %.6f (deg) ' % (out.theta*180/np.pi),
+              ' Monochromator.theta_width : %.6f (microrad) ' % (out.theta_width*1e6),
+              ' Monochromator.energy_width: %.6f (eV) ' % out.energy_width,
+              ' Monochromator.theta_fwhm  : %.6f (microrad) ' % (out.theta_fwhm*1e6),
+              ' Monochromator.rocking_fwhm: %.6f (microrad) ' % (out.rocking_theta_fwhm*1e6),
+              ' Monochromator.energy_fwhm : %.6f (eV) ' % out.energy_fwhm,
               ' Xray.Energy               : %s (eV)' % energy,
               ' Column.1: dtheta (microrad)' ,
               ' Column.2: denergy (eV)',
               ' Column.3: zeta (delta_lambda / lambda)',
-              ' Column.4: intensity')
+              ' Column.4: intensity',
+              ' Column.5: rocking_curve')
     arr_names = ('dtheta       ', 'denergy      ',
-                 'zeta         ', 'intensity    ')
+                 'zeta         ', 'intensity    ', 'rocking_curve')
 
     txt = make_asciifile(header, arr_names,
-                         (out.dtheta*1e6, out.denergy, out.zeta, out.intensity))
+                        (out.dtheta*1e6, out.denergy, out.zeta,
+                         out.intensity, out.rocking_curve))
 
     return Response(txt, mimetype='text/plain')
 
@@ -829,17 +888,23 @@ dw = xraydb.darwin_width(energy, xtal, (h, k, l), polarization=polarization)
 
 print('Mono Angle: %.5f deg' % (dw.theta*180/np.pi))
 print('Angular width : %.5f microrad' % (dw.theta_width*1.e6))
+print('Rocking Curve width : %.5f microrad' % (dw.rocking_theta_fwhm*1.e6))
 print('Energy width  : %.5f eV' % (dw.energy_width))
 
-plt.plot(dw.denergy, dw.intensity)
+plt.plot(dw.denergy, dw.intensity, label='1 bounce')
+plt.plot(dw.denergy, dw.rocking_curve, label='rocking curve')
 plt.xlabel('Energy (eV)')
 plt.ylabel('reflectivity')
+plt.legend()
 plt.title(f'{{xtal}} {{(h, k, l)}}, "{{polarization}}" polar, E={{energy}} eV')
 plt.show()
 
-plt.plot(dw.dtheta*1e6, dw.intensity)
+
+plt.plot(dw.dtheta*1e6, dw.intensity, label='1 bounce')
+plt.plot(dw.dtheta*1e6, dw.rocking_curve, label='rocking curve')
 plt.xlabel('Angle (microrad)')
 plt.ylabel('reflectivity')
+plt.legend()
 plt.title(f'{{xtal}} {{(h, k, l)}}, "{{polarization}}" polar, E={{energy}} eV')
 plt.show()
 """.format(header=PY_TOP, xtal=xtal, hkl=hkl,

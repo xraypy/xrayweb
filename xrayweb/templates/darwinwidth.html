@@ -79,20 +79,33 @@
            <table cellpadding=2 border=0 style='vertical-align: top; '>
              <tr style='vertical-align: top; '>
                <th > &nbsp; Reflection Property &nbsp;</th>
-               <th > &nbsp; Value  &nbsp;</th>
-               <th > &nbsp; Units  &nbsp;</th>
+               <th align=right> &nbsp; degrees</th>
+               <th align=right> &nbsp; microrad</th>
+               <th align=right> &nbsp; eV</th>
              </tr>
              <tr class='odd'>
-               <td> &nbsp; Bragg Angle: </td>
-               <td> &nbsp; {{theta_deg}}</td><td> &nbsp; degrees</td>
+               <td> &nbsp; Bragg Angle/Energy: </td>
+               <td align=right> &nbsp; {{theta_deg}}</td>
+               <td align=right> &nbsp; {{theta_urad}}</td>
+               <td align=right> &nbsp; {{energy_ev}}</td>
              </tr>
              <tr class='even'>
-               <td> &nbsp; Angular Darwin Width: </td>
-               <td> &nbsp; {{theta_width}}</td><td> &nbsp; microrad</td>
+               <td> &nbsp; Refraction Offest: </td>
+               <td align=right> &nbsp; {{refrac_off_deg}}</td>
+               <td align=right> &nbsp; {{refrac_off_urad}}</td>
+               <td align=right> &nbsp; {{refrac_off_ev}}</td>
              </tr>
              <tr class='odd'>
-               <td> &nbsp; Energy Darwin Width: </td>
-               <td> &nbsp; {{energy_width}}</td><td> &nbsp; eV</td>
+               <td> &nbsp; Rocking Curve FWHM: </td>
+               <td align=right> &nbsp; {{rocking_fwhm_deg}}</td>
+               <td align=right> &nbsp; {{rocking_fwhm_urad}}</td>
+               <td align=right> &nbsp; {{rocking_fwhm_ev}}</td>
+             </tr>
+             <tr class='even'>
+               <td> &nbsp; Darwin Width: </td>
+               <td align=right> &nbsp; {{theta_width_deg}}</td>
+               <td align=right> &nbsp; {{theta_width_urad}}</td>
+               <td align=right> &nbsp; {{energy_width}}</td>
              </tr>
            </table>
            {% else %}
