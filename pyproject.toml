@@ -26,6 +26,7 @@ dependencies = [
     "numpy",
     "flask",
     "plotly",
+    "pyshortcuts",
 ]
 
 license = {file = "LICENSE"}
