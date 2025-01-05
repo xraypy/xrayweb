@@ -1,20 +1,21 @@
 #!/usr/bin/env python
+"""
+web app for xraydb
+"""
 import os
 import time
 import json
 from collections import OrderedDict, namedtuple
-from typing import Type
 import numpy as np
 import scipy.constants as consts
 
-from flask import (Flask, redirect, url_for, render_template,
-                   request, session, Response,
+from flask import (Flask, render_template, request, Response,
                    send_from_directory)
 
 import xraydb
 from xraydb.xraydb import XrayLine
 from xraydb import chemparse
-
+from pyshortcuts import gformat
 
 XrayEdge = namedtuple('XrayEdge', ('energy', 'fyield', 'jump_ratio', 'width'))
 top, _ =  os.path.split(os.path.abspath(__file__))
@@ -62,12 +63,12 @@ for z in range(1, 96):
     atsym = xraydb.atomic_symbol(z)
     xlines = xraydb.xray_lines(z)
     for line in analyzer_lines:
-        key = '%s_%s' % (atsym, line)
+        key = f'{atsym}_{line}'
         en = xlines.get(line, None)
         if en is None:
             emission_energies[key] = '0'
         else:
-            emission_energies[key] = '%.0f' % (en.energy)
+            emission_energies[key] = f'{en.energy:.0f}'
 
 emission_energies_json = json.dumps(emission_energies)
 
@@ -95,55 +96,6 @@ def th_diffracted(energy, hkl, a):
     if abs(omega) > 1:
         omega = -0
     return (180/np.pi)*np.arcsin(omega)
-
-
-def nformat(val, length=11):
-    """Format a number with '%g'-like format.
-
-    Except that:
-        a) the length of the output string is fixed.
-        b) positive numbers will have a leading blank.
-        b) the precision will be as high as possible.
-        c) trailing zeros will not be trimmed.
-
-    The precision will typically be at least ``length-7``,
-    with ``length-6`` significant digits shown.
-
-    Parameters
-    ----------
-    val : float
-        Value to be formatted.
-    length : int, optional
-        Length of output string (default is 11).
-
-    Returns
-    -------
-    str
-        String of specified length.
-
-    Notes
-    ------
-    Positive values will have leading blank.
-
-    """
-    try:
-        expon = int(np.log10(abs(val)))
-    except (OverflowError, ValueError):
-        expon = 0
-    length = max(length, 7)
-    form = 'e'
-    prec = length - 7
-    if abs(expon) > 99:
-        prec -= 1
-    elif ((expon >= 0 and expon < (prec+4)) or
-          (expon <= 0 and -expon < (prec-1))):
-        form = 'f'
-        prec += 4
-        if expon > 0:
-            prec -= expon
-    fmt = '{0: %i.%i%s}' % (length, prec, form)
-    return fmt.format(val)[:length]
-
 
 def tick_format(x):
     try:
@@ -250,12 +202,12 @@ def make_plot(x, y, material_name, formula_name, ytitle='mu',
 
 def make_asciifile(header, array_names, arrays):
     buff = ['#XDI/1.1']
-    buff.extend(['# %s' % l.strip() for l in header])
+    buff.extend([f"# {l.strip()}" for l in header])
     buff.append("#---------------------")
-    buff.append("# %s" % ' '.join(array_names))
+    buff.append("# {' '.join(array_names)}")
     for i in range(len(arrays[0])):
         row = [a[i] for a in arrays]
-        l = [nformat(x, length=12) for x in row]
+        l = [gformat(x, length=12) for x in row]
         buff.append('  '.join(l))
     buff.append('')
     return '\n'.join(buff)
@@ -324,7 +276,8 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
         t = float(request.form.get('thickness'))
         #input validation
         if not xraydb.validate_formula(formula):
-            message.append(f"cannot interpret chemical formula '{formula}' : check case and validity")
+            message.append(
+      f"cannot interpret chemical formula '{formula}' : check case and validity")
 
         try:
             density = max(0, float(density))
@@ -361,7 +314,7 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
         en_array = energy_array(e1, e2, de)
         num = en_array.size
         try:
-            o = chemparse(formula)
+            chemparse(formula)
             parsed = True
         except:
             parsed = False
@@ -374,7 +327,7 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
             mu_plot = make_plot(en_array, 10/mu_array, material, formula,
                                 ylog_scale=use_log, ytitle='1/e length (mm)')
             atten_plot = make_plot(en_array, trans,
-                                   material, "%.3f mm %s" % (t, formula),
+                                   material, f"{t:.3f} mm {formula}",
                                    ylog_scale=use_log,
                                    y2=atten,
                                    ytitle='transmitted/attenuated fraction',
@@ -391,7 +344,6 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
 @app.route('/reflectivity/', methods=['GET', 'POST'])
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<mats>/<plotmode>', methods=['GET', 'POST'])
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<mats>/<formula2>/<density2>/<angle2>/<rough2>/<polar2>/<mats2>/<e1>/<e2>/<de>/<plotmode>', methods=['GET', 'POST'])
-
 def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
                  polar='s', mats='rhodium',  formula2='', density2='0', angle2='2',
                  rough2='10', polar2='s', mats2='None',
@@ -421,7 +373,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
         plotmode = request.form.get('plotmode', 'linear')
         do_calc = True
     else:
-        do_calc = (formula != '')
+        do_calc = formula != ''
         if not do_calc:
             formula = materials_['rhodiumn'].formula
             density = materials_['rhodium'].density
@@ -447,7 +399,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
         if len(message) == 0:
             has_data = True
             en_array = energy_array(e1, e2, de)
-            use_log = (plotmode.lower() == 'log')
+            use_log = plotmode.lower() == 'log'
 
             ref_array = xraydb.mirror_reflectivity(formula, 0.001*float(angle),
                                                    en_array, density,
@@ -530,8 +482,8 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             np.log10(mu_coher.min()+1.e-5)),
                   0.75+np.log10(mu_total.max()+1.e-5)]
 
-        mu_plot = make_plot(en_array, mu_total, 'Mass Attenuation for %s' %
-                            elem, elem, ytitle='mu/rho (cm^2/gr)',
+        mu_plot = make_plot(en_array, mu_total, f'Mass Attenuation for {elem}',
+                            elem, ytitle='mu/rho (cm^2/gr)',
                             xtitle='Energy (eV)', xlog_scale=False,
                             ylog_scale=True, yrange=yrange,
                             yformat='.2f',
@@ -546,7 +498,8 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                 f1 = xraydb.f1_chantler(elem, en_array, smoothing=1)
 
             f2 = xraydb.f2_chantler(elem, en_array)
-            f1f2_plot = make_plot(en_array, f1, 'Resonant Scattering factors for %s' % elem,
+            f1f2_plot = make_plot(en_array, f1,
+                                  f'Resonant Scattering factors for {elem}',
                                   elem, ytitle='f1, f2 (electrons/atom)',
                                   xtitle='Energy (eV)',
                                   xlog_scale=False, ylog_scale=False, y2=f2,
@@ -606,11 +559,11 @@ def ionchamber(elem=None):
         compton_flux = f"{flux.incoherent:.7g}"
         rayleigh_flux = f"{flux_rayleigh:.7g}"
 
-        incident_flux = nformat(flux.incident)
-        transmitted_flux =nformat(flux.transmitted)
-        photo_flux = nformat(flux.photo)
-        compton_flux = nformat(flux.incoherent)
-        rayleigh_flux = nformat(flux_rayleigh)
+        incident_flux = gformat(flux.incident)
+        transmitted_flux =gformat(flux.transmitted)
+        photo_flux = gformat(flux.photo)
+        compton_flux = gformat(flux.incoherent)
+        rayleigh_flux = gformat(flux_rayleigh)
 
         transmitted_percent =f"{100*flux.transmitted/flux.incident:8.4f}"
         photo_percent = f"{100*flux.photo/flux.incident:8.4f}"
@@ -649,7 +602,6 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
     xtal_list = ('Si', 'Ge', 'C')
 
     dtheta_plot = denergy_plot = None
-    theta_deg = theta_fwhm = energy_fwhm = theta_width = energy_width = ''
 
     if request.method == 'POST':
         xtal = request.form.get('xtal', 'Si')
@@ -673,13 +625,9 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
         energy_min = PLANCK_HC /(2*lambd)
         if energy < energy_min:
             theta_deg = "not allowed"
-            theta_width = "-"
-            energy_width = "-"
-            theta_fwhm = "-"
-            energy_fwhm = "-"
             return render_template('darwinwidth.html',
-                           energy_min="%.3f" % energy_min,
-                                       theta_deg='not allowed',
+                           energy_min=f"{energy_min:.3f}",
+                           theta_deg='not allowed',
                            energy_ev='-',
                            dtheta_plot='',
                            denergy_plot='',
@@ -688,8 +636,6 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
                            theta_fwhm_urad='',
                            theta_width_deg='',
                            theta_width_urad='',
-                           energy_fwhm='',
-                           energy_width='',
                            rocking_fwhm_deg='',
                            rocking_fwhm_urad='',
                            rocking_fwhm_ev='',
@@ -705,7 +651,7 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
         else:
             out = xraydb.darwin_width(energy, xtal, hkl_tuple,
                                       polarization=polar, m=1)
-            title="%s(%s), '%s' polar, E=%.1f eV" % (xtal, hkl, polar, energy)
+            title=f"{xtal}({hkl}), '{polar}' polar, E={energy:.1f} eV"
             dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
                                     xtal, y1label='1 bounce',
                                     yformat='.2f',
@@ -747,10 +693,10 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
             rocking_deg,  rocking_urad = format_angle(out.rocking_theta_fwhm)
             rocking_ev = f"{(out.rocking_energy_fwhm):.3f}"
 
-            energy_fwhm = f"{(out.energy_fwhm):.3f}"
+            # energy_fwhm = f"{(out.energy_fwhm):.3f}"
 
         return render_template('darwinwidth.html',
-                           energy_min="%.3f" % energy_min,
+                           energy_min=f"{energy_min:.3f}",
                            dtheta_plot=dtheta_plot,
                            denergy_plot=denergy_plot,
                            bragg_ev=bragg_ev,
@@ -780,8 +726,8 @@ def analyzers(elem='', energy='10000', theta1='60', theta2='90'):
     analyzer_results = None
 
     if len(request.form) != 0:
-        elem   = request.form.get('elem', '')
-        line   = request.form.get('line', 'Ka1')
+        elem = request.form.get('elem', '')
+        line = request.form.get('line', 'Ka1')
         energy = request.form.get('energy', '10000')
         theta1 = request.form.get('theta1', '60')
         theta2 = request.form.get('theta2', '90')
@@ -801,9 +747,9 @@ def analyzers(elem='', energy='10000', theta1='60', theta2='90'):
                     dw = xraydb.darwin_width(float(energy), crystal=xtal,
                                              hkl=hkl_tuple, polarization='u')
                     analyzer_results.append((xtal, hkl, hkl_link,
-                                             "%8.4f" % thbragg,
-                                             "%8.4f" % (dw.theta_width*1e6),
-                                             "%8.4f" % dw.energy_width))
+                                             f"{thbragg:8.4f}",
+                                             f"{(dw.theta_width*1e6):8.4f}",
+                                             f"{(dw.energy_width):8.4f}"))
     return render_template('analyzers.html',
                            analyzer_results=analyzer_results,
                            emission_energies=emission_energies_json,
@@ -820,8 +766,9 @@ def scatteringdata(elem, e1, e2, de, fname):
     mu_incoh = xraydb.mu_elam(elem, en_array, kind='incoh')
     mu_coher = xraydb.mu_elam(elem, en_array, kind='coh')
 
-    header = [' X-ray Atomic Scattering Cross-Sections from xrayweb  %s ' % time.ctime(),
-              ' Element : %s ' % elem,
+    header = [f' X-ray Atomic Scattering Cross-Sections from xrayweb  {time.ctime()}',
+              f' Element : {elem}',
+              f' Filename : {fname}',
               ' Column.1: Energy (eV)',
               ' Column.2: mu_total (cm^2/gr)',
               ' Column.3: mu_photo (cm^2/gr)  # Photo-electric',
@@ -925,11 +872,13 @@ def darwindata(xtal, hkl, energy, polar, fname):
 
 @app.route('/darwinscript/<xtal>/<hkl>/<energy>/<polar>/<fname>')
 def darwinscript(xtal, hkl, energy, polar,  fname):
+    "create script for darwin width"
     hkl = hkl.replace('_', ' ')
-    hklval = [a for a in hkl.split()]
+    hklval = list(hkl.split())
     script = """{header:s}
 # X-ray monochromator Darwin Width calculations
 # inputs from web form
+# filename: {fname}
 xtal    = '{xtal:s}'
 h, k, l = ({h:s}, {k:s}, {l:s})
 polarization = '{polar:s}'
@@ -958,15 +907,17 @@ plt.ylabel('reflectivity')
 plt.legend()
 plt.title(f'{{xtal}} {{(h, k, l)}}, "{{polarization}}" polar, E={{energy}} eV')
 plt.show()
-""".format(header=PY_TOP, xtal=xtal, hkl=hkl,
+""".format(header=PY_TOP, fname=fname, xtal=xtal,
            h=hklval[0], k=hklval[1], l=hklval[2], polar=polar, energy=energy)
     return Response(script, mimetype='text/plain')
 
 
 @app.route('/elementscript/<elem>/<fname>')
 def elementscript(elem, fname):
+    "output script for element properties"
     script = """{header:s}
 # X-ray propertie
+# filename: {fname}
 elem  = '{elem:s}'
 print('# Atomic Symbol: %s ' % elem)
 print('# Atomic Number: %d ' % xraydb.atomic_number(elem))
@@ -986,31 +937,33 @@ print('#  Line     Energy  Intensity       Levels')
 for key, val in xraydb.xray_lines(elem).items():
      levels = '%s-%s' % (val.initial_level, val.final_level)
      print(l_fmt % (key, val.energy, val.intensity, levels))
-""".format(header=PY_TOP, elem=elem)
+""".format(header=PY_TOP, elem=elem, fname=fname)
     return Response(script, mimetype='text/plain')
 
 
 @app.route('/attendata/<formula>/<rho>/<t>/<e1>/<e2>/<de>/<fname>')
 def attendata(formula, rho, t, e1, e2, de, fname):
+    "attenuation data"
     en_array = energy_array(e1, e2, de)
     rho = float(rho)
 
     try:
-        o = chemparse(formula)
+        _ = chemparse(formula)
         parsed = True
     except:
-        text = f"check case and validity of formula '{formula}'"
+        txt = f"could not parse formula: '{formula}'"
         parsed = False
     if parsed:
         mu_array = xraydb.material_mu(formula, en_array, density=rho)
         t = float(t)
         trans = np.exp(-0.1*t*mu_array)
-        atten = 1 - trans
+        xatten = 1 - trans
 
-        header = (' X-ray attenuation data from xrayweb  %s ' % time.ctime(),
-                  ' Material.formula   : %s ' % formula,
-                  ' Material.density   : %.3f gr/cm^3 ' % rho,
-                  ' Material.thickness : %.3f mm ' % t,
+        header = (f' X-ray attenuation data from xrayweb  {time.ctime()}',
+                  f' File.Name: {fname}',
+                  f' Material.formula   : {formula}',
+                  f' Material.density   : {rho:.4f} gr/cm^3 ',
+                  f' Material.thickness : {t:.5f} mm ',
                   ' Column.1: energy (eV)',
                   ' Column.2: attenuation_length (mm)' ,
                   ' Column.3: transmitted_fraction',
@@ -1020,7 +973,7 @@ def attendata(formula, rho, t, e1, e2, de, fname):
                      'trans_fract  ', 'atten_fract  ')
 
         txt = make_asciifile(header, arr_names,
-                             (en_array, 10/mu_array, trans, atten))
+                             (en_array, 10/mu_array, trans, xatten))
 
     return Response(txt, mimetype='text/plain')
 
@@ -1033,8 +986,9 @@ def attenscript(formula, rho, t, e1, e2, de, fname):
     script = """{header:s}
 # X-ray attenuation calculations
 # inputs from web form
+# Filename: {fname}
 formula = '{formula:s}'  # material chemical formula
-density = {density:.8g}  # material density in gr/cm^3
+density = {density:.4f}  # material density in gr/cm^3
 thickness = {thick:.6f}  # material thickness, in mm
 energy = np.arange({e1:.0f}, {e2:.0f}+{de:.0f}, {de:.0f})
 
@@ -1056,7 +1010,7 @@ plt.xlabel('Energy (eV)')
 plt.ylabel('tranmitted/attenuated fraction')
 plt.title('attenuation for %s' % formula)
 plt.show()
-""".format(header=PY_TOP, formula=formula,
+""".format(header=PY_TOP, formula=formula, fname=fname,
            density=float(rho), thick=float(t),
            e1=e1, e2=e2, de=de)
     return Response(script, mimetype='text/plain')
@@ -1070,24 +1024,24 @@ def reflectdata(formula, density, angle, rough, polar, e1, e2, de, fname):
     angle = float(angle)
     density  = float(density)
     rough = float(rough)
-    reflectivity = xraydb.mirror_reflectivity(formula, 0.001*angle, en_array, density,
+    refl = xraydb.mirror_reflectivity(formula, 0.001*angle, en_array, density,
                                               roughness=rough, polarization=polar)
 
     _del, _bet, _ = xraydb.xray_delta_beta(formula, density, en_array)
     ang_crit = 1000*(np.pi/2 - np.arcsin(1 - _del - 1j*_bet)).real
 
-    header = (' X-ray reflectivity data from xrayweb  %s ' % time.ctime(),
-              ' Material.formula   : %s ' % formula,
-              ' Material.density   : %.4f gr/cm^3 ' % density,
-              ' Material.angle     : %.4f mrad ' % angle,
-              ' Material.roughness : %.4f Ang ' % rough,
-              ' Material.polarization: %s ' % polar,
+    header = (f' X-ray reflectivity data from xrayweb  {time.ctime()}',
+              f' Material.formula   : {formula}',
+              f' Material.density   : {density:.4f} gr/cm^3',
+              f' Material.angle     : {angle:.4f} mrad',
+              f' Material.roughness : {rough:.4f} Ang',
+              f' Material.polarization: {polar}',
               ' Column.1: energy (eV)',
               ' Column.2: reflectivity',
               ' Column.3: critical_angle (mrad)')
 
     arr_names = ('energy       ', 'reflectivity ', 'crit_angle    ')
-    txt = make_asciifile(header, arr_names, (en_array, reflectivity, ang_crit))
+    txt = make_asciifile(header, arr_names, (en_array, refl, ang_crit))
     return Response(txt, mimetype='text/plain')
 
 
@@ -1298,6 +1252,5 @@ print(samp)
 absorp_total=absorp_total, area=area, density=density, frac_type=frac_type)
             return Response(script, mimetype='text/plain')
 
-    else:
-        return render_template('transmission_sample.html', materials_dict=materials_dict,
-                                result=result)
+    return render_template('transmission_sample.html', materials_dict=materials_dict,
+                            result=result)
