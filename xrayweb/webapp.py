@@ -1007,7 +1007,7 @@ plt.show()
 plt.plot(energy, trans, label='transmitted')
 plt.plot(energy, atten, label='attenuated')
 plt.xlabel('Energy (eV)')
-plt.ylabel('tranmitted/attenuated fraction')
+plt.ylabel('transmitted/attenuated fraction')
 plt.title('attenuation for %s' % formula)
 plt.show()
 """.format(header=PY_TOP, formula=formula, fname=fname,
