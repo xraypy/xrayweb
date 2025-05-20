@@ -345,7 +345,7 @@ def atten(material=None, density=None, t='1.0', e1='1000', e2='51000', de='50'):
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<e1>/<e2>/<de>/<mats>/<plotmode>', methods=['GET', 'POST'])
 @app.route('/reflectivity/<formula>/<density>/<angle>/<rough>/<polar>/<mats>/<formula2>/<density2>/<angle2>/<rough2>/<polar2>/<mats2>/<e1>/<e2>/<de>/<plotmode>', methods=['GET', 'POST'])
 def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
-                 polar='s', mats='rhodium',  formula2='', density2='0', angle2='2',
+                 polar='s', mats='rhodium',  formula2='None', density2='0', angle2='2',
                  rough2='10', polar2='s', mats2='None',
                  e1='1000', e2='51000', de='50', plotmode='linear'):
     message = []
@@ -362,7 +362,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
         formula2 = request.form.get('formula2', 'None')
         density2 = request.form.get('density2', '0')
         angle2 = request.form.get('angle2', '2')
-        mats2 = request.form.get('mats2', '')
+        mats2 = request.form.get('mats2', 'None')
         rough2 = request.form.get('rough2', '10')
         polar2 = request.form.get('polar2', 's')
 
