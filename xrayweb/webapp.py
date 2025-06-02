@@ -204,7 +204,7 @@ def make_asciifile(header, array_names, arrays):
     buff = ['#XDI/1.1']
     buff.extend([f"# {l.strip()}" for l in header])
     buff.append("#---------------------")
-    buff.append("# {' '.join(array_names)}")
+    buff.append(f"# {' '.join(array_names)}")
     for i in range(len(arrays[0])):
         row = [a[i] for a in arrays]
         l = [gformat(x, length=12) for x in row]
