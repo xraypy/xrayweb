@@ -435,7 +435,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
 
 
                 ref_plot = make_plot(en_array, ref_array, ref_title, formula,
-                                     yformat='.3f', y1label=formula,
+                                     yformat='.4f', y1label=formula,
                                      y2=ref2_array, y2label=formula2,
                                      ytitle='Reflectivity', ylog_scale=use_log)
                 angc_plot = make_plot(en_array, ang_crit, ang_title, formula,
@@ -445,7 +445,7 @@ def reflectivity(formula='Rh', density='12.41', angle='2', rough='10',
 
             else:
                 ref_plot = make_plot(en_array, ref_array, ref_title, formula,
-                                     yformat='.3f',
+                                     yformat='.4f',
                                      ytitle='Reflectivity', ylog_scale=use_log)
                 angc_plot = make_plot(en_array, ang_crit, ang_title, formula,
                                       ytitle='Critical Angle (mrad)', ylog_scale=use_log)
@@ -486,7 +486,7 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                             elem, ytitle='mu/rho (cm^2/gr)',
                             xtitle='Energy (eV)', xlog_scale=False,
                             ylog_scale=True, yrange=yrange,
-                            yformat='.2f',
+                            yformat='.4g',
                             y1label='Total',
                             y2=mu_photo, y2label='Photo-electric',
                             y3=mu_incoh, y3label='Incoherent',
@@ -502,7 +502,8 @@ def scattering(elem=None, e1='1000', e2='50000', de='50'):
                                   f'Resonant Scattering factors for {elem}',
                                   elem, ytitle='f1, f2 (electrons/atom)',
                                   xtitle='Energy (eV)',
-                                  xlog_scale=False, ylog_scale=False, y2=f2,
+                                  xlog_scale=False, ylog_scale=False,
+                                  yformat='.4g',  y2=f2,
                                   y1label='f1', y2label='f2')
     return render_template('scattering.html', elem=elem, e1=e1, e2=e2, de=int(de),
                            f1f2_plot=f1f2_plot, mu_plot=mu_plot,
@@ -654,7 +655,7 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
             title=f"{xtal}({hkl}), '{polar}' polar, E={energy:.1f} eV"
             dtheta_plot = make_plot(out.dtheta*1.e6, out.intensity, title,
                                     xtal, y1label='1 bounce',
-                                    yformat='.2f',
+                                    yformat='.4f',
                                     y2=out.intensity**2,
                                     y2label='2 bounces',
                                     y3=out.rocking_curve,
@@ -664,7 +665,7 @@ def darwinwidth(xtal='Si', hkl='1 1 1', energy='10000', polar='s'):
 
             denergy_plot = make_plot(out.denergy, out.intensity, title,
                                      xtal, y1label='1 bounce',
-                                     yformat='.2f', y2=out.intensity**2,
+                                     yformat='.4f', y2=out.intensity**2,
                                      y2label='2 bounces',
                                      y3=out.rocking_curve,
                                      y3label='rocking curve',
